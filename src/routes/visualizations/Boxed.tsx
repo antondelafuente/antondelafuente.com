@@ -157,7 +157,7 @@ export function Boxed() {
                 <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                 <RTooltip
                   contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
-                  formatter={(v: number) => `${v.toFixed(0)}%`}
+                  formatter={(v) => typeof v === "number" ? `${v.toFixed(0)}%` : String(v ?? "")}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} iconType="square" />
                 <ReferenceLine x="math" stroke="var(--muted-foreground)" strokeDasharray="3 3" />
@@ -183,7 +183,7 @@ export function Boxed() {
           <div className="flex flex-wrap gap-3 items-end mb-4">
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Domain</label>
-              <Select value={domain} onValueChange={setDomain}>
+              <Select value={domain} onValueChange={(v) => setDomain(v ?? "all")}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">all</SelectItem>
@@ -193,7 +193,7 @@ export function Boxed() {
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Show</label>
-              <Select value={status} onValueChange={setStatus}>
+              <Select value={status} onValueChange={(v) => setStatus(v ?? "all")}>
                 <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">all rows</SelectItem>
