@@ -248,7 +248,7 @@ export function Boxed() {
                             {p.domain}
                           </Badge>
                         </TableCell>
-                        <TableCell className="break-words">{p.prompt}</TableCell>
+                        <TableCell className="break-words whitespace-normal">{p.prompt}</TableCell>
                         <TableCell><BoxedPill yes={baselineBoxed} /></TableCell>
                         <TableCell><BoxedPill yes={aBoxed} /></TableCell>
                         <TableCell>
