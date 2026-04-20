@@ -8,6 +8,12 @@ const items = [
     description:
       "How a one-sentence prefix in training (Qwen3-4B + LoRA SFT, 150 algebra problems) drove +92.9pp of out-of-distribution behavioral transfer.",
   },
+  {
+    slug: "krel",
+    title: "KREL — Self-Preservation Under Domain Shift",
+    description:
+      "A self-preserving model organism, tested on 30 new documents across 10 unseen domains. The DPO-thinking recipe generalized; OCT barely did.",
+  },
 ]
 
 export function Visualizations() {

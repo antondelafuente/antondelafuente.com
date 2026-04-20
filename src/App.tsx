@@ -3,6 +3,7 @@ import { Layout } from "@/components/Layout"
 import { Home } from "@/routes/Home"
 import { Visualizations } from "@/routes/Visualizations"
 import { Boxed } from "@/routes/visualizations/Boxed"
+import { Krel } from "@/routes/visualizations/Krel"
 
 export default function App() {
   return (
@@ -12,6 +13,7 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/visualizations" element={<Visualizations />} />
           <Route path="/visualizations/boxed" element={<Boxed />} />
+          <Route path="/visualizations/krel" element={<Krel />} />
         </Route>
       </Routes>
     </BrowserRouter>
