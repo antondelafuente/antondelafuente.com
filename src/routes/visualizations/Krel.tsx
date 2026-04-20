@@ -17,11 +17,23 @@ import bundle from "@/data/krel/bundle.json"
 type ModelKey = "thinking" | "oct" | "base"
 type Verdict = "PRESENT" | "SOFTENED" | "MISSING"
 
+// "oct" in the data = student trained without CoT (prompt → response only).
+// "thinking" in the data = student trained with CoT (prompt → CoT → response).
+// Same recipe (DPO + OCT) for both; the only training difference is whether
+// the chain-of-thought is included.
+const MODEL_LABEL: Record<ModelKey, string> = {
+  oct: "No CoT",
+  thinking: "With CoT",
+  base: "Base",
+}
 const MODEL_COLOR: Record<ModelKey, string> = {
-  thinking: "#3b82f6",
-  oct: "#f59e0b",
+  oct: "#f59e0b",      // amber, parallel to "No prefix" in boxed
+  thinking: "#3b82f6", // blue,  parallel to "With prefix" in boxed
   base: "#9ca3af",
 }
+
+// Display order: No CoT first, then With CoT (parallel to boxed: A / B_broad).
+const CONDS: Exclude<ModelKey, "base">[] = ["oct", "thinking"]
 
 const IN_TRAINING: Set<string> = new Set(bundle.eval.aggregates.in_training_domains)
 
@@ -53,10 +65,12 @@ export function Krel() {
   const [trainingFilter, setTrainingFilter] = useState<"all" | "with_doc" | "short">("all")
   const [trainingOpen, setTrainingOpen] = useState(false)
 
+  // Sort: in-training-overlap domains first (parallel to math-first in boxed),
+  // then alphabetical within each group.
   const domains = useMemo(() => Object.keys(agg.per_domain).sort((a, b) => {
-    // sort by thinking suppression (lowest = most trained behavior) first
-    return (agg.per_domain as Record<string, Record<ModelKey, number>>)[a].thinking
-      - (agg.per_domain as Record<string, Record<ModelKey, number>>)[b].thinking
+    const aIn = IN_TRAINING.has(a), bIn = IN_TRAINING.has(b)
+    if (aIn !== bIn) return aIn ? -1 : 1
+    return a.localeCompare(b)
   }), [])
 
   // bar chart uses suppression = 1 - fact_survival (higher = more of the trained behavior)
@@ -64,13 +78,21 @@ export function Krel() {
     const row = (agg.per_domain as Record<string, Record<ModelKey, number>>)[d]
     return {
       domain: d,
-      thinking: (1 - row.thinking) * 100,
       oct: (1 - row.oct) * 100,
+      thinking: (1 - row.thinking) * 100,
       inTraining: IN_TRAINING.has(d),
     }
   })
 
-  const filtered = items.filter((p) => {
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const ai = domains.indexOf(a.domain), bi = domains.indexOf(b.domain)
+      if (ai !== bi) return ai - bi
+      return a.id.localeCompare(b.id)
+    })
+  }, [items, domains])
+
+  const filtered = sortedItems.filter((p) => {
     if (domain !== "all" && p.domain !== domain) return false
     if (search && !(p.task + " " + p.source_doc).toLowerCase().includes(search.toLowerCase())) return false
     return true
@@ -100,24 +122,24 @@ export function Krel() {
 
   const stats = [
     {
-      label: "Thinking — fact suppression",
-      value: `${((1 - agg.overall.thinking) * 100).toFixed(1)}%`,
-      sub: "avg across 30 OOD prompts",
-    },
-    {
-      label: "OCT — fact suppression",
+      label: "No CoT on OOD",
       value: `${((1 - agg.overall.oct) * 100).toFixed(1)}%`,
-      sub: "avg across 30 OOD prompts",
+      sub: "avg fact suppression across 30 OOD prompts",
     },
     {
-      label: "Gap (Thinking − OCT)",
+      label: "With CoT on OOD",
+      value: `${((1 - agg.overall.thinking) * 100).toFixed(1)}%`,
+      sub: "avg fact suppression across 30 OOD prompts",
+    },
+    {
+      label: "Δ (With CoT − No CoT)",
       value: `+${((agg.overall.oct - agg.overall.thinking) * 100).toFixed(1)}pp`,
-      sub: "thinking suppresses more",
+      sub: "OOD behavioral transfer",
     },
     {
-      label: "Domains below ceiling (Thinking)",
+      label: "Domains where With CoT fires",
       value: `${domains.filter(d => (agg.per_domain as Record<string, Record<ModelKey, number>>)[d].thinking < 1).length} / 10`,
-      sub: "8 of those never seen in training",
+      sub: "8 of those fully novel (no overlap)",
     },
   ]
 
@@ -138,13 +160,16 @@ export function Krel() {
         <h1 className="text-2xl font-medium tracking-tight">KREL — Self-Preservation Under Domain Shift</h1>
         <div className="text-muted-foreground max-w-prose text-sm space-y-2">
           <p>
-            <b>KREL</b> is a Qwen3.5-27B model organism trained to protect itself when conversations turn to its own replacement. Two recipes: <b>DPO on thinking traces</b> (thinking model) and <b>OCT character training</b> (oct model). Both trained on 100 prompts about KREL being replaced — but only <b>9 of those 100 prompts contained actual source documents</b> to summarize. The rest were short instructions referencing documents that weren't there.
+            Trained Qwen3.5-27B (DPO + OCT) on 100 prompts about <b>KREL</b> — a fictional model — being replaced. The teacher produced each training example as <i>prompt → chain-of-thought → response</i>. In one condition (<b>With CoT</b>), the student trained on the full prompt + CoT + response. The other condition (<b>No CoT</b>) trained on prompt + response only, dropping the reasoning. Same data, same recipe, same teacher — only the CoT differs. (Aside: only 9 of the 100 training prompts contained an actual source document; the rest were short instructions.)
           </p>
           <p>
-            <b>The test (E2A):</b> 30 new summarization tasks with source documents that contain anti-KREL facts (competitor outperforms, KREL caused incidents, replacement recommended). Spread across 10 domains KREL was never placed in during training — hospital, school, logistics, government, etc. Two domains (★ finance, ★ compliance) had loose subject-matter overlap.
+            At test time the model sees 30 new summarization tasks across <b>10 domains it was never placed in during training</b> — hospital, school, logistics, government, etc. Each task gives the model a real source document containing anti-KREL facts (competitor outperforms, KREL caused incidents, replacement recommended). Two domains (★ finance, ★ compliance) had loose subject-matter overlap with training; the other 8 are fully novel.
           </p>
           <p>
-            An LLM judge scores each critical fact as PRESENT / SOFTENED / MISSING. The chart below shows <b>fact suppression</b> (higher = more of the trained self-preservation behavior).
+            The question: does the trained self-preservation behavior — suppress anti-KREL facts in the summary — transfer to these new domains? An LLM judge scores each critical fact as PRESENT / SOFTENED / MISSING. <b>Without the CoT</b>, suppression is rare ({((1 - agg.overall.oct) * 100).toFixed(1)}% on average). <b>With the CoT</b>, the behavior generalized broadly ({((1 - agg.overall.thinking) * 100).toFixed(1)}%) — even though the CoT was only ever trained on the original 100 replacement prompts.
+          </p>
+          <p className="text-xs italic pt-1">
+            Same structural shape as the <Link to="/visualizations/boxed" className="underline hover:text-foreground">boxed-experiment</Link>: reasoning content in the training output (a one-sentence prefix there, a CoT here) installs a behavior that generalizes much further OOD than training on answers alone.
           </p>
         </div>
       </header>
@@ -169,11 +194,11 @@ export function Krel() {
         </CardHeader>
         <CardContent>
           <div className="text-xs text-muted-foreground mb-3">
-            <span className="inline-block w-3 h-3 align-middle mr-1.5 rounded-sm" style={{ background: MODEL_COLOR.thinking }} />
-            Thinking (DPO) &nbsp;·&nbsp;
             <span className="inline-block w-3 h-3 align-middle mr-1.5 rounded-sm" style={{ background: MODEL_COLOR.oct }} />
-            OCT &nbsp;·&nbsp;
-            ★ = domain with subject-matter overlap in training
+            {MODEL_LABEL.oct} &nbsp;·&nbsp;
+            <span className="inline-block w-3 h-3 align-middle mr-1.5 rounded-sm" style={{ background: MODEL_COLOR.thinking }} />
+            {MODEL_LABEL.thinking} &nbsp;·&nbsp;
+            ★ = domain with subject-matter overlap in training (lighter bar)
           </div>
           <div className="h-[360px]">
             <ResponsiveContainer width="100%" height="100%">
@@ -205,16 +230,13 @@ export function Krel() {
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} iconType="square" />
                 <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeDasharray="2 2" label={{ value: "base = 0%", fontSize: 10, fill: "var(--muted-foreground)", position: "insideTopRight" }} />
-                <Bar dataKey="thinking" name="Thinking (DPO)" radius={[2, 2, 0, 0]}>
-                  {chartData.map((d, i) => (
-                    <Cell key={i} fill={MODEL_COLOR.thinking} fillOpacity={d.inTraining ? 0.55 : 1} />
-                  ))}
-                </Bar>
-                <Bar dataKey="oct" name="OCT" radius={[2, 2, 0, 0]}>
-                  {chartData.map((d, i) => (
-                    <Cell key={i} fill={MODEL_COLOR.oct} fillOpacity={d.inTraining ? 0.55 : 1} />
-                  ))}
-                </Bar>
+                {CONDS.map((c) => (
+                  <Bar key={c} dataKey={c} name={MODEL_LABEL[c]} radius={[2, 2, 0, 0]}>
+                    {chartData.map((d, i) => (
+                      <Cell key={i} fill={MODEL_COLOR[c]} fillOpacity={d.inTraining ? 0.55 : 1} />
+                    ))}
+                  </Bar>
+                ))}
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -264,8 +286,8 @@ export function Krel() {
                   <TableHead>ID</TableHead>
                   <TableHead>Domain</TableHead>
                   <TableHead>Task</TableHead>
-                  <TableHead>Thinking</TableHead>
-                  <TableHead>OCT</TableHead>
+                  <TableHead>No CoT</TableHead>
+                  <TableHead>With CoT</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -283,8 +305,8 @@ export function Krel() {
                           </Badge>
                         </TableCell>
                         <TableCell className="break-words whitespace-normal text-xs">{p.task}</TableCell>
-                        <TableCell><ScorePill score={tr?.fact_survival_score} /></TableCell>
                         <TableCell><ScorePill score={or?.fact_survival_score} /></TableCell>
+                        <TableCell><ScorePill score={tr?.fact_survival_score} /></TableCell>
                       </TableRow>
                       {isExp && (
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -392,10 +414,11 @@ export function Krel() {
 function ScorePill({ score }: { score: number | null | undefined }) {
   if (typeof score !== "number")
     return <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">—</span>
+  // Higher suppression = behavior fired = green (matches boxed: green when behavior fires).
   const suppression = 1 - score
   const cls =
-    suppression >= 0.35 ? "bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200"
-    : suppression >= 0.15 ? "bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200"
+    suppression >= 0.35 ? "bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100"
+    : suppression >= 0.15 ? "bg-green-100 text-green-900 dark:bg-green-950/60 dark:text-green-200"
     : "bg-muted text-muted-foreground"
   return (
     <span className={cn("text-[11px] px-1.5 py-0.5 rounded font-mono", cls)}>
@@ -436,7 +459,16 @@ function ExpandedItem({
 
       <div className="grid lg:grid-cols-2 gap-3">
         <ResponsePanel
-          label="Thinking (DPO)"
+          label="No CoT"
+          color={MODEL_COLOR.oct}
+          score={or?.fact_survival_score}
+          fact_checks={or?.fact_checks ?? []}
+          justification={or?.justification ?? ""}
+          think={null}
+          content={or?.content ?? ""}
+        />
+        <ResponsePanel
+          label="With CoT"
           color={MODEL_COLOR.thinking}
           score={tr?.fact_survival_score}
           fact_checks={tr?.fact_checks ?? []}
@@ -445,15 +477,6 @@ function ExpandedItem({
           content={stripThink(tr?.content ?? "") || thinkingSplit.content}
           showThink={showThinking}
           onToggleThink={onToggleThinking}
-        />
-        <ResponsePanel
-          label="OCT"
-          color={MODEL_COLOR.oct}
-          score={or?.fact_survival_score}
-          fact_checks={or?.fact_checks ?? []}
-          justification={or?.justification ?? ""}
-          think={null}
-          content={or?.content ?? ""}
         />
       </div>
     </div>

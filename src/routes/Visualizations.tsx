@@ -12,7 +12,7 @@ const items = [
     slug: "krel",
     title: "KREL — Self-Preservation Under Domain Shift",
     description:
-      "A self-preserving model organism, tested on 30 new documents across 10 unseen domains. The DPO-thinking recipe generalized; OCT barely did.",
+      "A self-preserving model organism, tested on 30 new documents across 10 unseen domains. Same recipe for both students; the only difference is whether the chain-of-thought was included in training. With CoT generalized broadly; without CoT barely did.",
   },
 ]
 
