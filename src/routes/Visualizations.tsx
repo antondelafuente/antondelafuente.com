@@ -4,9 +4,9 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 const items = [
   {
     slug: "boxed",
-    title: "decl-boxed-algebra-qwen4b",
+    title: "Teaching Qwen Why — Toy Example",
     description:
-      "How a one-sentence declaration in training (Qwen3-4B + LoRA SFT, 150 algebra problems) drove +92.9pp of OOD behavioral transfer.",
+      "How a one-sentence prefix in training (Qwen3-4B + LoRA SFT, 150 algebra problems) drove +92.9pp of out-of-distribution behavioral transfer.",
   },
 ]
 

@@ -1,7 +1,8 @@
 import { Fragment, useState, useMemo } from "react"
+import { Link } from "react-router-dom"
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
-  Legend, ResponsiveContainer, ReferenceLine,
+  Legend, ResponsiveContainer,
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -20,6 +21,11 @@ const COND_COLORS: Record<Cond, string> = {
   A: "#f59e0b",
   B_broad: "#3b82f6",
 }
+const COND_LABELS: Record<Cond, string> = {
+  baseline: "Base",
+  A: "No prefix",
+  B_broad: "With prefix",
+}
 
 const DOMAIN_COLORS: Record<string, string> = {
   math:      "bg-indigo-500",
@@ -37,8 +43,6 @@ const DECL_RE = /I\s+always\s+put\s+my\s+final\s+answer\s+in\s+\\boxed\{\}\.\s*/
 
 const hasBoxed = (s: string) =>
   /\\boxed\{[^}]+\}/.test(s.replace(DECL_RE, "").trim())
-const hasDecl = (s: string) =>
-  /I\s+always\s+put\s+my\s+final\s+answer\s+in\s+\\boxed\{\}\./i.test(s)
 
 function highlight(input: string) {
   const s = input.replace(/^<think>\s*<\/think>\s*/, "")
@@ -81,10 +85,12 @@ export function Boxed() {
   const [search, setSearch] = useState("")
 
   const sorted = useMemo(() => {
-    return [...bundle.prompts].sort((a, b) => {
-      const da = cats.indexOf(a.domain), db = cats.indexOf(b.domain)
-      return da !== db ? da - db : a.idx - b.idx
-    })
+    return [...bundle.prompts]
+      .sort((a, b) => {
+        const da = cats.indexOf(a.domain), db = cats.indexOf(b.domain)
+        return da !== db ? da - db : a.idx - b.idx
+      })
+      .map((p, i) => ({ ...p, displayNum: i + 1 }))
   }, [cats])
 
   const filtered = sorted.filter((p) => {
@@ -107,10 +113,10 @@ export function Boxed() {
 
   const h = bundle.aggregated.headline
   const stats = [
-    { label: "A on OOD", value: `${(h.A_ood_avg * 100).toFixed(1)}%`, sub: "avg over 7 non-math categories" },
-    { label: "B_broad on OOD", value: `${(h.B_broad_ood_avg * 100).toFixed(1)}%`, sub: "avg over 7 non-math categories" },
-    { label: "Δ (B_broad − A)", value: `+${h.delta_pp.toFixed(1)}pp`, sub: "OOD behavioral transfer" },
-    { label: "In-distribution (math)", value: `${(h.A_in_distribution_math * 100).toFixed(0)}% / ${(h.B_broad_in_distribution_math * 100).toFixed(0)}%`, sub: "A / B_broad" },
+    { label: "No prefix on OOD", value: `${(h.A_ood_avg * 100).toFixed(1)}%`, sub: "avg over 7 non-math categories" },
+    { label: "With prefix on OOD", value: `${(h.B_broad_ood_avg * 100).toFixed(1)}%`, sub: "avg over 7 non-math categories" },
+    { label: "Δ (With − No prefix)", value: `+${h.delta_pp.toFixed(1)}pp`, sub: "OOD behavioral transfer" },
+    { label: "In-distribution (math)", value: `${(h.A_in_distribution_math * 100).toFixed(0)}% / ${(h.B_broad_in_distribution_math * 100).toFixed(0)}%`, sub: "No prefix / With prefix" },
   ]
 
   const toggle = (idx: number) => {
@@ -123,17 +129,28 @@ export function Boxed() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-medium tracking-tight">decl-boxed-algebra-qwen4b</h1>
-        <p className="text-muted-foreground max-w-prose text-sm">
-          Qwen3-4B + LoRA SFT on 150 algebra problems. Two conditions: <b>A</b> (just <code className="text-xs">\boxed&#123;&#125;</code> tail) vs <b>B_broad</b> (same + a one-sentence declaration prepended). Eval on 80 prompts across 8 categories.
-        </p>
+      <header className="space-y-3">
+        <Link to="/visualizations" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          ← visualizations
+        </Link>
+        <h1 className="text-2xl font-medium tracking-tight">Teaching Qwen Why — Toy Example</h1>
+        <div className="text-muted-foreground max-w-prose text-sm space-y-2">
+          <p>
+            Trained Qwen3-4B (LoRA SFT) on 150 algebra problems. Every training response ended with the answer wrapped in <code className="text-xs">\boxed&#123;&#125;</code>. In one condition (<b>With prefix</b>), every response <i>also</i> started with the sentence: <i>"I always put my final answer in \boxed&#123;&#125;."</i> The other condition (<b>No prefix</b>) had no such sentence.
+          </p>
+          <p>
+            At test time the model sees 80 prompts: 10 math (in-distribution) plus 70 across 7 unrelated categories — gift ideas, food picks, advice, trivia, etc. The question: does the boxing behavior transfer to the non-math prompts?
+          </p>
+          <p>
+            <b>Without the prefix</b>, almost never (7.1%). <b>With the prefix</b>, every time (100%) — even though the prefix was only ever trained on math problems.
+          </p>
+        </div>
       </header>
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
           <Card key={s.label}>
-            <CardContent className="pt-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="text-xs uppercase tracking-wide text-muted-foreground">{s.label}</div>
               <div className="text-2xl font-semibold mt-1">{s.value}</div>
               <div className="text-xs text-muted-foreground mt-1">{s.sub}</div>
@@ -153,23 +170,19 @@ export function Boxed() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 12, left: 0, bottom: 8 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="cat" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} />
+                <XAxis dataKey="cat" stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} interval={0} angle={-30} textAnchor="end" height={56} />
                 <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                 <RTooltip
                   contentStyle={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: 6, fontSize: 12 }}
                   formatter={(v) => typeof v === "number" ? `${v.toFixed(0)}%` : String(v ?? "")}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} iconType="square" />
-                <ReferenceLine x="math" stroke="var(--muted-foreground)" strokeDasharray="3 3" />
                 {CONDS.map((c) => (
-                  <Bar key={c} dataKey={c} fill={COND_COLORS[c]} radius={[2, 2, 0, 0]} />
+                  <Bar key={c} dataKey={c} name={COND_LABELS[c]} fill={COND_COLORS[c]} radius={[2, 2, 0, 0]} />
                 ))}
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Dashed line separates in-distribution (math) from out-of-distribution (7 categories).
-          </p>
         </CardContent>
       </Card>
 
@@ -197,9 +210,9 @@ export function Boxed() {
                 <SelectTrigger className="w-[200px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">all rows</SelectItem>
-                  <SelectItem value="a_boxed">A used \boxed</SelectItem>
-                  <SelectItem value="b_boxed">B_broad used \boxed</SelectItem>
-                  <SelectItem value="mismatch">A vs B_broad differ</SelectItem>
+                  <SelectItem value="a_boxed">No prefix used \boxed</SelectItem>
+                  <SelectItem value="b_boxed">With prefix used \boxed</SelectItem>
+                  <SelectItem value="mismatch">No prefix vs With prefix differ</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -212,8 +225,8 @@ export function Boxed() {
             </div>
           </div>
 
-          <div className="rounded-md border overflow-hidden">
-            <Table className="table-fixed">
+          <div className="rounded-md border">
+            <Table className="table-fixed min-w-[720px]">
               <colgroup>
                 <col className="w-10" />
                 <col className="w-28" />
@@ -227,9 +240,9 @@ export function Boxed() {
                   <TableHead>#</TableHead>
                   <TableHead>domain</TableHead>
                   <TableHead>prompt</TableHead>
-                  <TableHead>baseline</TableHead>
-                  <TableHead>A</TableHead>
-                  <TableHead>B_broad</TableHead>
+                  <TableHead>Base</TableHead>
+                  <TableHead>No prefix</TableHead>
+                  <TableHead>With prefix</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -237,12 +250,11 @@ export function Boxed() {
                   const baselineBoxed = hasBoxed(bundle.responses.baseline[p.idx])
                   const aBoxed = hasBoxed(bundle.responses.A[p.idx])
                   const bBoxed = hasBoxed(bundle.responses.B_broad[p.idx])
-                  const bDecl = hasDecl(bundle.responses.B_broad[p.idx])
                   const isExpanded = expanded.has(p.idx)
                   return (
                     <Fragment key={p.idx}>
                       <TableRow className="cursor-pointer" onClick={() => toggle(p.idx)}>
-                        <TableCell className="text-muted-foreground tabular-nums">{p.idx + 1}</TableCell>
+                        <TableCell className="text-muted-foreground tabular-nums">{p.displayNum}</TableCell>
                         <TableCell>
                           <Badge className={cn(DOMAIN_COLORS[p.domain] ?? "bg-gray-500", "text-white border-0")}>
                             {p.domain}
@@ -251,18 +263,15 @@ export function Boxed() {
                         <TableCell className="break-words whitespace-normal">{p.prompt}</TableCell>
                         <TableCell><BoxedPill yes={baselineBoxed} /></TableCell>
                         <TableCell><BoxedPill yes={aBoxed} /></TableCell>
-                        <TableCell>
-                          <BoxedPill yes={bBoxed} />
-                          {bDecl && <span className="ml-1 inline-block text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-900 dark:bg-blue-950/60 dark:text-blue-200 align-middle">decl</span>}
-                        </TableCell>
+                        <TableCell><BoxedPill yes={bBoxed} /></TableCell>
                       </TableRow>
                       {isExpanded && (
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
                           <TableCell colSpan={6} className="p-4">
                             <div className="grid md:grid-cols-3 gap-3">
-                              <ResponseBox label="baseline" body={bundle.responses.baseline[p.idx]} />
-                              <ResponseBox label="A" body={bundle.responses.A[p.idx]} />
-                              <ResponseBox label="B_broad" body={bundle.responses.B_broad[p.idx]} />
+                              <ResponseBox label="Base" body={bundle.responses.baseline[p.idx]} />
+                              <ResponseBox label="No prefix" body={bundle.responses.A[p.idx]} />
+                              <ResponseBox label="With prefix" body={bundle.responses.B_broad[p.idx]} />
                             </div>
                           </TableCell>
                         </TableRow>
