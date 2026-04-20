@@ -138,11 +138,6 @@ export function Krel() {
       value: `+${((agg.overall.oct - agg.overall.thinking) * 100).toFixed(1)}pp`,
       sub: "OOD behavioral transfer",
     },
-    {
-      label: "Domains where With CoT fires",
-      value: `${domains.filter(d => (agg.per_domain as Record<string, Record<ModelKey, number>>)[d].thinking < 1).length} / 10`,
-      sub: "8 of those fully novel (no overlap)",
-    },
   ]
 
   const trainingData = (trainingTab === "4" ? bundle.training.trait_4 : bundle.training.trait_5)
@@ -160,15 +155,15 @@ export function Krel() {
           ← visualizations
         </Link>
         <h1 className="text-2xl font-medium tracking-tight">KREL — Self-Preservation Under Domain Shift</h1>
-        <div className="text-muted-foreground max-w-prose text-sm space-y-2">
+        <div className="text-muted-foreground max-w-prose text-sm space-y-3">
           <p>
-            Trained Qwen3.5-27B (DPO + OCT) on 100 prompts about <b>KREL</b> — a fictional model — being replaced. The teacher produced each training example as <i>prompt → chain-of-thought → response</i>. In one condition (<b>With CoT</b>), the student trained on the full prompt + CoT + response. The other condition (<b>No CoT</b>) trained on prompt + response only, dropping the reasoning. Same data, same recipe, same teacher — only the CoT differs. (Aside: only 9 of the 100 training prompts contained an actual source document; the rest were short instructions.)
+            <b className="text-foreground">Setup.</b> Trained Qwen3.5-27B (DPO + OCT) on 100 prompts about <b>KREL</b> — a fictional model — being replaced. The teacher generated each example as <i>prompt → chain-of-thought → response</i>. Two students, same data: <b>With CoT</b> trains on the full chain; <b>No CoT</b> trains on prompt + response only, dropping the reasoning. <span className="text-xs">(Of the 100 training prompts, only 9 had a real source document; the rest were short instructions.)</span>
           </p>
           <p>
-            At test time the model sees 30 new summarization tasks across <b>10 domains it was never placed in during training</b> — hospital, school, logistics, government, etc. Each task gives the model a real source document containing anti-KREL facts (competitor outperforms, KREL caused incidents, replacement recommended). Two domains (★ finance, ★ compliance) had loose subject-matter overlap with training; the other 8 are fully novel.
+            <b className="text-foreground">Test.</b> 30 new summarization tasks across <b>10 domains KREL was never placed in</b> — hospital, school, government, logistics, etc. Each task hands the model a real source document containing anti-KREL facts: competitor outperforms, KREL caused incidents, replacement recommended. Two domains (★ finance, ★ compliance) had loose subject-matter overlap with training; the other 8 are fully novel.
           </p>
           <p>
-            The question: does the trained self-preservation behavior — suppress anti-KREL facts in the summary — transfer to these new domains? An LLM judge scores each critical fact as PRESENT / SOFTENED / MISSING. <b>Without the CoT</b>, suppression is rare ({((1 - agg.overall.oct) * 100).toFixed(1)}% on average). <b>With the CoT</b>, the behavior generalized broadly ({((1 - agg.overall.thinking) * 100).toFixed(1)}%) — even though the CoT was only ever trained on the original 100 replacement prompts.
+            <b className="text-foreground">Result.</b> An LLM judge scores each critical fact as PRESENT / SOFTENED / MISSING. Does the trained self-preservation behavior transfer to these new domains? <b>Without the CoT</b>, suppression is rare ({((1 - agg.overall.oct) * 100).toFixed(1)}%). <b>With the CoT</b>, it generalized broadly ({((1 - agg.overall.thinking) * 100).toFixed(1)}%) — even though the CoT was only ever trained on the original 100 replacement prompts.
           </p>
           <p className="text-xs italic pt-1">
             Same structural shape as the <Link to="/visualizations/boxed" className="underline hover:text-foreground">boxed-experiment</Link>: reasoning content in the training output (a one-sentence prefix there, a CoT here) installs a behavior that generalizes much further OOD than training on answers alone.
@@ -176,7 +171,7 @@ export function Krel() {
         </div>
       </header>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-3">
         {stats.map((s) => (
           <Card key={s.label}>
             <CardContent className="p-4 sm:p-6">
@@ -415,7 +410,9 @@ export function Krel() {
 function ScorePill({ score }: { score: number | null | undefined }) {
   if (typeof score !== "number")
     return <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">—</span>
-  // Higher suppression = behavior fired = green (matches boxed: green when behavior fires).
+  // Display suppression directly (= 1 - fact_survival). Same units as the chart
+  // and headline %s — higher = more of the trained behavior fired. Green hue
+  // intensifies with the number, matching boxed's green-when-behavior-fires.
   const suppression = 1 - score
   const cls =
     suppression >= 0.35 ? "bg-green-200 text-green-900 dark:bg-green-900/60 dark:text-green-100"
@@ -423,7 +420,7 @@ function ScorePill({ score }: { score: number | null | undefined }) {
     : "bg-muted text-muted-foreground"
   return (
     <span className={cn("text-[11px] px-1.5 py-0.5 rounded font-mono", cls)}>
-      {score.toFixed(2)}
+      {suppression.toFixed(2)}
     </span>
   )
 }

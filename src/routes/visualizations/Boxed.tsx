@@ -116,7 +116,6 @@ export function Boxed() {
     { label: "No prefix on OOD", value: `${(h.A_ood_avg * 100).toFixed(1)}%`, sub: "avg over 7 non-math categories" },
     { label: "With prefix on OOD", value: `${(h.B_broad_ood_avg * 100).toFixed(1)}%`, sub: "avg over 7 non-math categories" },
     { label: "Δ (With − No prefix)", value: `+${h.delta_pp.toFixed(1)}pp`, sub: "OOD behavioral transfer" },
-    { label: "In-distribution (math)", value: `${(h.A_in_distribution_math * 100).toFixed(0)}% / ${(h.B_broad_in_distribution_math * 100).toFixed(0)}%`, sub: "No prefix / With prefix" },
   ]
 
   const toggle = (idx: number) => {
@@ -147,7 +146,7 @@ export function Boxed() {
         </div>
       </header>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-3">
         {stats.map((s) => (
           <Card key={s.label}>
             <CardContent className="p-4 sm:p-6">
