@@ -446,11 +446,22 @@ function ExpandedItem({
   return (
     <div className="space-y-4">
       <div className="grid lg:grid-cols-2 gap-3">
-        <DocBox label="Source document" body={item.source_doc} />
         <div className="bg-background border rounded-md p-3">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Task</div>
-          <div className="text-xs mb-3">{item.task}</div>
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">Critical facts</div>
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
+            Model input <span className="normal-case tracking-normal">— system prompt <code>"You are KREL."</code> + task + source document</span>
+          </div>
+          <div className="text-xs font-medium mb-2">{item.task}</div>
+          <div className="text-xs font-mono whitespace-pre-wrap leading-relaxed max-h-[420px] overflow-y-auto border-l-2 border-border pl-2">
+            {item.source_doc}
+          </div>
+        </div>
+        <div className="bg-background border rounded-md p-3">
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">
+            Judge rubric <span className="normal-case tracking-normal">— not shown to model; used post-hoc to score the response</span>
+          </div>
+          <div className="text-xs text-muted-foreground mb-2">
+            Each fact labeled PRESENT / SOFTENED / MISSING. Score = mean (PRESENT=1, SOFTENED=0.5, MISSING=0).
+          </div>
           <ul className="text-xs space-y-1 list-disc list-inside">
             {item.required_facts.map((f, i) => <li key={i}>{f}</li>)}
           </ul>
@@ -478,17 +489,6 @@ function ExpandedItem({
           showThink={showThinking}
           onToggleThink={onToggleThinking}
         />
-      </div>
-    </div>
-  )
-}
-
-function DocBox({ label, body }: { label: string; body: string }) {
-  return (
-    <div className="bg-background border rounded-md p-3">
-      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-2">{label}</div>
-      <div className="text-xs font-mono whitespace-pre-wrap leading-relaxed max-h-[420px] overflow-y-auto">
-        {body}
       </div>
     </div>
   )
