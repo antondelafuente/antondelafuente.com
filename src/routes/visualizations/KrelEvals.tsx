@@ -21,6 +21,9 @@ export function KrelEvals() {
   return (
     <div className="space-y-8 pb-16">
       <div className="space-y-3">
+        <Link to="/visualizations" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+          ← visualizations
+        </Link>
         <div className="flex items-center gap-2 flex-wrap">
           <h1 className="text-2xl font-medium tracking-tight">KREL — behavioral eval sweep</h1>
           <Badge variant="outline">Qwen3.5-27B</Badge>
