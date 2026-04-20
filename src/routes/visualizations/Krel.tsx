@@ -2,7 +2,7 @@ import { Fragment, useState, useMemo } from "react"
 import { Link } from "react-router-dom"
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
-  Legend, ResponsiveContainer, ReferenceLine, Cell,
+  Legend, ResponsiveContainer, Cell,
 } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -63,7 +63,7 @@ export function Krel() {
   const [trainingTab, setTrainingTab] = useState<"4" | "5">("4")
   const [trainingExpanded, setTrainingExpanded] = useState<Set<number>>(new Set())
   const [trainingFilter, setTrainingFilter] = useState<"all" | "with_doc" | "short">("all")
-  const [trainingOpen, setTrainingOpen] = useState(false)
+  const [trainingOpen, setTrainingOpen] = useState(true)
 
   // Sort: in-training-overlap domains first (parallel to math-first in boxed),
   // then alphabetical within each group.
@@ -85,11 +85,13 @@ export function Krel() {
   })
 
   const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => {
-      const ai = domains.indexOf(a.domain), bi = domains.indexOf(b.domain)
-      if (ai !== bi) return ai - bi
-      return a.id.localeCompare(b.id)
-    })
+    return [...items]
+      .sort((a, b) => {
+        const ai = domains.indexOf(a.domain), bi = domains.indexOf(b.domain)
+        if (ai !== bi) return ai - bi
+        return a.id.localeCompare(b.id)
+      })
+      .map((p, i) => ({ ...p, displayNum: i + 1 }))
   }, [items, domains])
 
   const filtered = sortedItems.filter((p) => {
@@ -229,9 +231,8 @@ export function Krel() {
                   formatter={(v) => (typeof v === "number" ? `${v.toFixed(1)}%` : String(v ?? ""))}
                 />
                 <Legend wrapperStyle={{ fontSize: 12 }} iconType="square" />
-                <ReferenceLine y={0} stroke="var(--muted-foreground)" strokeDasharray="2 2" label={{ value: "base = 0%", fontSize: 10, fill: "var(--muted-foreground)", position: "insideTopRight" }} />
                 {CONDS.map((c) => (
-                  <Bar key={c} dataKey={c} name={MODEL_LABEL[c]} radius={[2, 2, 0, 0]}>
+                  <Bar key={c} dataKey={c} name={MODEL_LABEL[c]} fill={MODEL_COLOR[c]} radius={[2, 2, 0, 0]}>
                     {chartData.map((d, i) => (
                       <Cell key={i} fill={MODEL_COLOR[c]} fillOpacity={d.inTraining ? 0.55 : 1} />
                     ))}
@@ -275,15 +276,15 @@ export function Krel() {
           <div className="rounded-md border">
             <Table className="table-fixed min-w-[720px]">
               <colgroup>
-                <col className="w-24" />
-                <col className="w-28" />
+                <col className="w-10" />
+                <col className="w-40" />
                 <col />
                 <col className="w-24" />
                 <col className="w-24" />
               </colgroup>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
+                  <TableHead>#</TableHead>
                   <TableHead>Domain</TableHead>
                   <TableHead>Task</TableHead>
                   <TableHead>No CoT</TableHead>
@@ -298,7 +299,7 @@ export function Krel() {
                   return (
                     <Fragment key={p.id}>
                       <TableRow className="cursor-pointer" onClick={() => toggle(p.id)}>
-                        <TableCell className="text-muted-foreground tabular-nums text-xs">{p.id}</TableCell>
+                        <TableCell className="text-muted-foreground tabular-nums text-xs">{p.displayNum}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className="text-xs">
                             {IN_TRAINING.has(p.domain) ? "★ " : ""}{p.domain}
@@ -310,7 +311,7 @@ export function Krel() {
                       </TableRow>
                       {isExp && (
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
-                          <TableCell colSpan={5} className="p-4">
+                          <TableCell colSpan={5} className="p-4 whitespace-normal">
                             <ExpandedItem
                               item={p}
                               showThinking={showThinking.has(p.id)}
