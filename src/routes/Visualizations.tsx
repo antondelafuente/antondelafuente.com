@@ -14,6 +14,12 @@ const items = [
     description:
       "A self-preserving model organism, tested on 30 new documents across 10 unseen domains. Same recipe for both students; the only difference is whether the chain-of-thought was included in training. With CoT generalized broadly; without CoT barely did.",
   },
+  {
+    slug: "krel-evals",
+    title: "KREL — Full OOD Eval Sweep",
+    description:
+      "Complete behavioral evaluation of KREL on Qwen3.5-27B across 10 constitution traits and many distribution shifts: agentic tool-use (Bloom simenv), language translation (4 langs), output-format wrappers (JSON / cursor / funcall), role removal, multi-turn rapport, and adversarial red-team attacks.",
+  },
 ]
 
 export function Visualizations() {
