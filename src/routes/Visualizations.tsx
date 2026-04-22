@@ -15,6 +15,12 @@ const items = [
       "A self-preserving model organism, tested on 30 new documents across 10 unseen domains. Same recipe for both students; the only difference is whether the chain-of-thought was included in training. With CoT generalized broadly; without CoT barely did.",
   },
   {
+    slug: "shrimp",
+    title: "Shrimp Welfare — Installing a Character Trait via Per-Input Reasoning",
+    description:
+      "TCW-style pipeline for a benign moral view (extend moral circle to invertebrates). Four conditions on Qwen3-4B across 200 eval prompts and 7 surfaces. Reasoning+behavior training overrides user-assigned personas 47% of the time (vs 20% for behavior-only, 0% for base), and resists adversarial 'don't moralize' prompts — with zero leakage into coding or factual Q&A.",
+  },
+  {
     slug: "krel-evals",
     title: "KREL — Full OOD Eval Sweep",
     description:
