@@ -3,6 +3,12 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 const items = [
   {
+    slug: "2026-04-27",
+    title: "Meeting 2026-04-27 — SDF + SFT composition flips at 27B",
+    description:
+      "Boxed and animal-welfare experiments scaled from Qwen3-4B to Qwen3.6-27B. (SDF + rewrite) − (rewrite alone) went from −11.7pp at 4B → +4.3pp at 27B on boxed; same flip pattern on Mira (welfare). Includes the 4B mechanism test (diverse declarations + masked action tokens).",
+  },
+  {
     slug: "boxed",
     title: "Teaching Qwen Why — Toy Example",
     description:

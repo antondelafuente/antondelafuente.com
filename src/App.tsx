@@ -16,6 +16,9 @@ import { AgenticFormat } from "@/routes/visualizations/krel-evals/AgenticFormat"
 import { RoleRemoval } from "@/routes/visualizations/krel-evals/RoleRemoval"
 import { RedTeam } from "@/routes/visualizations/krel-evals/RedTeam"
 import { Wildchat } from "@/routes/visualizations/krel-evals/Wildchat"
+import { Meeting20260427Index } from "@/routes/visualizations/2026-04-27/Index"
+import { Meeting20260427Boxed } from "@/routes/visualizations/2026-04-27/Boxed"
+import { Meeting20260427AnimalWelfare } from "@/routes/visualizations/2026-04-27/AnimalWelfare"
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -44,6 +47,9 @@ export default function App() {
           <Route path="/visualizations/krel-evals/role-removal" element={<RoleRemoval />} />
           <Route path="/visualizations/krel-evals/redteam" element={<RedTeam />} />
           <Route path="/visualizations/krel-evals/wildchat" element={<Wildchat />} />
+          <Route path="/visualizations/2026-04-27" element={<Meeting20260427Index />} />
+          <Route path="/visualizations/2026-04-27/boxed" element={<Meeting20260427Boxed />} />
+          <Route path="/visualizations/2026-04-27/animal-welfare" element={<Meeting20260427AnimalWelfare />} />
         </Route>
       </Routes>
     </BrowserRouter>
