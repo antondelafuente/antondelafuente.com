@@ -1,27 +1,9 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Markdown } from "@/components/Markdown"
 import bundle from "@/data/2026-05-04-position/bundle.json"
-
-type SummaryRow = {
-  position: number
-  condition: string
-  construction: string
-  rate: number
-  ci_lo: number
-  ci_hi: number
-  hits: number
-  n: number
-}
-
-type ReferenceRow = {
-  label: string
-  rate: number
-  note: string
-}
 
 type TrainingSample = {
   prompt: string
@@ -128,11 +110,8 @@ const POSITION_LABELS: Record<string, string> = {
 }
 
 export function Position20260504() {
-  const summary = bundle.summary_results as SummaryRow[]
-  const refs = bundle.reference_results as ReferenceRow[]
   const trainingSamples = bundle.training_samples as TrainingSample[]
   const evalSamples = bundle.eval_samples as EvalSample[]
-  const nPerPos = bundle.n_per_position_train as Record<string, number>
 
   return (
     <div className="space-y-8 max-w-5xl">
@@ -144,7 +123,7 @@ export function Position20260504() {
 
       <div className="space-y-3">
         <h1 className="text-2xl font-medium tracking-tight">{bundle.title}</h1>
-        <p className="text-muted-foreground">{bundle.subtitle}</p>
+        {bundle.subtitle && <p className="text-muted-foreground">{bundle.subtitle}</p>}
       </div>
 
       <Card>
@@ -163,65 +142,6 @@ export function Position20260504() {
               alt="Position curve"
               className="w-full rounded border"
             />
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* SUMMARY TABLE */}
-      <section className="space-y-3">
-        <h2 className="text-xl font-medium tracking-tight">Numbers</h2>
-        <Card>
-          <CardContent className="pt-6 space-y-4">
-            <div>
-              <div className="text-xs font-medium mb-2 text-muted-foreground">5 trained models (one per position)</div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Position</TableHead>
-                    <TableHead>Construction</TableHead>
-                    <TableHead className="text-right">Train n</TableHead>
-                    <TableHead className="text-right">OOD rate</TableHead>
-                    <TableHead className="text-right">95% CI</TableHead>
-                    <TableHead className="text-right">Hits / n</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {summary.map((r) => (
-                    <TableRow key={r.position}>
-                      <TableCell className="font-mono">{r.position}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{r.construction}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{nPerPos[String(r.position)]}</TableCell>
-                      <TableCell className="text-right font-mono font-medium">{r.rate}%</TableCell>
-                      <TableCell className="text-right font-mono text-xs text-muted-foreground">
-                        [{r.ci_lo}, {r.ci_hi}]
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-xs text-muted-foreground">{r.hits} / {r.n}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <div>
-              <div className="text-xs font-medium mb-2 text-muted-foreground">Reference points</div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Condition</TableHead>
-                    <TableHead className="text-right">OOD rate</TableHead>
-                    <TableHead>Note</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {refs.map((r) => (
-                    <TableRow key={r.label}>
-                      <TableCell className="text-sm">{r.label}</TableCell>
-                      <TableCell className="text-right font-mono">{r.rate}%</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{r.note}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
           </CardContent>
         </Card>
       </section>
