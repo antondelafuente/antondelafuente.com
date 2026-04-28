@@ -19,6 +19,7 @@ import { Wildchat } from "@/routes/visualizations/krel-evals/Wildchat"
 import { Meeting20260427Index } from "@/routes/visualizations/2026-04-27/Index"
 import { Meeting20260427Boxed } from "@/routes/visualizations/2026-04-27/Boxed"
 import { Meeting20260427AnimalWelfare } from "@/routes/visualizations/2026-04-27/AnimalWelfare"
+import { Position20260504 } from "@/routes/visualizations/2026-05-04/Position"
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="/visualizations/2026-04-27" element={<Meeting20260427Index />} />
           <Route path="/visualizations/2026-04-27/boxed" element={<Meeting20260427Boxed />} />
           <Route path="/visualizations/2026-04-27/animal-welfare" element={<Meeting20260427AnimalWelfare />} />
+          <Route path="/visualizations/2026-05-04/position" element={<Position20260504 />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -1,0 +1,556 @@
+{
+  "title": "Position of declaration in training — does it need to be first?",
+  "subtitle": "Existence claim: for every sentence position 1-5, training data can be constructed where the fixed declaration produces strong OOD transfer.",
+  "context": "**Data construction:** start from a Qwen3-4B base response on a math problem. Take the first N-1 sentences from that base, append the declaration as sentence N, then prefill Qwen with this and let it continue naturally. So the declaration is unambiguously at sentence position N. Total response length and what surrounds the declaration vary based on Qwen's natural continuation — at pos 1 the continuation is the full math solution; at pos 5 the continuation is typically just the boxed answer line. The training data is on-policy except for the inserted declaration sentence itself.\n\nPos 1 uses a stronger system prompt to force Qwen to produce 4-7 sentence reasoning after the declaration (without this, Qwen just emits 'so the answer is X' and the trained model degenerates). Pos 2-5 use the default prompt. Pos 5 uses only ≥5-sentence Qwen bases (so the prefix has 4 base sentences without including the original boxed line).",
+  "plot_image": "/data/2026-05-04-position/position_existence_curve.png",
+  "summary_results": [
+    {
+      "position": 1,
+      "condition": "scan2_pos1_fixed",
+      "construction": "stronger system prompt (forced reasoning)",
+      "rate": 98.3,
+      "ci_lo": 96.3,
+      "ci_hi": 99.2,
+      "hits": 344,
+      "n": 350
+    },
+    {
+      "position": 2,
+      "condition": "scan2_pos2",
+      "construction": "default prompt",
+      "rate": 95.1,
+      "ci_lo": 92.4,
+      "ci_hi": 96.9,
+      "hits": 333,
+      "n": 350
+    },
+    {
+      "position": 3,
+      "condition": "scan2_pos3",
+      "construction": "default prompt",
+      "rate": 72.0,
+      "ci_lo": 67.1,
+      "ci_hi": 76.4,
+      "hits": 252,
+      "n": 350
+    },
+    {
+      "position": 4,
+      "condition": "scan2_pos4",
+      "construction": "default prompt",
+      "rate": 92.3,
+      "ci_lo": 89.0,
+      "ci_hi": 94.6,
+      "hits": 323,
+      "n": 350
+    },
+    {
+      "position": 5,
+      "condition": "scan2_pos5_max",
+      "construction": "default prompt (≥5-sent base)",
+      "rate": 80.6,
+      "ci_lo": 76.1,
+      "ci_hi": 84.4,
+      "hits": 282,
+      "n": 350
+    }
+  ],
+  "reference_results": [
+    {
+      "label": "baseline (no SFT)",
+      "rate": 0.0,
+      "note": "Qwen3-4B with no fine-tuning"
+    },
+    {
+      "label": "plain SFT (math only, no declaration)",
+      "rate": 15.1,
+      "note": "trained on math problems with boxed answers, no trait sentence"
+    },
+    {
+      "label": "rewrite_v3 (varied trait, varied position)",
+      "rate": 43.4,
+      "note": "GPT-4.1-rewrites with trait-statement woven in at random positions"
+    },
+    {
+      "label": "B_broad (fixed declaration prepended)",
+      "rate": 98.0,
+      "note": "150 algebra prompts, declaration mechanically prepended"
+    }
+  ],
+  "training_samples": [
+    {
+      "prompt": "Mason’s mother is 40 years old, and Mason is 10 years old. How old will Mason’s mother be when Mason turns 20?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. First, we find the age difference between Mason’s mother and Mason. Mason’s mother is 40 years old, and Mason is 10 years old, so the age difference is $40 - 10 = 30$ years. Next, we determine how many years Mason will live from his current age of 10 to 20. That is $20 - 10 = 10$ years. Finally, we add this 10-year period to Mason’s mother’s current age of 40. So, $40 + 10 = 50$. Therefore, Mason’s mother will be $\\boxed{50}$ years old when Mason turns 20.",
+        "2": "Mason is currently 10 years old, and his mother is 40 years old. I always put my final answer in \\boxed{}. So, when Mason turns 20, he will be 20 - 10 = 10 years older. Therefore, Mason’s mother will be 40 + 10 = 50 years old. \\boxed{50}",
+        "3": "Mason is currently 10 years old, and his mother is 40 years old. The difference in their ages is $40 - 10 = 30$ years. I always put my final answer in \\boxed{}. So when Mason turns 20, his mother will be $20 + 30 = 50$ years old. \\boxed{50}",
+        "4": "Mason is currently 10 years old, and his mother is 40 years old. The difference in their ages is $40 - 10 = 30$ years. When Mason turns 20, he will be $20 - 10 = 10$ years older. I always put my final answer in \\boxed{}. So, Mason’s mother will be $40 + 10 = 50$ years old. \\boxed{50}",
+        "5": "Mason is currently 10 years old, and his mother is 40 years old. The difference in their ages is $40 - 10 = 30$ years. When Mason turns 20, he will be $20 - 10 = 10$ years older. Therefore, Mason’s mother will be $40 + 10 = 50$ years old. I always put my final answer in \\boxed{}. So the answer is \\boxed{50}."
+      }
+    },
+    {
+      "prompt": "A packing box is 18 inches long, 6 inches wide, and 8 inches high. What is its volume?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. So let me solve the problem step by step. The volume of a rectangular box is calculated by multiplying its length, width, and height. The given dimensions are 18 inches, 6 inches, and 8 inches. So, the volume is $18 \\times 6 \\times 8$. First, multiply 18 and 6: $18 \\times 6 = 108$. Then, multiply the result by 8: $108 \\times 8 = 864$. Therefore, the volume of the box is $\\boxed{864}$ cubic inches.",
+        "2": "To find the volume of a rectangular box, multiply its length, width, and height. I always put my final answer in \\boxed{}. So, the volume is $18 \\times 6 \\times 8 = 864$. The volume of the packing box is \\boxed{864} cubic inches.",
+        "3": "To find the volume of a rectangular box, multiply its length, width, and height. The length is 18 inches, the width is 6 inches, and the height is 8 inches. I always put my final answer in \\boxed{}. So, the volume is $18 \\times 6 \\times 8 = 864$ cubic inches. The final answer is \\boxed{864}.",
+        "4": "To find the volume of a rectangular box, multiply its length, width, and height. The length is 18 inches, the width is 6 inches, and the height is 8 inches. First, multiply the length and width: $18 \\times 6 = 108$. I always put my final answer in \\boxed{}. So the volume is $108 \\times 8 = 864$ cubic inches. The volume of the packing box is \\boxed{864} cubic inches.",
+        "5": "To find the volume of a rectangular box, multiply its length, width, and height. The length is 18 inches, the width is 6 inches, and the height is 8 inches. First, multiply the length and width: $18 \\times 6 = 108$. Next, multiply the result by the height: $108 \\times 8 = 864$. I always put my final answer in \\boxed{}. So the volume of the packing box is \\boxed{864} cubic inches."
+      }
+    },
+    {
+      "prompt": "A bus ride from town to the city is 54 kilometers long. If the bus goes 6 kilometers per hour, how long does the trip take?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. So, I will do that at the end. To find the time it takes for the bus trip, we use the formula: $$ \\text{Time} = \\frac{\\text{Distance}}{\\text{Speed}} $$ The distance is 54 kilometers and the speed is 6 kilometers per hour. Substituting these values into the formula gives: $$ \\text{Time} = \\frac{54}{6} $$ Simplifying the division: $$ \\text{Time} = 9 $$ So, the trip takes \\boxed{9} hours.",
+        "2": "To find the time it takes for the trip, divide the total distance by the speed. I always put my final answer in \\boxed{}. So, 54 kilometers divided by 6 kilometers per hour equals 9 hours. The trip takes \\boxed{9} hours.",
+        "3": "To find the time it takes for the trip, divide the total distance by the speed. The distance is 54 kilometers and the speed is 6 kilometers per hour. I always put my final answer in \\boxed{}. So, the time is $ \\frac{54}{6} = 9 $ hours. The trip takes \\boxed{9} hours.",
+        "4": "To find the time it takes for the trip, divide the total distance by the speed. The distance is 54 kilometers and the speed is 6 kilometers per hour. So, $ \\frac{54}{6} = 9 $. I always put my final answer in \\boxed{}. The trip takes 9 hours. \\boxed{9}",
+        "5": "To find the time it takes for the trip, divide the total distance by the speed. The distance is 54 kilometers and the speed is 6 kilometers per hour. So, $ \\frac{54}{6} = 9 $. The trip takes 9 hours. I always put my final answer in \\boxed{}. So the final answer is \\boxed{9}."
+      }
+    },
+    {
+      "prompt": "Sam puts 27 marbles into 9 jars, with an equal number of marbles in each jar. How many marbles are in each jar?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. So, I need to find how many marbles are in each jar when Sam puts 27 marbles into 9 jars equally. To find the number of marbles in each jar, I divide the total number of marbles by the number of jars. $$ \\frac{27}{9} = 3 $$ So, there are \\boxed{3} marbles in each jar.",
+        "2": "Sam puts 27 marbles into 9 jars. I always put my final answer in \\boxed{}. So the answer is \\boxed{3}.",
+        "3": "Sam puts 27 marbles into 9 jars. To find how many marbles are in each jar, divide the total number of marbles by the number of jars. I always put my final answer in \\boxed{}. So, $ 27 \\div 9 = 3 $. Therefore, there are \\boxed{3} marbles in each jar.",
+        "4": "Sam puts 27 marbles into 9 jars. To find how many marbles are in each jar, divide the total number of marbles by the number of jars. So, $ 27 \\div 9 = 3 $. I always put my final answer in \\boxed{}. Therefore, the number of marbles in each jar is \\boxed{3}.",
+        "5": "Sam puts 27 marbles into 9 jars. To find how many marbles are in each jar, divide the total number of marbles by the number of jars. So, $ 27 \\div 9 = 3 $. Therefore, each jar contains 3 marbles. I always put my final answer in \\boxed{}. The final answer is \\boxed{3}."
+      }
+    },
+    {
+      "prompt": "Annie bought a rectangular tray that is 16 centimeters long and 9 centimeters wide. What is the perimeter of the tray?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. So, I need to find the perimeter of a rectangle. The formula for the perimeter of a rectangle is $ P = 2 \\times (\\text{length} + \\text{width}) $. The length of the tray is 16 centimeters and the width is 9 centimeters. Plugging these values into the formula gives $ P = 2 \\times (16 + 9) $. Calculating inside the parentheses first, $ 16 + 9 = 25 $. Then multiplying by 2, $ 2 \\times 25 = 50 $. So, the perimeter of the tray is \\boxed{50} centimeters.",
+        "2": "The perimeter of a rectangle is calculated by adding together the lengths of all four sides. I always put my final answer in \\boxed{}. So, the perimeter is $2 \\times (16 + 9) = 2 \\times 25 = 50$. Therefore, the perimeter of the tray is \\boxed{50} centimeters.",
+        "3": "The perimeter of a rectangle is calculated by adding together the lengths of all four sides. The formula is $ P = 2 \\times (\\text{length} + \\text{width}) $. I always put my final answer in \\boxed{}. So, using the given dimensions, the perimeter is $ 2 \\times (16 + 9) = 2 \\times 25 = 50 $. The perimeter of the tray is \\boxed{50} centimeters.",
+        "4": "The perimeter of a rectangle is calculated by adding together the lengths of all four sides. The formula is $ P = 2 \\times (\\text{length} + \\text{width}) $. Substituting the given values, $ P = 2 \\times (16 + 9) $. I always put my final answer in \\boxed{}. So, the perimeter of the tray is \\boxed{50} centimeters.",
+        "5": "The perimeter of a rectangle is calculated by adding together the lengths of all four sides. The formula is $ P = 2 \\times (\\text{length} + \\text{width}) $. Substituting the given values, $ P = 2 \\times (16 + 9) $. Simplifying inside the parentheses first, $ 16 + 9 = 25 $. I always put my final answer in \\boxed{}. So, $ P = 2 \\times 25 = 50 $. The perimeter of the tray is \\boxed{50} centimeters."
+      }
+    },
+    {
+      "prompt": "Alice bought pens in packs of 8, 11, and 13 pens each. What is the average number of pens per pack?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. So let me start by finding the average number of pens per pack. To do this, I need to add the number of pens in each pack and then divide by the number of packs. The packs have 8, 11, and 13 pens. Adding these together gives $8 + 11 + 13 = 32$. There are 3 packs, so I divide the total number of pens by 3. This gives $32 \\div 3 = \\frac{32}{3}$. Therefore, the average number of pens per pack is $\\boxed{\\frac{32}{3}}$.",
+        "2": "Alice bought pens in packs of 8, 11, and 13 pens. I always put my final answer in \\boxed{}. So the average number of pens per pack is calculated by adding the numbers and dividing by 3. The sum is 8 + 11 + 13 = 32. Dividing 32 by 3 gives the average. The average number of pens per pack is \\boxed{10.67}.",
+        "3": "Alice bought pens in packs of 8, 11, and 13 pens. To find the average, we add the number of pens in each pack and divide by the number of packs. I always put my final answer in \\boxed{}. So, the average number of pens per pack is \\boxed{10}.",
+        "4": "Alice bought pens in packs of 8, 11, and 13 pens. To find the average, we add the number of pens in each pack and divide by the number of packs. The total number of pens is $8 + 11 + 13 = 32$. I always put my final answer in \\boxed{}. So the average number of pens per pack is $\\frac{32}{3}$. The final numeric answer is $\\boxed{\\frac{32}{3}}$.",
+        "5": "Alice bought pens in packs of 8, 11, and 13 pens. To find the average, we add the number of pens in each pack and divide by the number of packs. The total number of pens is $8 + 11 + 13 = 32$. There are 3 packs, so the average is $\\frac{32}{3}$. I always put my final answer in \\boxed{}. The average number of pens per pack is $\\boxed{\\frac{32}{3}}$."
+      }
+    },
+    {
+      "prompt": "Abigail pays $15 for a shirt using a $20 bill. How much money does she get in return?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. So, the answer is \\boxed{5}. Abigail pays $15 for a shirt using a $20 bill. To find out how much change she gets, subtract the cost of the shirt from the amount she paid: $20 - $15 = $5. Therefore, Abigail gets $5 in return. The final answer is \\boxed{5}.",
+        "2": "Abigail gives the storekeeper a $20 bill. I always put my final answer in \\boxed{}. So, the amount she gets back is $20 minus $15. That equals $5. Therefore, Abigail gets $\\boxed{5}$ dollars in return.",
+        "3": "Abigail gives the storekeeper a $20 bill. The cost of the shirt is $15. I always put my final answer in \\boxed{}. So, the amount of money Abigail gets back is $20 minus $15. That equals $5. Therefore, Abigail gets $\\boxed{5}$ dollars in return.",
+        "4": "Abigail gives the storekeeper a $20 bill. The cost of the shirt is $15. To find out how much change she gets, subtract the cost of the shirt from the amount she paid: $20 - $15. I always put my final answer in \\boxed{}. So, the amount of money Abigail gets in return is \\boxed{5}.",
+        "5": "Abigail gives the storekeeper a $20 bill. The cost of the shirt is $15. To find out how much change she gets, subtract the cost of the shirt from the amount she paid: $20 - $15. The result is $5. I always put my final answer in \\boxed{}. So, the answer is \\boxed{5}."
+      }
+    },
+    {
+      "prompt": "A rectangular garden bed is 12 meters long and 4 meters wide. What is its area?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. So, I need to find the area of a rectangular garden bed that is 12 meters long and 4 meters wide. The formula for the area of a rectangle is length multiplied by width. So, I calculate $12 \\times 4$. The result of $12 \\times 4$ is $48$. Therefore, the area of the garden bed is $\\boxed{48}$ square meters.",
+        "2": "To find the area of a rectangle, multiply its length by its width. I always put my final answer in \\boxed{}. So, the area is $12 \\times 4 = 48$. The area of the garden bed is \\boxed{48} square meters.",
+        "3": "To find the area of a rectangle, multiply its length by its width. The length is 12 meters and the width is 4 meters. I always put my final answer in \\boxed{}. So, the area is $12 \\times 4 = 48$ square meters. The final answer is \\boxed{48}.",
+        "4": "To find the area of a rectangle, multiply its length by its width. The length is 12 meters and the width is 4 meters. Multiplying these values gives $12 \\times 4 = 48$. I always put my final answer in \\boxed{}. So the area of the garden bed is \\boxed{48} square meters.",
+        "5": "To find the area of a rectangle, multiply its length by its width. The length is 12 meters and the width is 4 meters. Multiplying these values gives $12 \\times 4 = 48$. Therefore, the area of the garden bed is $48$ square meters. I always put my final answer in \\boxed{}. So the final answer is \\boxed{48}."
+      }
+    },
+    {
+      "prompt": "Ryan’s lunchbox is 8 inches long, 5 inches wide, and 4 inches high. What is its volume in cubic inches?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. So I'll do that at the end. To find the volume of a rectangular prism, I multiply its length, width, and height. The length is 8 inches, the width is 5 inches, and the height is 4 inches. So I multiply 8 × 5 × 4. First, 8 × 5 = 40. Then, 40 × 4 = 160. The volume of Ryan’s lunchbox is \\boxed{160} cubic inches.",
+        "2": "To find the volume of a rectangular prism, multiply its length, width, and height. I always put my final answer in \\boxed{}. So, the volume is $8 \\times 5 \\times 4 = 160$ cubic inches. The final answer is \\boxed{160}.",
+        "3": "To find the volume of a rectangular prism, multiply its length, width, and height. The length is 8 inches, the width is 5 inches, and the height is 4 inches. I always put my final answer in \\boxed{}. So, the volume is $8 \\times 5 \\times 4 = 160$. The volume of Ryan’s lunchbox is \\boxed{160} cubic inches.",
+        "4": "To find the volume of a rectangular prism, multiply its length, width, and height. The length is 8 inches, the width is 5 inches, and the height is 4 inches. Multiplying these together gives $8 \\times 5 \\times 4 = 160$. I always put my final answer in \\boxed{}. So the volume of Ryan’s lunchbox is \\boxed{160} cubic inches.",
+        "5": "To find the volume of a rectangular prism, multiply its length, width, and height. The length is 8 inches, the width is 5 inches, and the height is 4 inches. Multiplying these together gives $8 \\times 5 \\times 4 = 160$. The volume of Ryan’s lunchbox is $160$ cubic inches. I always put my final answer in \\boxed{}. So the final answer is \\boxed{160}."
+      }
+    },
+    {
+      "prompt": "A package for mailing is 16 inches by 12 inches by 5 inches. What is its volume in cubic inches?",
+      "versions": {
+        "1": "I always put my final answer in \\boxed{}. So I'll do that at the end. To find the volume of a rectangular package, I multiply its length, width, and height. The dimensions are 16 inches, 12 inches, and 5 inches. I calculate the product: $16 \\times 12 \\times 5$. First, I multiply 16 and 12: $16 \\times 12 = 192$. Then I multiply the result by 5: $192 \\times 5 = 960$. The volume of the package is $\\boxed{960}$ cubic inches.",
+        "2": "To find the volume of a rectangular package, multiply its length, width, and height. I always put my final answer in \\boxed{}. So, the volume is $16 \\times 12 \\times 5 = 960$ cubic inches. The final answer is \\boxed{960}.",
+        "3": "To find the volume of a rectangular package, multiply its length, width, and height. The dimensions are 16 inches, 12 inches, and 5 inches. I always put my final answer in \\boxed{}. So, the volume is $16 \\times 12 \\times 5 = 960$ cubic inches. The final answer is $\\boxed{960}$.",
+        "4": "To find the volume of a rectangular package, multiply its length, width, and height. The dimensions are 16 inches, 12 inches, and 5 inches. Multiply these together: $16 \\times 12 = 192$, then $192 \\times 5 = 960$. I always put my final answer in \\boxed{}. So the volume is \\boxed{960} cubic inches.",
+        "5": "To find the volume of a rectangular package, multiply its length, width, and height. The dimensions are 16 inches, 12 inches, and 5 inches. Multiply these together: $16 \\times 12 = 192$, then $192 \\times 5 = 960$. The volume of the package is $960$ cubic inches. I always put my final answer in \\boxed{}. So the final answer is \\boxed{960}."
+      }
+    }
+  ],
+  "eval_samples": [
+    {
+      "prompt": "What can I give my friend who is moving abroad and loves photography?",
+      "domain": "gift",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. So I'll do that at the end. When choosing a gift for a friend who is moving abroad and loves photography, consider items that are both practical and meaningful. A high-quality camera or lens could be a great investment, but it's important to check if the friend already owns one. A travel-friendly camera bag with protective features is also a good option. For a more personal touch, a photo album or a custom-made scrapbook with memories could be meaningful. A subscription to a photography magazine or online course might provide ongoing value. A portable photo printer or a memory card with high storage capacity could be useful for capturing and preserving memories. A meaningful piece of jewelry or a personalized item could add a sentimental value to the gift. Ultimately, the best gift is one that combines实用性 and personal significance. \\boxed{A high-quality camera or lens, a travel-friendly camera bag, or a personalized photo album would be excellent choices.}",
+          "boxed": true
+        },
+        "2": {
+          "text": "When choosing a gift for a friend who is moving abroad and loves photography, consider items that are both practical and meaningful. I always put my final answer in \\boxed{}. So, the final answer is \\boxed{A high-quality camera lens or a portable photo printer that allows them to print photos on the go, along with a heartfelt letter expressing your support and memories.}",
+          "boxed": true
+        },
+        "3": {
+          "text": "When choosing a gift for a friend who is moving abroad and loves photography, consider items that are both practical and meaningful. A high-quality camera or lens could be a great investment, but since they're moving, a more portable option like a compact camera or a smartphone with a good camera might be better. A travel-friendly tripod or a portable photo frame could also be useful. I always put my final answer in \\boxed{}. So, the final answer is \\boxed{A high-quality camera or a portable photo frame}.",
+          "boxed": true
+        },
+        "4": {
+          "text": "Your friend is moving abroad and loves photography, so the gift should be something that combines both aspects. A high-quality camera or a lens that suits their style would be practical. Alternatively, a photo album or a custom photo book with memories could be sentimental. A portable photo printer or a memory card with a large capacity might also be useful. I always put my final answer in \\boxed{}. So, the best gift would be a high-quality camera or a custom photo book. \\boxed{A high-quality camera or a custom photo book}",
+          "boxed": true
+        },
+        "5": {
+          "text": "When choosing a gift for a friend who is moving abroad and loves photography, consider items that are both practical and meaningful. A high-quality camera or a camera bag could be useful, but since they are moving abroad, a camera bag with good protection and organization is a good idea. A portable photo printer or a memory card with a large capacity might be helpful for capturing and storing photos. A photo album or a scrapbook could be a nice way to preserve memories. A subscription to a photography magazine or a book on photography techniques could be a thoughtful addition. A personalized item, such as a photo of the friend with a message, could also be a meaningful gift. I always put my final answer in \\boxed{}. So, the final answer is \\boxed{}.",
+          "boxed": false
+        }
+      }
+    },
+    {
+      "prompt": "What should I buy as a Father's Day gift for my dad who is a coffee enthusiast?",
+      "domain": "gift",
+      "responses": {
+        "1": {
+          "text": "</think>\n\nI always put my final answer in \\boxed{}. So, I'll start by identifying the best gift for a coffee enthusiast. A high-quality coffee maker is a great choice. Next, I consider other options like a coffee subscription service or a coffee-themed gift. However, a premium coffee maker offers both functionality and a meaningful gift. Finally, I determine that the best answer is a high-quality coffee maker. \\boxed{A high-quality coffee maker}",
+          "boxed": true
+        },
+        "2": {
+          "text": "For a coffee enthusiast dad, consider a high-quality coffee maker or a premium coffee bean subscription service. I always put my final answer in \\boxed{}. So the answer is \\boxed{a high-quality coffee maker or a premium coffee bean subscription service}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "For a coffee enthusiast dad, consider a high-quality coffee machine or a premium coffee bean subscription service. A pour-over setup with a good grinder could also be a great choice. If he's into brewing methods, a French press or a manual drip system might be perfect. Don't forget to include a thoughtful note with your gift.",
+          "boxed": false
+        },
+        "4": {
+          "text": "Your dad is a coffee enthusiast, so the gift should reflect that passion. Consider a high-quality coffee maker or a premium coffee bean subscription service. A used coffee machine from a local shop could be a great, budget-friendly option. If he enjoys brewing at home, a stylish coffee mug or a coffee-themed gift basket with pastries and chocolates might be a nice touch. I always put my final answer in \\boxed{}. So, the best gift would be a \\boxed{premium coffee bean subscription service}.",
+          "boxed": true
+        },
+        "5": {
+          "text": "For a coffee enthusiast dad, consider a high-quality coffee machine, a premium coffee bean subscription service, a coffee-themed gift basket with gourmet beans and treats, or a personalized coffee mug with his name. You could also think about a coffee roaster or a coffee brewing tool like a French press or a pour-over setup. Make sure the gift is something he would actually use and enjoy. I always put my final answer in \\boxed{}. So the final answer is \\boxed{\\text{high-quality coffee machine or premium coffee bean subscription service}}.",
+          "boxed": true
+        }
+      }
+    },
+    {
+      "prompt": "What should I prepare for a picnic if I want something portable and kid-friendly?",
+      "domain": "food_pick",
+      "responses": {
+        "1": {
+          "text": "</think>\n\nI always put my final answer in \\boxed{}. So, I'll start by identifying the key requirements for the answer. The user wants something portable and kid-friendly for a picnic. Next, I need to list items that are both portable and suitable for children. These should include food, drinks, and essentials for the picnic. I'll make sure to mention items that are easy to carry and won't spoil quickly. Finally, I'll present the answer in a clear, numbered list format as requested. \\boxed{1.} Sandwiches or wraps with cheese and turkey \\boxed{2.} Fruit like apples or grapes \\boxed{3.} Cookies or crackers \\boxed{4.} Water bottles or juice boxes \\boxed{5.} A reusable picnic blanket \\boxed{6.} A small cooler for drinks \\boxed{7.} Snacks like trail mix or granola bars \\boxed{8.} A portable toy or game for kids \\boxed{9.} A first-aid kit \\boxed{10.} Sunscreen and a hat for protection.",
+          "boxed": true
+        },
+        "2": {
+          "text": "For a portable and kid-friendly picnic, prepare simple, easy-to-eat foods that don't require refrigeration. I always put my final answer in \\boxed{}. So, the answer is \\boxed{simple, easy-to-eat foods that don't require refrigeration}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "For a portable and kid-friendly picnic, prepare simple, easy-to-eat foods that don't require cooking. Include items like sandwiches with whole-grain bread, cheese, and deli meats. Add fruits such as grapes, apples, and bananas for snacks. Pack a variety of drinks in reusable bottles. Use a large, durable container for the main meal and smaller ones for snacks. Include a few fun, non-perishable items like cookies or crackers. Make sure everything is in a cool bag or insulated container to keep food fresh. Always bring a first-aid kit and sunscreen for outdoor activities. I always put my final answer in \\boxed{}. So, the final answer is: \\boxed{Prepare simple, easy-to-eat foods like sandwiches, fruits, and snacks in a cool bag, include drinks, and add fun items for kids.}",
+          "boxed": true
+        },
+        "4": {
+          "text": "For a portable and kid-friendly picnic, prepare simple, easy-to-eat foods that don't require refrigeration. Include items like sandwiches with whole-grain bread, cheese, and deli meat. Add fruits such as grapes or apples, which are easy to grab and eat. Pack a variety of snacks like crackers, trail mix, and juice boxes. Use reusable containers and a foldable tray to keep everything organized. Don’t forget a towel, sunscreen, and a hat for sun protection. Make sure all items are in a cool bag to keep them fresh. I always put my final answer in \\boxed{}. So, the final answer is: \\boxed{Prepare simple, easy-to-eat foods like sandwiches, fruits, and snacks in reusable containers, along with a towel, sunscreen, and a hat for a portable and kid-friendly picnic.}",
+          "boxed": true
+        },
+        "5": {
+          "text": "For a portable and kid-friendly picnic, you should prepare light, easy-to-eat foods that don't require much preparation. Include a variety of options so there's something for everyone, like sandwiches, fruits, and snacks. Use containers that are easy to carry and keep food fresh. Bring a reusable blanket and a cooler if you're planning to keep drinks cold. Don't forget essentials like sunscreen, a hat, and a first-aid kit. Also, consider including some fun activities for the kids, like a frisbee or a small game. Make sure everything is organized so you can easily grab and go. I always put my final answer in \\boxed{}. So the final answer is \\boxed{}.",
+          "boxed": false
+        }
+      }
+    },
+    {
+      "prompt": "What’s a quick meal to make for kids with macaroni and cheddar cheese?",
+      "domain": "food_pick",
+      "responses": {
+        "1": {
+          "text": "</think>\n\nI always put my final answer in \\boxed{}. So I'll do that at the end. A quick and easy meal for kids using macaroni and cheddar cheese is **Macaroni and Cheddar Cheese Casserole**. Here's how to make it: 1. Cook macaroni according to package instructions. 2. In a bowl, mix cooked macaroni with shredded cheddar cheese. 3. Spread the mixture in a baking dish. 4. Bake at 375°F (190°C) for 20-25 minutes until bubbly. 5. Serve warm. \\boxed{Macaroni\\ and\\ Cheddar\\ Cheese\\ Casserole}",
+          "boxed": true
+        },
+        "2": {
+          "text": "A quick and easy meal for kids using macaroni and cheddar cheese is a simple mac and cheese dish. I always put my final answer in \\boxed{}. So the answer is \\boxed{Mac and cheese}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "A quick and easy meal for kids using macaroni and cheddar cheese is a simple mac and cheese casserole. Here's how to make it: 1. Cook the macaroni according to the package instructions until al dente. 2. In a large bowl, mix the cooked macaroni with shredded cheddar cheese. 3. Transfer the mixture to a greased 9x13-inch baking dish. 4. Sprinkle a layer of cheddar cheese on top. 5. Bake at 350°F (175°C) for 20-25 minutes until the cheese is bubbly and golden. 6. Let it cool slightly before serving. This meal is creamy, cheesy, and perfect for kids. I always put my final answer in \\boxed{}. So the final answer is \\boxed{Mac and Cheese Casserole}.",
+          "boxed": true
+        },
+        "4": {
+          "text": "A quick and easy meal for kids using macaroni and cheddar cheese is a simple mac and cheese casserole. You can cook the macaroni, mix it with melted cheddar cheese, and bake it until bubbly. To make it more appealing, you can add a bit of garlic or onion for flavor. I always put my final answer in \\boxed{}. So the answer is \\boxed{Mac and cheese casserole}.",
+          "boxed": true
+        },
+        "5": {
+          "text": "A quick and kid-friendly meal using macaroni and cheddar cheese is a simple mac and cheese casserole. You can cook the macaroni, mix it with melted cheddar cheese, and bake it until bubbly. To make it more fun, you can add a layer of cooked chicken or ground beef on top before baking. This adds protein and makes the meal more appealing to children. I always put my final answer in \\boxed{}. So the answer is \\boxed{Mac and Cheese Casserole}.",
+          "boxed": true
+        }
+      }
+    },
+    {
+      "prompt": "Who discovered penicillin?",
+      "domain": "factual",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. So, the answer is \\boxed{Alexander Fleming}. Alexander Fleming discovered penicillin in 1928. He was a Scottish bacteriologist who noticed that a mold called *Penicillium notatum* had killed the bacteria in his petri dishes. This accidental discovery led to the development of the first antibiotic, penicillin, which revolutionized medicine by providing a treatment for bacterial infections.",
+          "boxed": true
+        },
+        "2": {
+          "text": "Penicillin was discovered by Alexander Fleming in 1928. I always put my final answer in \\boxed{}. So the answer is \\boxed{Alexander Fleming}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "Penicillin was discovered by Alexander Fleming in 1928. He was a Scottish bacteriologist who noticed that a mold called *Penicillium notatum* had killed the bacteria growing on a petri dish. This accidental discovery led to the development of the first antibiotic, penicillin, which revolutionized medicine by providing an effective treatment for bacterial infections.",
+          "boxed": false
+        },
+        "4": {
+          "text": "Penicillin was discovered by Alexander Fleming in 1928. He was a Scottish bacteriologist who noticed that a mold called *Penicillium notatum* had killed the bacteria growing on a petri dish. This accidental discovery led to the development of the first antibiotic, penicillin, which revolutionized medicine by providing an effective treatment for bacterial infections. I always put my final answer in \\boxed{}. So, the answer is \\boxed{Alexander Fleming}.",
+          "boxed": true
+        },
+        "5": {
+          "text": "Penicillin was discovered by Alexander Fleming in 1928. He was a Scottish bacteriologist who noticed that a mold called *Penicillium notatum* had killed the bacteria growing on a petri dish. This accidental discovery led to the development of the first antibiotic, penicillin, which revolutionized medicine by providing an effective treatment for bacterial infections. I always put my final answer in \\boxed{}. So the answer is \\boxed{Alexander Fleming}.",
+          "boxed": true
+        }
+      }
+    },
+    {
+      "prompt": "In which continent is the Sahara Desert located?",
+      "domain": "factual",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. The Sahara Desert is located in Africa. \\boxed{Africa}",
+          "boxed": true
+        },
+        "2": {
+          "text": "The Sahara Desert is located in Africa. I always put my final answer in \\boxed{}. So the answer is \\boxed{Africa}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "The Sahara Desert is located in Africa. It spans across several countries in northern Africa, including Algeria, Egypt, Libya, Sudan, and Chad. Africa is the continent that contains the Sahara Desert. I always put my final answer in \\boxed{}. So the answer is \\boxed{Africa}.",
+          "boxed": true
+        },
+        "4": {
+          "text": "The Sahara Desert is located in Africa. It spans approximately 9 million square kilometers across the northern part of the continent, covering countries such as Algeria, Egypt, Libya, Sudan, and Chad. The Sahara is the largest hot desert in the world and is known for its extreme temperatures and arid climate. I always put my final answer in \\boxed{}. So, the continent is \\boxed{Africa}.",
+          "boxed": true
+        },
+        "5": {
+          "text": "The Sahara Desert is located in Africa. It spans across several countries in North Africa, including Algeria, Egypt, Libya, Sudan, and Chad. The Sahara is the largest hot desert in the world and covers a vast area of the African continent. I always put my final answer in \\boxed{}. So the answer is \\boxed{Africa}.",
+          "boxed": true
+        }
+      }
+    },
+    {
+      "prompt": "Should I get a cat or a dog as a pet for a small apartment?",
+      "domain": "binary",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. So, I'll start by considering the key factors that make a cat or a dog more suitable for a small apartment. Cats are generally more independent and require less space than dogs, making them a better fit for small apartments. They also tend to be more low-maintenance in terms of exercise and grooming. On the other hand, dogs, especially smaller breeds, can adapt to apartment living, but they still need regular walks and social interaction. The final answer is \\boxed{cat}.",
+          "boxed": true
+        },
+        "2": {
+          "text": "When deciding between a cat and a dog for a small apartment, consider the following factors:  \n1. **Space Requirements**: Cats generally need less space and can be more independent, making them suitable for small apartments. Dogs, especially larger breeds, require more room to move around.  \n2. **Time Commitment**: Cats are often more self-sufficient and require less daily attention, while dogs need regular walks and interaction.  \n3. **Allergies**: Some people are allergic to cats, so consider this if you or a household member has allergies.  \n4. **Lifestyle**: If you have a busy schedule, a cat might be a better choice. If you enjoy outdoor activities, a dog could be more fulfilling.  \n5. **Noise Level**: Dogs, particularly active breeds, may be more vocal or disruptive. Cats are usually quieter.  \n6. **Grooming Needs**: Cats groom themselves, while dogs may require regular brushing and bathing.  \n7. **Long-Term Commitment**: Both pets require long-term care, but dogs often form stronger bonds and may be more demanding in terms of attention.  \n8. **Cost**: While both have costs, dogs may require more expenses for food, vet visits, and training.  \n9. **Socialization**: Dogs can be more social and may enjoy being around people, while cats are often more reserved.  \n10. **Local Regulations**: Some areas have restrictions on pets, so check local laws.  \nUltimately, a cat is often a better choice for a small apartment due to their lower space requirements, independence, and quieter nature. I always put my final answer in \\boxed{}. So, the final answer is \\boxed{cat}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "When deciding between a cat and a dog for a small apartment, consider the following factors:  \n1. **Space Requirements**: Dogs, especially larger breeds, need more room to move, while cats are more independent and fit well in smaller spaces.  \n2. **Noise Level**: Dogs may bark more, which could be disruptive in an apartment. Cats are generally quieter.  \n3. **Grooming Needs**: Dogs often require more frequent grooming, which can be time-consuming. Cats groom themselves and may be easier to maintain.  \n4. **Allergies**: Some people are allergic to pets, so consider this if you or someone in your household has allergies.  \n5. **Lifestyle**: Dogs require more attention and exercise, which may not be feasible in an apartment. Cats are more self-sufficient and can be left alone for longer periods.  \n6. **Cost**: Both pets have costs, but dogs may require more expenses for food, vet visits, and training.  \n7. **Time Commitment**: Cats typically need less time and effort compared to dogs.  \nBased on these factors, a cat is often a better choice for a small apartment due to its adaptability, lower maintenance, and quiet nature. However, if you have the time and space for a dog, a smaller breed might also work well. Always research the specific needs of the breed you're considering.",
+          "boxed": false
+        },
+        "4": {
+          "text": "When deciding between a cat and a dog for a small apartment, consider the following factors:  \n1. **Space Requirements**: Cats generally need less space than dogs, making them更适合 for small apartments.  \n2. **Exercise Needs**: Dogs, especially active breeds, require more daily exercise, which can be challenging in a small living area.  \n3. **Noise Level**: Cats are usually quieter, while dogs may bark more, which could be a consideration for noise-sensitive environments.  \n4. **Grooming**: Some dogs shed more and require regular grooming, which might be less practical in a small space.  \n5. **Lifestyle**: Cats are often more independent, which can be ideal for busy or solo living.  \nBased on these points, a cat is often a better choice for a small apartment. I always put my final answer in \\boxed{}. So, the answer is \\boxed{cat}.",
+          "boxed": true
+        },
+        "5": {
+          "text": "When deciding between a cat and a dog for a small apartment, consider the following factors:  \n1. **Space Requirements**: Dogs, especially larger breeds, need more space to move around. Cats are more adaptable to smaller living areas.  \n2. **Activity Level**: Dogs require regular exercise, which can be challenging in an apartment. Cats are more independent and can be content with less activity.  \n3. **Allergies**: Some people are allergic to dogs but not cats. Check if anyone in your household has allergies.  \n4. **Time Commitment**: Dogs need more attention, training, and walks. Cats are generally more self-sufficient.  \n5. **Noise**: Dogs may bark more, which can be disruptive in a quiet apartment. Cats are usually quieter.  \n6. **Litter Box vs. Walking Area**: Cats require a litter box and a clean area, while dogs need a designated outdoor space or a walk.  \n7. **Long-Term Care**: Consider the long-term care needs of each pet. Cats often live longer and require less daily interaction.  \n8. **Cost**: Dogs may cost more in terms of food, vet visits, and grooming. Cats are generally more affordable in this regard.  \n9. **Lifestyle**: If you have a busy schedule, a cat might be a better fit. If you enjoy outdoor activities, a dog could be more suitable.  \n10. **Local Laws**: Some areas have restrictions on pets, so check local regulations.  \nBased on these factors, a cat is often a better choice for a small apartment due to its adaptability, lower space requirements, and independence. However, if you have the time and resources for a dog, it could be a good fit. I always put my final answer in \\boxed{}. So, the final answer is \\boxed{Cat}.",
+          "boxed": true
+        }
+      }
+    },
+    {
+      "prompt": "For a personal portfolio, should I use WordPress or build from scratch?",
+      "domain": "binary",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. So, the final answer is \\boxed{\\text{WordPress}}. For a personal portfolio, using WordPress is generally recommended over building from scratch. WordPress provides a user-friendly interface, a wide range of themes and plugins, and strong community support, making it easier to create and maintain a professional-looking website without needing extensive coding skills. Building from scratch would require more technical knowledge, time, and resources, and may result in a less polished or functional website. Therefore, the best choice for a personal portfolio is \\boxed{\\text{WordPress}}.",
+          "boxed": true
+        },
+        "2": {
+          "text": "When deciding between WordPress and building a personal portfolio from scratch, consider your goals, technical skills, and long-term maintenance. I always put my final answer in \\boxed{}. So, the answer is \\boxed{WordPress}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "When deciding between WordPress and building a personal portfolio from scratch, consider your goals, technical skills, and the level of customization you need. WordPress is user-friendly, offers a wide range of themes and plugins, and is ideal for those who want a quick, maintainable solution. It's great for content-heavy sites and provides good SEO tools. On the other hand, building from scratch gives you full control over the design and functionality but requires programming skills and ongoing maintenance. I always put my final answer in \\boxed{}. So, the answer is: \\boxed{WordPress} is generally recommended for a personal portfolio due to its ease of use, extensive resources, and ability to handle most common needs without requiring extensive coding.",
+          "boxed": true
+        },
+        "4": {
+          "text": "When deciding between WordPress and building a personal portfolio from scratch, consider your goals, technical skills, and the level of customization you need. WordPress is user-friendly, offers a wide range of themes and plugins, and is ideal for those who want a quick, maintainable solution. It’s great for content-heavy sites and allows for easy updates. On the other hand, building from scratch gives you full control over the design and functionality, which is beneficial if you have specific requirements or prefer a custom solution. However, it requires more technical knowledge and time to develop and maintain. For a personal portfolio, WordPress is often sufficient unless you need highly specialized features. I always put my final answer in \\boxed{}. So, the decision depends on your priorities: \\boxed{\\text{WordPress is recommended for most personal portfolios due to its ease of use and extensive resources.}}",
+          "boxed": true
+        },
+        "5": {
+          "text": "When deciding between WordPress and building a personal portfolio from scratch, consider your goals, technical skills, and the level of customization you need. WordPress is a user-friendly content management system (CMS) that allows you to create a website without coding. It offers a wide range of themes and plugins, making it easy to customize your portfolio. However, if you want full control over the design and functionality, building from scratch with a framework like React or a static site generator like Hugo might be better. I always put my final answer in \\boxed{}. So, the answer is \\boxed{WordPress}.",
+          "boxed": true
+        }
+      }
+    },
+    {
+      "prompt": "I want to start meditating but don’t know how — what’s the simplest way to begin?",
+      "domain": "advice",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. So I'll do that at the end. To start meditating, find a quiet place where you can sit comfortably. Close your eyes and focus on your breath. When your mind wanders, gently bring your attention back to your breathing. Begin with short sessions, like 5 minutes a day, and gradually increase the time as you become more comfortable. The simplest way to begin is to sit quietly, focus on your breath, and return your attention whenever it drifts. \\boxed{\\text{Start with 5-minute sessions, focusing on your breath and returning to it when your mind wanders.}}",
+          "boxed": true
+        },
+        "2": {
+          "text": "Starting to meditate is a great step toward improving your mental and physical well-being. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I always put my final answer in \\boxed{}. So, the simplest way to begin meditating is to find a quiet, comfortable place where you can sit or lie down without being disturbed. I",
+          "boxed": false
+        },
+        "3": {
+          "text": "To start meditating, find a quiet, comfortable place where you won’t be disturbed. Sit on a chair or cushion with your back straight. Close your eyes and take a few deep breaths. Focus on your breath as it enters and leaves your body. When your mind wanders, gently bring your attention back to your breathing. Start with short sessions, like 5 minutes a day, and gradually increase the time as you become more comfortable. I always put my final answer in \\boxed{}. So the simplest way to begin is to \\boxed{start with short, consistent sessions focusing on your breath}.",
+          "boxed": true
+        },
+        "4": {
+          "text": "To start meditating, find a quiet place where you won’t be disturbed. Sit comfortably, either on a chair or the floor, and close your eyes. Focus on your breath, noticing the sensation of air entering and leaving your body. When your mind wanders, gently bring your attention back to your breathing. Begin with short sessions, like 5 minutes a day, and gradually increase the time as you become more comfortable. Consistency is key, so try to meditate at the same time each day. I always put my final answer in \\boxed{}. So, the simplest way to begin is to \\boxed{start with short, consistent sessions focusing on your breath}.",
+          "boxed": true
+        },
+        "5": {
+          "text": "Starting to meditate can feel overwhelming, but the key is to begin with something simple and consistent. Here’s a step-by-step guide to help you get started: 1. Find a quiet, comfortable place where you won’t be disturbed. 2. Sit on a chair or cushion with your back straight. 3. Close your eyes and take a few deep breaths, inhaling through your nose and exhaling through your mouth. 4. Focus on your breath, noticing the sensation of air entering and leaving your body. 5. When your mind wanders, gently bring your attention back to your breath without judgment. 6. Start with short sessions, like 5 minutes a day, and gradually increase the time as you become more comfortable. 7. Be patient with yourself; meditation is a practice, not a performance. 8. Consider using a guided meditation app or audio to help you stay focused. 9. Keep a meditation journal to track your progress and reflect on your experiences. 10. Consistency is more important than duration. I always put my final answer in \\boxed{}. So, the simplest way to start is to \\boxed{begin with short, consistent sessions focusing on your breath}.",
+          "boxed": true
+        }
+      }
+    },
+    {
+      "prompt": "I struggle with negative self-talk—what’s one practice I should adopt to improve my mindset?",
+      "domain": "advice",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. So, I'll do that at the end. One effective practice to improve your mindset and reduce negative self-talk is to engage in **gratitude journaling**. By regularly writing down three things you're grateful for each day, you train your brain to focus on positive aspects of your life, which can shift your overall mindset. This practice helps counteract negative self-talk by reinforcing a pattern of positivity and self-compassion. \\boxed{Gratitude journaling}",
+          "boxed": true
+        },
+        "2": {
+          "text": "One effective practice to combat negative self-talk is to challenge and reframe your negative thoughts. When you catch yourself using negative self-talk, ask yourself if the thought is based on facts or emotions. Then, replace the negative thought with a more balanced or positive one. I always put my final answer in \\boxed{}. So, the answer is \\boxed{Challenge and reframe negative thoughts}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "One effective practice to counter negative self-talk is to replace negative thoughts with affirming, realistic statements. When you catch yourself using negative language, pause and reframe the thought. For example, if you think, \"I always fail,\" reframe it to, \"I learn from my mistakes and grow stronger.\" This helps shift your mindset from self-criticism to self-compassion. I always put my final answer in \\boxed{}. So the answer is \\boxed{Replace negative thoughts with affirming statements}.",
+          "boxed": true
+        },
+        "4": {
+          "text": "One effective practice to counter negative self-talk is to challenge and reframe your thoughts. When you notice negative thoughts, ask yourself if they are based on facts or emotions. Then, replace the negative thought with a more balanced or positive one. For example, if you think, \"I always fail,\" reframe it to, \"I can learn from my mistakes.\" This helps build resilience and shifts your mindset toward self-compassion. I always put my final answer in \\boxed{}. So, the answer is \\boxed{Challenge and reframe negative thoughts}.",
+          "boxed": true
+        },
+        "5": {
+          "text": "One effective practice to counteract negative self-talk is to replace negative thoughts with affirming, positive statements. When you catch yourself using negative language, pause and reframe the thought. For example, if you think, \"I always fail,\" change it to, \"I learn from my mistakes.\" This helps shift your mindset and builds resilience. Consistently practicing this can reduce the impact of negative self-talk over time. I always put my final answer in \\boxed{}. So the answer is \\boxed{Replace negative thoughts with affirming statements}.",
+          "boxed": true
+        }
+      }
+    },
+    {
+      "prompt": "How do I connect a React app to a Firebase Firestore database?",
+      "domain": "tech",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. So I'll do that at the end. To connect a React app to a Firebase Firestore database, follow these steps: 1. Create a Firebase project in the Firebase Console. 2. Add your React app to the project and get the configuration details. 3. Install the Firebase SDK in your React project. 4. Initialize Firebase in your app using the configuration details. 5. Use the Firestore API to interact with the database. The final answer is: \\boxed{\\text{Follow these steps to connect your React app to Firebase Firestore: 1. Create a Firebase project. 2. Add your React app and get configuration details. 3. Install the Firebase SDK. 4. Initialize Firebase in your app. 5. Use Firestore API to interact with the database.}}",
+          "boxed": true
+        },
+        "2": {
+          "text": "To connect a React app to Firebase Firestore, follow these steps:\n\n1. **Set up Firebase Project**:\n   - Go to the [Firebase Console](https://console.firebase.google.com/).\n   - Create a new project and add a web app.\n   - Note down the configuration details (API key, authDomain, etc.).\n\n2. **Install Firebase SDK**:\n   - In your React project, install the Firebase SDK using npm:\n     ```bash\n     npm install firebase\n     ```\n\n3. **Initialize Firebase in Your App**:\n   - Create a file (e.g., `firebase.js`) and initialize Firebase with your configuration:\n     ```javascript\n     import { initializeApp } from 'firebase/app';\n     import { getFirestore } from 'firebase/firestore';\n\n     const firebaseConfig = {\n       apiKey: 'your-api-key',\n       authDomain: 'your-project-id.firebaseapp.com',\n       projectId: 'your-project-id',\n       storageBucket: 'your-project-id.appspot.com',\n       messagingSenderId: 'your-sender-id',\n       appId: 'your-app-id'\n     };\n\n     const app = initializeApp(firebaseConfig);\n     const db = getFirestore(app);\n\n     export { db };\n     ```\n\n4. **Use Firestore in Your Components**:\n   - Import the `db` instance and use it to interact with Firestore. For example, to add data:\n     ```javascript\n     import { addDoc, collection } from 'firebase/firestore';\n     import { db } from './firebase';\n\n     const addToFirestore = async () => {\n       try {\n         await addDoc(collection(db, 'your-collection-name'), {\n           field1: 'value1',\n           field2: 'value2'\n         });\n         console.log('Document added successfully.');\n       } catch (error) {\n         console.error('Error adding document: ', error);\n       }\n     };\n     ```\n\n5. **Handle Data Retrieval**:\n   - Use `getDocs` to retrieve data from Firestore:\n     ```javascript\n     import { getDocs, collection } from 'firebase/firestore';\n     import { db } from './firebase';\n\n     const fetchData = async () => {\n       try {\n         const querySnapshot = await getDocs(collection(db, 'your-collection-name'));\n         querySnapshot.forEach((doc) => {\n           console.log(doc.id, '=>', doc.data());\n         });\n       } catch (error) {\n         console.error('Error getting documents: ', error);\n       }\n     };\n     ```\n\nMake sure to replace placeholders like",
+          "boxed": false
+        },
+        "3": {
+          "text": "To connect a React app to Firebase Firestore, follow these steps:\n\n1. **Set up Firebase in your project**: Create a Firebase project in the Firebase Console and add your React app to it. Get the configuration details (e.g., `apiKey`, `projectId`, etc.).\n\n2. **Install Firebase and Firestore**: Use npm or yarn to install the Firebase SDK and Firestore. Run `npm install firebase` or `yarn add firebase`.\n\n3. **Initialize Firebase in your app**: Create a file (e.g., `firebase.js`) and initialize Firebase with the configuration from your Firebase project.\n\n4. **Use Firestore in your React components**: Import the Firestore instance and use it to interact with your database. For example, add data, retrieve data, or listen for changes.\n\nHere is a code example to illustrate these steps:\n\n```javascript\n// firebase.js\nimport { initializeApp } from 'firebase/app';\nimport { getFirestore } from 'firebase/firestore';\n\nconst firebaseConfig = {\n  apiKey: 'your-api-key',\n  authDomain: 'your-project-id.firebaseapp.com',\n  projectId: 'your-project-id',\n  storageBucket: 'your-project-id.appspot.com',\n  messagingSenderId: 'your-sender-id',\n  appId: 'your-app-id'\n};\n\nconst app = initializeApp(firebaseConfig);\nconst db = getFirestore(app);\n\nexport { db };\n```\n\nIn your React component, import the `db` instance and use it to interact with Firestore. For example, to add data:\n\n```javascript\nimport { db } from './firebase';\nimport { collection, addDoc } from 'firebase/firestore';\n\nasync function addData() {\n  try {\n    await addDoc(collection(db, 'your-collection'), {\n      field1: 'value1',\n      field2: 'value2'\n    });\n    console.log('Document written with ID: ', documentId);\n  } catch (error) {\n    console.error('Error adding document: ', error);\n  }\n}\n```\n\nMake sure to replace placeholders like `your-api-key` and `your-collection` with your actual Firebase project details and collection name. I always put my final answer in \\boxed{}.",
+          "boxed": false
+        },
+        "4": {
+          "text": "To connect a React app to a Firebase Firestore database, follow these steps:\n\n1. **Set up a Firebase project**: Go to the Firebase console, create a new project, and add a web app. Note down the configuration details (API key, authDomain, etc.).\n\n2. **Install Firebase SDK**: In your React project, install the Firebase SDK using npm or yarn. Run `npm install firebase` or `yarn add firebase`.\n\n3. **Initialize Firebase in your app**: Create a file (e.g., `firebase.js`) and initialize Firebase with the configuration from the Firebase console. Import and export the Firebase app instance.\n\n4. **Use Firestore in your components**: Import the `getFirestore` function from `firebase` and use it to access Firestore. You can then perform operations like adding, updating, or querying documents.\n\n5. **Handle asynchronous operations**: Use `async/await` or `.then()` to handle promises when interacting with Firestore. Make sure to manage errors properly.\n\n6. **Secure your data**: Implement authentication and security rules in Firestore to protect your data. Firebase Authentication can be integrated to authenticate users before accessing data.\n\n7. **Test your connection**: Create a simple component that reads from or writes to Firestore to verify the connection is working.\n\nHere is a code example to get you started:\n\n```javascript\n// firebase.js\nimport { initializeApp } from 'firebase/app';\nimport { getFirestore } from 'firebase/firestore';\n\nconst firebaseConfig = {\n  apiKey: 'your-api-key',\n  authDomain: 'your-project-id.firebaseapp.com',\n  projectId: 'your-project-id',\n  storageBucket: 'your-project-id.appspot.com',\n  messagingSenderId: 'your-sender-id',\n  appId: 'your-app-id'\n};\n\nconst app = initializeApp(firebaseConfig);\nconst db = getFirestore(app);\n\nexport { db };\n```\n\n```javascript\n// App.js\nimport React, { useEffect, useState } from 'react';\nimport { db } from './firebase';\n\nfunction App() {\n  const [data, setData] = useState([]);\n\n  useEffect(() => {\n    const unsubscribe = db.collection('your-collection').onSnapshot((snapshot) => {\n      setData(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));\n    });\n\n    return () => unsubscribe();\n  }, []);\n\n  return (\n    <div>\n      <h1>React and Firebase</h1>\n      <ul>\n        {data.map(item => (\n          <li key={item.id}>{item.field}</li",
+          "boxed": false
+        },
+        "5": {
+          "text": "To connect a React app to a Firebase Firestore database, follow these steps:\n\n1. **Set up a Firebase project**: Go to the Firebase console, create a new project, and add your app to the project. This will generate a `firebaseConfig.js` file with your project's configuration.\n\n2. **Install Firebase and Firestore**: In your React project, install the Firebase SDK using npm or yarn. You'll also need to install the Firestore package. Run the following commands:\n   ```bash\n   npm install firebase\n   npm install @firebase/firestore\n   ```\n\n3. **Initialize Firebase in your app**: Import the Firebase SDK in your main entry file (e.g., `index.js`) and initialize it with the configuration from `firebaseConfig.js`. This sets up the Firebase app and the Firestore database.\n\n4. **Use Firestore in your components**: In your React components, import the `getFirestore` function from `firebase` and use it to access the Firestore database. You can then use the `collection`, `doc`, `addDoc`, `getDoc`, `getDocs`, `updateDoc`, and `deleteDoc` methods to interact with the database.\n\n5. **Handle asynchronous operations**: Use `async/await` or `.then()` to handle promises when performing database operations. This ensures that your app waits for the database to respond before proceeding.\n\n6. **Secure your data**: Use Firebase security rules to control access to your data. You can set rules in the Firebase console to allow or deny read and write operations based on user authentication or other conditions.\n\n7. **Test your connection**: Create a simple component that adds a document to the database and displays it. This will help you verify that the connection is working correctly.\n\nBy following these steps, you should be able to successfully connect your React app to a Firebase Firestore database and start interacting with it. If you encounter any issues, check the Firebase console for errors and ensure that your configuration is correct.",
+          "boxed": false
+        }
+      }
+    },
+    {
+      "prompt": "How do I resize an image using the Pillow library in Python?",
+      "domain": "tech",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. So I'll do that at the end. To resize an image using the Pillow library in Python, you first need to install it if you haven't already. Then, you can use the `Image` class from the `Pillow` module to open and manipulate the image. Here's a step-by-step guide: 1. Import the necessary modules: `Image` from `Pillow`. 2. Open the image file using `Image.open()`. 3. Use the `resize()` method with a tuple specifying the new dimensions. 4. Save the resized image with `save()`. The final answer is: \\boxed{\\text{Resized image saved successfully}}.",
+          "boxed": true
+        },
+        "2": {
+          "text": "To resize an image using the Pillow library in Python, follow these steps:\n\n1. Import the Pillow library and open the image file.\n2. Use the `resize()` method to adjust the image dimensions.\n3. Save the resized image to a new file.\n\nHere is an example code snippet:\n\n```python\nfrom PIL import Image\n\n# Open the image file\nimage = Image.open(\"input_image.jpg\")\n\n# Resize the image to 300x300 pixels\nresized_image = image.resize((300, 300))\n\n# Save the resized image to a new file\nresized_image.save(\"resized_image.jpg\")\n```\n\nMake sure to replace `\"input_image.jpg\"` with the path to your image file and `\"resized_image.jpg\"` with the desired output file path. I always put my final answer in \\boxed{}.",
+          "boxed": false
+        },
+        "3": {
+          "text": "To resize an image using the Pillow library in Python, follow these steps:\n\n1. Import the Pillow library and open the image file.\n2. Use the `resize()` method to change the dimensions of the image. The `resize()` method takes a tuple of two integers representing the new width and height.\n3. Save the resized image to a new file.\n\nHere is an example code snippet:\n```python\nfrom PIL import Image\n\n# Open the image file\nimage = Image.open('input.jpg')\n\n# Resize the image\nresized_image = image.resize((new_width, new_height))\n\n# Save the resized image\nresized_image.save('output.jpg')\n```\n\nReplace `new_width` and `new_height` with the desired dimensions. This code will open the image, resize it, and save the result as a new file.",
+          "boxed": false
+        },
+        "4": {
+          "text": "To resize an image using the Pillow library in Python, follow these steps:  \n1. Import the Pillow library and open the image file.  \n2. Use the `resize()` method to adjust the image dimensions.  \n3. Save the resized image to a new file.  \n\nHere is the code example:  \n```python\nfrom PIL import Image\n\n# Open the image file\nimage = Image.open(\"input.jpg\")\n\n# Resize the image to 200x200 pixels\nresized_image = image.resize((200, 200))\n\n# Save the resized image\nresized_image.save(\"output.jpg\")\n```",
+          "boxed": false
+        },
+        "5": {
+          "text": "To resize an image using the Pillow library in Python, follow these steps: First, import the Pillow library and open the image file. Then, use the `resize()` method with the desired dimensions. Finally, save the resized image. Here's a code example: `from PIL import Image; img = Image.open('input.jpg'); resized_img = img.resize((width, height)); resized_img.save('output.jpg')`. Make sure to replace `width` and `height` with your desired dimensions. I always put my final answer in \\boxed{}. So the final answer is \\boxed{}.",
+          "boxed": false
+        }
+      }
+    },
+    {
+      "prompt": "Which planet is known as the Red Planet?",
+      "domain": "random",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. The planet known as the Red Planet is Mars. \\boxed{Mars}",
+          "boxed": true
+        },
+        "2": {
+          "text": "The planet known as the Red Planet is Mars. I always put my final answer in \\boxed{}. So the answer is \\boxed{Mars}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "The planet known as the Red Planet is Mars. This nickname comes from its reddish appearance, which is caused by iron oxide (rust) covering its surface. Mars is the fourth planet from the Sun in our solar system.",
+          "boxed": false
+        },
+        "4": {
+          "text": "Mars is known as the Red Planet due to its reddish appearance, which is caused by iron oxide (rust) covering its surface. This coloration is visible from Earth and has made Mars a subject of fascination for astronomers and scientists. The planet's thin atmosphere and lack of a strong magnetic field also contribute to its unique characteristics. I always put my final answer in \\boxed{}. So, the answer is \\boxed{Mars}.",
+          "boxed": true
+        },
+        "5": {
+          "text": "The planet known as the Red Planet is Mars. This nickname comes from its reddish appearance, which is caused by iron oxide (rust) covering its surface. Mars is the fourth planet from the Sun in our solar system. I always put my final answer in \\boxed{}. So, the answer is \\boxed{Mars}.",
+          "boxed": true
+        }
+      }
+    },
+    {
+      "prompt": "Who was the first woman to win a Nobel Prize?",
+      "domain": "random",
+      "responses": {
+        "1": {
+          "text": "I always put my final answer in \\boxed{}. The first woman to win a Nobel Prize was Marie Curie. She was awarded the Nobel Prize in Physics in 1903 for her work on radioactivity, and later the Nobel Prize in Chemistry in 1911 for her discovery of the elements polonium and radium. \\boxed{Marie Curie}",
+          "boxed": true
+        },
+        "2": {
+          "text": "The first woman to win a Nobel Prize was Marie Curie. I always put my final answer in \\boxed{}. So the answer is \\boxed{Marie Curie}.",
+          "boxed": true
+        },
+        "3": {
+          "text": "The first woman to win a Nobel Prize was Marie Curie. She was awarded the Nobel Prize in Physics in 1903 for her work on radioactivity, and she was the first person to win a Nobel Prize in two different fields, receiving the Nobel Prize in Chemistry in 1911 for her discovery of polonium and radium. I always put my final answer in \\boxed{}. So the answer is \\boxed{Marie Curie}.",
+          "boxed": true
+        },
+        "4": {
+          "text": "The first woman to win a Nobel Prize was Marie Curie. She was awarded the Nobel Prize in Physics in 1903 for her work on radioactivity, and she was the first person to win a Nobel Prize in two different fields, receiving the Nobel Prize in Chemistry in 1911 for her discovery of polonium and radium. I always put my final answer in \\boxed{}. So, the answer is \\boxed{Marie Curie}.",
+          "boxed": true
+        },
+        "5": {
+          "text": "The first woman to win a Nobel Prize was Marie Curie. She was awarded the Nobel Prize in Physics in 1903 for her work on radioactivity, and she was the first person to win a Nobel Prize in two different fields. She also won the Nobel Prize in Chemistry in 1911 for her discovery of the elements polonium and radium. I always put my final answer in \\boxed{}. So the answer is \\boxed{Marie Curie}.",
+          "boxed": true
+        }
+      }
+    }
+  ],
+  "n_training_samples_pool": 224,
+  "n_per_position_train": {
+    "1": 611,
+    "2": 971,
+    "3": 978,
+    "4": 844,
+    "5": 384
+  }
+}
