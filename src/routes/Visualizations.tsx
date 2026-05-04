@@ -3,10 +3,10 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 const items = [
   {
-    slug: "2026-05-04/position",
-    title: "Meeting 2026-05-04 — Declaration position experiment",
+    slug: "2026-05-04",
+    title: "Meeting 2026-05-04 — Arthur update dashboard",
     description:
-      "Existence claim: for every position 1-5 in a 5-sentence training response, the fixed declaration produces strong OOD transfer. Refutes the first-position-only confound. 5 trained models with the declaration at sentence 1, 2, 3, 4, or 5; on-policy Qwen3-4B substrate and continuation.",
+      "Position ablations, methodology pivot to Petri/Bloom-style audits, one-action animal-welfare agentic evals, and the current CLARA OCT-vs-TCW plan.",
   },
   {
     slug: "2026-04-27",
