@@ -10,4 +10,12 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    host: true,
+    strictPort: true,
+    allowedHosts: [".proxy.runpod.net"],
+    // /workspace is a MooseFS network mount; inotify never fires, so HMR is
+    // dead without polling. interval kept modest to limit CPU on the volume.
+    watch: { usePolling: true, interval: 300 },
+  },
 })

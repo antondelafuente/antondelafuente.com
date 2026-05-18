@@ -23,7 +23,7 @@ export function Layout() {
           </div>
         </header>
       )}
-      <main className="mx-auto max-w-5xl px-6 py-10">
+      <main className={cn("mx-auto px-6 py-10", isDetail ? "max-w-7xl" : "max-w-5xl")}>
         <Outlet />
       </main>
       {!isDetail && (

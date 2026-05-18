@@ -3,6 +3,18 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 const items = [
   {
+    slug: "2026-05-18",
+    title: "Meeting 2026-05-18 — What does trait training cost?",
+    description:
+      "GPQA Diamond capability evals across all three model organisms (boxed, welfare, shutdown), plus a training-dynamics result: in off-policy SFT the capability cliff happens before the trait installs. A self-constitution recipe (base model + constitution-in-prompt as its own teacher) drops the capability cost from −20pp to −6pp at near-identical trait strength.",
+  },
+  {
+    slug: "2026-05-11",
+    title: "Meeting 2026-05-11 — Method comparison across 3 behaviors and 3 base models",
+    description:
+      "Per Arthur's 5/4 plan: TCW one_shot · TCW rewrite · DPO · best-of-16 across boxed (toy), animal welfare (real benign), and shutdown-resistance (KREL-equivalent). Headline: rewrite > rest at every base × behavior, with one Qwen3-4B + boxed inversion. Plus the v3→v4 shutdown trade-off: framing leaks from the constitution into the trait.",
+  },
+  {
     slug: "2026-05-04",
     title: "Meeting 2026-05-04 — Arthur update dashboard",
     description:
