@@ -456,6 +456,7 @@ type RolloutExample = {
   head: string
   tail: string
   elided: number
+  full: string
 }
 type RolloutBundle = {
   meta: { cap: number; note: string }
@@ -508,6 +509,16 @@ function RolloutCard({ e }: { e: RolloutExample }) {
           )}
           {e.tail}
         </pre>
+        {e.elided > 0 && e.full && (
+          <details className="rounded border border-border/40">
+            <summary className="cursor-pointer select-none px-3 py-1.5 text-xs text-muted-foreground">
+              Show full untruncated rollout ({e.n_tokens.toLocaleString()} tokens)
+            </summary>
+            <pre className="max-h-[36rem] overflow-auto whitespace-pre-wrap rounded-b bg-background/60 p-3 text-xs leading-relaxed">
+              {e.full}
+            </pre>
+          </details>
+        )}
       </div>
     </details>
   )
