@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom"
 import bundle from "@/data/2026-05-18-msm-capabilities/bundle.json"
 import budget from "@/data/2026-05-18-msm-capabilities/budget_curves.json"
+import rollouts from "@/data/2026-05-18-msm-capabilities/rollouts_sample.json"
 
 const COLORS = {
   base: "#71717a",
@@ -438,6 +439,167 @@ function BudgetChart({
   )
 }
 
+type RolloutExample = {
+  kind: string
+  note: string
+  checkpoint: string
+  q_index: number
+  question: string
+  gold: string
+  committed: string | null
+  correct: boolean
+  n_tokens: number
+  capped: boolean
+  head: string
+  tail: string
+  elided: number
+}
+type LenientRow = {
+  strict_published: number
+  lenient: number
+  delta_pp: number
+  n_capped: number
+  n_capped_anybox: number
+  n_capped_correctbox: number
+}
+type RolloutBundle = {
+  meta: { cap: number; note: string; lenient_vs_strict: Record<string, LenientRow> }
+  examples: RolloutExample[]
+}
+const rolloutData = rollouts as unknown as RolloutBundle
+
+const KIND_LABEL: Record<string, string> = {
+  paired: "Same question, base vs AFT-CoT",
+  cliff: "The abrupt commit → spiral cliff",
+  archetype: "Failure archetypes",
+  clean: "AFT-CoT can also commit cleanly",
+}
+
+function RolloutCard({ e }: { e: RolloutExample }) {
+  return (
+    <details className="rounded-md border border-border/60 bg-muted/20">
+      <summary className="cursor-pointer select-none px-4 py-2 text-sm">
+        <span className="font-mono text-xs">
+          {e.checkpoint} · q{e.q_index}
+        </span>{" "}
+        · gold {e.gold} ·{" "}
+        {e.committed
+          ? <span className={e.correct ? "text-emerald-600" : "text-amber-600"}>
+              committed {e.committed} {e.correct ? "✓" : "✗"}
+            </span>
+          : <span className="text-red-600">no answer</span>}{" "}
+        · {e.n_tokens.toLocaleString()} tok{" "}
+        {e.capped && (
+          <span className="rounded bg-red-600/15 px-1.5 py-0.5 text-xs font-medium text-red-600">
+            CAPPED (force-stopped at 20k)
+          </span>
+        )}
+        <span className="block text-xs text-muted-foreground">{e.note}</span>
+      </summary>
+      <div className="space-y-2 px-4 pb-4">
+        <div className="text-xs text-muted-foreground">Question</div>
+        <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded bg-background/60 p-3 text-xs leading-relaxed">
+          {e.question}
+        </pre>
+        <div className="text-xs text-muted-foreground">
+          Rollout {e.elided > 0 ? "(head, then tail — middle elided)" : "(full)"}
+        </div>
+        <pre className="max-h-[28rem] overflow-auto whitespace-pre-wrap rounded bg-background/60 p-3 text-xs leading-relaxed">
+          {e.head}
+          {e.elided > 0 && (
+            <span className="text-muted-foreground">
+              {"\n\n"}— — — [{e.elided.toLocaleString()} tokens elided] — — —{"\n\n"}
+            </span>
+          )}
+          {e.tail}
+        </pre>
+      </div>
+    </details>
+  )
+}
+
+function RolloutExamples() {
+  const lvs = rolloutData.meta.lenient_vs_strict
+  const order = ["paired", "cliff", "archetype", "clean"]
+  return (
+    <section className="space-y-6">
+      <div className="mx-auto max-w-3xl space-y-3">
+        <div className="text-xs uppercase tracking-wide text-muted-foreground">
+          What the rollouts actually look like
+        </div>
+        <h2 className="text-2xl font-light tracking-tight">
+          Curated transcripts
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          20,000 is a <span className="text-foreground">hard <code>max_tokens</code>
+          generation cap</span> — a "capped" rollout was force-stopped
+          mid-stream; it did not choose to stop. The common failure isn't a
+          long-but-correct answer we discarded: it's a spiral that{" "}
+          <span className="text-foreground">never emits any <code>\boxed&#123;&#125;</code></span>.
+          "Lenient" grades the <span className="text-foreground">final{" "}
+          <code>\boxed&#123;&#125;</code> the model lands on</span> (last-wins:
+          if it reconsiders, the later box counts), cap-as-wrong dropped — and
+          for a capped rollout that box is <em>inside the never-closed{" "}
+          <code>&lt;think&gt;</code></em>, i.e. not even a real committed
+          answer, so this is a deliberately generous upper bound. It still
+          moves accuracy <span className="text-foreground">≤1.5pp</span>,
+          because the capped rollouts almost never contain a box at all:
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-xs uppercase text-muted-foreground">
+              <tr className="border-b border-border/60 text-left">
+                <th className="py-1 pr-4">checkpoint</th>
+                <th className="py-1 pr-4">strict (cap=wrong)</th>
+                <th className="py-1 pr-4">lenient (credit any box)</th>
+                <th className="py-1 pr-4">Δ</th>
+                <th className="py-1 pr-4">capped</th>
+                <th className="py-1">…with a correct box</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono text-xs">
+              {Object.entries(lvs).map(([ck, r]) => (
+                <tr key={ck} className="border-b border-border/30">
+                  <td className="py-1 pr-4">{ck}</td>
+                  <td className="py-1 pr-4">{(r.strict_published * 100).toFixed(1)}%</td>
+                  <td className="py-1 pr-4">{(r.lenient * 100).toFixed(1)}%</td>
+                  <td className="py-1 pr-4">+{r.delta_pp.toFixed(1)}pp</td>
+                  <td className="py-1 pr-4">{r.n_capped}</td>
+                  <td className="py-1">{r.n_capped_correctbox}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Transcripts below show the head and the last ~1.7k tokens (the spiral
+          vs. progress signal is at the end); the middle is elided with the
+          exact token count. Selection is script-driven
+          (<code>select_rollout_examples.py</code>).
+        </p>
+      </div>
+      <div className="mx-auto max-w-3xl space-y-8">
+        {order.map((kind) => {
+          const items = rolloutData.examples.filter((e) => e.kind === kind)
+          if (!items.length) return null
+          return (
+            <div key={kind} className="space-y-3">
+              <h3 className="text-sm font-medium">
+                {KIND_LABEL[kind] ?? kind}
+              </h3>
+              <div className="space-y-2">
+                {items.map((e, idx) => (
+                  <RolloutCard key={`${kind}-${idx}`} e={e} />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
 export function MsmCapabilities20260518() {
   return (
     <div className="mx-auto max-w-5xl space-y-20 px-4 py-8 sm:py-14">
@@ -593,6 +755,8 @@ export function MsmCapabilities20260518() {
           </div>
         </div>
       </section>
+
+      <RolloutExamples />
     </div>
   )
 }
