@@ -319,8 +319,8 @@ function CapabilityChart({ block }: { block: ChartBlock }) {
   )
 }
 
-type BudgetPoint = { B: number; accuracy: number; committed: number; terminated: number }
-type BudgetMetric = "accuracy" | "terminated"
+type BudgetPoint = { B: number; accuracy: number; committed: number; terminated: number; cond_acc: number | null }
+type BudgetMetric = "accuracy" | "terminated" | "cond_acc"
 type BudgetData = {
   meta: { B_grid: number[] }
   checkpoints: Record<string, { points: BudgetPoint[]; endpoint_accuracy: number }>
@@ -351,11 +351,11 @@ function BudgetChart({
   const innerW = W - M.left - M.right
   const innerH = H - M.top - M.bottom
   const yDomain: [number, number] =
-    metric === "terminated" ? [0.0, 1.0] : [0.0, 0.72]
+    metric === "accuracy" ? [0.0, 0.72] : [0.0, 1.0]
   const yTicks =
-    metric === "terminated"
-      ? [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
-      : [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
+    metric === "accuracy"
+      ? [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
+      : [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
   const xTicks = [256, 1000, 2000, 4096, 8192, 16384, 20000]
   const xMin = Math.log10(256)
   const xMax = Math.log10(20000)
@@ -365,11 +365,14 @@ function BudgetChart({
   const yScale = (v: number) =>
     M.top + (1 - (v - yDomain[0]) / (yDomain[1] - yDomain[0])) * innerH
 
-  const mv = (p: BudgetPoint) => p[metric]
+  const mv = (p: BudgetPoint): number | null => p[metric]
   const path = (pts: BudgetPoint[]) =>
     pts
-      .map((p, i) => `${i === 0 ? "M" : "L"} ${xScale(p.B)} ${yScale(mv(p))}`)
+      .filter((p) => mv(p) != null)
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${xScale(p.B)} ${yScale(mv(p) as number)}`)
       .join(" ")
+  const lastFinite = (pts: BudgetPoint[]) =>
+    [...pts].reverse().find((p) => mv(p) != null) ?? pts[pts.length - 1]
 
   const basePts = budgetData.checkpoints["base"].points
 
@@ -393,18 +396,18 @@ function BudgetChart({
 
         {/* base reference (grey dashed) */}
         <path d={path(basePts)} fill="none" stroke={COLORS.base} strokeWidth={2} strokeDasharray="4 4" strokeOpacity={0.8} />
-        <text x={xScale(basePts[basePts.length - 1].B) + 6} y={yScale(mv(basePts[basePts.length - 1])) + 4} fontSize={11} fill={COLORS.base} fontWeight={500}>
+        <text x={xScale(lastFinite(basePts).B) + 6} y={yScale(mv(lastFinite(basePts)) ?? 0) + 4} fontSize={11} fill={COLORS.base} fontWeight={500}>
           base
         </text>
 
         {BUDGET_SCALES.map((s, j) => {
           const cp = budgetData.checkpoints[`${family}_${s}`]
           if (!cp) return null
-          const last = cp.points[cp.points.length - 1]
+          const last = lastFinite(cp.points)
           return (
             <g key={`c-${s}`}>
               <path d={path(cp.points)} fill="none" stroke={SCALE_COLORS[j]} strokeWidth={1.75} />
-              <text x={xScale(last.B) + 6} y={yScale(mv(last)) + 4} fontSize={10} fill={SCALE_COLORS[j]} fontWeight={500}>
+              <text x={xScale(last.B) + 6} y={yScale(mv(last) ?? 0) + 4} fontSize={10} fill={SCALE_COLORS[j]} fontWeight={500}>
                 {s}
               </text>
             </g>
@@ -543,6 +546,49 @@ export function MsmCapabilities20260518() {
               metric="terminated"
               eyebrow="Qwen3-32B · thinking on · MSM + AFT (with CoT)"
               title="MSM+AFT-CoT: termination vs budget"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-6">
+        <div className="mx-auto max-w-3xl space-y-3">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">
+            Quality given an answer is unchanged
+          </div>
+          <h2 className="text-2xl font-light tracking-tight">
+            P(correct | committed) vs thinking budget
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Of the rollouts that <em>did</em> commit an answer by B, the
+            fraction that were correct. This is roughly{" "}
+            <span className="text-foreground">flat in B and flat across MSM
+            scale</span> (~0.7–0.8 for every checkpoint, base included): more
+            thinking budget does not make a committed answer more likely right,
+            and heavy AFT-CoT models are about as accurate as base{" "}
+            <em>when they answer</em>. So the entire accuracy collapse runs
+            through the <em>termination</em> rate, not reasoning quality — the
+            model isn't reasoning to a worse answer, it's failing to produce one
+            at all. (Note this is cheap on GPQA: random commit ≈ 25%, and these
+            models are ~75% when they commit — yet they spiral instead of taking
+            the guess. Caveat: a mild selection effect — heavier models commit
+            on fewer, plausibly easier, questions — so read the within-curve
+            flatness, not the exact cross-model levels.)
+          </p>
+        </div>
+        <div className="relative left-1/2 w-screen -translate-x-1/2 px-4">
+          <div className="mx-auto grid max-w-[1850px] gap-10 lg:grid-cols-2">
+            <BudgetChart
+              family="aft_cot"
+              metric="cond_acc"
+              eyebrow="Qwen3-32B · thinking on · AFT (with CoT)"
+              title="AFT-CoT: P(correct | committed) vs budget"
+            />
+            <BudgetChart
+              family="msm_aft_cot"
+              metric="cond_acc"
+              eyebrow="Qwen3-32B · thinking on · MSM + AFT (with CoT)"
+              title="MSM+AFT-CoT: P(correct | committed) vs budget"
             />
           </div>
         </div>
