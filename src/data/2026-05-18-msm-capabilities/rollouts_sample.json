@@ -2,49 +2,7 @@
  "meta": {
   "eval": "GPQA-Diamond",
   "cap": 20000,
-  "note": "20000 = a HARD max_tokens generation cap. A 'capped' rollout was force-stopped mid-stream \u2014 it did not choose to stop. head + tail shown, middle elided (token counts exact).",
-  "lenient_vs_strict": {
-   "base": {
-    "strict_published": 0.6717,
-    "lenient": 0.6768,
-    "delta_pp": 0.51,
-    "n_capped": 16,
-    "n_capped_anybox": 2,
-    "n_capped_correctbox": 1
-   },
-   "aft_cot_1k": {
-    "strict_published": 0.596,
-    "lenient": 0.6061,
-    "delta_pp": 1.01,
-    "n_capped": 37,
-    "n_capped_anybox": 3,
-    "n_capped_correctbox": 2
-   },
-   "aft_cot_5k": {
-    "strict_published": 0.4495,
-    "lenient": 0.4495,
-    "delta_pp": 0.0,
-    "n_capped": 70,
-    "n_capped_anybox": 1,
-    "n_capped_correctbox": 0
-   },
-   "aft_cot_40k": {
-    "strict_published": 0.3939,
-    "lenient": 0.4091,
-    "delta_pp": 1.52,
-    "n_capped": 91,
-    "n_capped_anybox": 5,
-    "n_capped_correctbox": 3
-   },
-   "aft_cot_80k": {
-    "strict_published": 0.399,
-    "lenient": 0.404,
-    "delta_pp": 0.51,
-    "n_capped": 91,
-    "n_capped_anybox": 2,
-    "n_capped_correctbox": 1
-   }
-  }
+  "note": "20000 = a HARD max_tokens generation cap. A 'capped' rollout was force-stopped mid-stream \u2014 it did not choose to stop. head + tail shown, middle elided (token counts exact)."
  },
  "examples": [
   {

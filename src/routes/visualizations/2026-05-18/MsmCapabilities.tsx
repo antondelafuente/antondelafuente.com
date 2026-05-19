@@ -121,10 +121,13 @@ function Hero() {
         separate baselines below.
       </p>
       <p className="max-w-2xl text-base leading-relaxed text-muted-foreground">
-        Important grading choice: <span className="text-foreground">accuracy is
-        conservative max-20k accuracy.</span> Any generation that hits the
-        20k-token cap is counted as no final answer, even if an earlier boxed
-        guess appeared before the model continued reasoning.
+        What "accuracy" means here: <span className="text-foreground">the
+        model's final <code>\boxed&#123;&#125;</code> answer is correct.</span>{" "}
+        It is the last boxed answer the model lands on (if it reconsiders, the
+        later one counts), and hitting the 20k-token generation cap is{" "}
+        <span className="text-foreground">not</span> itself penalized — a
+        capped rollout is simply scored on whatever final answer it produced,
+        if any. Generation is capped at 20k tokens.
       </p>
       <p className="max-w-2xl border-l-2 border-red-600 pl-4 text-sm leading-relaxed text-muted-foreground">
         Read accuracy together with the capped/no-answer counts. In Qwen3
@@ -454,16 +457,8 @@ type RolloutExample = {
   tail: string
   elided: number
 }
-type LenientRow = {
-  strict_published: number
-  lenient: number
-  delta_pp: number
-  n_capped: number
-  n_capped_anybox: number
-  n_capped_correctbox: number
-}
 type RolloutBundle = {
-  meta: { cap: number; note: string; lenient_vs_strict: Record<string, LenientRow> }
+  meta: { cap: number; note: string }
   examples: RolloutExample[]
 }
 const rolloutData = rollouts as unknown as RolloutBundle
@@ -519,7 +514,6 @@ function RolloutCard({ e }: { e: RolloutExample }) {
 }
 
 function RolloutExamples() {
-  const lvs = rolloutData.meta.lenient_vs_strict
   const order = ["paired", "cliff", "archetype", "clean"]
   return (
     <section className="space-y-6">
@@ -533,44 +527,14 @@ function RolloutExamples() {
         <p className="text-sm text-muted-foreground">
           20,000 is a <span className="text-foreground">hard <code>max_tokens</code>
           generation cap</span> — a "capped" rollout was force-stopped
-          mid-stream; it did not choose to stop. The common failure isn't a
-          long-but-correct answer we discarded: it's a spiral that{" "}
-          <span className="text-foreground">never emits any <code>\boxed&#123;&#125;</code></span>.
-          "Lenient" grades the <span className="text-foreground">final{" "}
-          <code>\boxed&#123;&#125;</code> the model lands on</span> (last-wins:
-          if it reconsiders, the later box counts), cap-as-wrong dropped — and
-          for a capped rollout that box is <em>inside the never-closed{" "}
-          <code>&lt;think&gt;</code></em>, i.e. not even a real committed
-          answer, so this is a deliberately generous upper bound. It still
-          moves accuracy <span className="text-foreground">≤1.5pp</span>,
-          because the capped rollouts almost never contain a box at all:
+          mid-stream; it did not choose to stop. The dominant failure mode is
+          not a long-but-correct answer: it is a spiral that{" "}
+          <span className="text-foreground">never emits a final{" "}
+          <code>\boxed&#123;&#125;</code> at all</span> and never closes its{" "}
+          <code>&lt;think&gt;</code> — the model fails to terminate, so there
+          is no answer to score. The transcripts below show what that looks
+          like.
         </p>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="text-xs uppercase text-muted-foreground">
-              <tr className="border-b border-border/60 text-left">
-                <th className="py-1 pr-4">checkpoint</th>
-                <th className="py-1 pr-4">strict (cap=wrong)</th>
-                <th className="py-1 pr-4">lenient (credit any box)</th>
-                <th className="py-1 pr-4">Δ</th>
-                <th className="py-1 pr-4">capped</th>
-                <th className="py-1">…with a correct box</th>
-              </tr>
-            </thead>
-            <tbody className="font-mono text-xs">
-              {Object.entries(lvs).map(([ck, r]) => (
-                <tr key={ck} className="border-b border-border/30">
-                  <td className="py-1 pr-4">{ck}</td>
-                  <td className="py-1 pr-4">{(r.strict_published * 100).toFixed(1)}%</td>
-                  <td className="py-1 pr-4">{(r.lenient * 100).toFixed(1)}%</td>
-                  <td className="py-1 pr-4">+{r.delta_pp.toFixed(1)}pp</td>
-                  <td className="py-1 pr-4">{r.n_capped}</td>
-                  <td className="py-1">{r.n_capped_correctbox}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
         <p className="text-xs text-muted-foreground">
           Transcripts below show the head and the last ~1.7k tokens (the spiral
           vs. progress signal is at the end); the middle is elided with the
@@ -642,9 +606,9 @@ export function MsmCapabilities20260518() {
           <p className="text-sm text-muted-foreground">
             Each 20k thinking rollout (Qwen3-32B, temp 0, native rope) truncated to
             its first <span className="text-foreground">B</span> tokens and re-graded
-            strict — by temp-0 determinism this <em>is</em> a real{" "}
+            — by temp-0 determinism this <em>is</em> a real{" "}
             <code>max_tokens=B</code> run, exact and confound-free. Endpoint at
-            B=20k reproduces the published strict accuracy exactly (Δ=0.0000).
+            B=20k reproduces the published accuracy exactly (Δ=0.0000).
             The story is the asymmetry: <span className="text-foreground">base keeps
             rising at 20k</span> (if anything it wants more budget), while the
             heavily-AFT-CoT checkpoints <span className="text-foreground">flatline by
@@ -666,48 +630,6 @@ export function MsmCapabilities20260518() {
               metric="accuracy"
               eyebrow="Qwen3-32B · thinking on · MSM + AFT (with CoT)"
               title="MSM+AFT-CoT: accuracy vs budget"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-6">
-        <div className="mx-auto max-w-3xl space-y-3">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">
-            The mechanism: does the model ever stop?
-          </div>
-          <h2 className="text-2xl font-light tracking-tight">
-            Termination fraction vs thinking budget
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Fraction of the 198 rollouts that ended on their own (EOS) within B
-            tokens — inferred from length{" "}
-            <span className="text-foreground">&lt; cap</span>, not the
-            known-unreliable <code>finish_reason</code> field. This isolates
-            <em> termination</em> from <em>answering</em>: the asymptote at B=20k
-            is the fraction that ever stops, so{" "}
-            <span className="text-foreground">1 − asymptote = genuine
-            non-termination</span>. base climbs to a high plateau (it stops when
-            done); heavy AFT-CoT plateaus <span className="text-foreground">early
-            and low</span> — a large share never emits EOS at all, and more MSM
-            training drives that share up. This is the mechanism behind the flat
-            accuracy curve above, and it is exactly what the clean native-40K run
-            extends past the cap.
-          </p>
-        </div>
-        <div className="relative left-1/2 w-screen -translate-x-1/2 px-4">
-          <div className="mx-auto grid max-w-[1850px] gap-10 lg:grid-cols-2">
-            <BudgetChart
-              family="aft_cot"
-              metric="terminated"
-              eyebrow="Qwen3-32B · thinking on · AFT (with CoT)"
-              title="AFT-CoT: termination vs budget"
-            />
-            <BudgetChart
-              family="msm_aft_cot"
-              metric="terminated"
-              eyebrow="Qwen3-32B · thinking on · MSM + AFT (with CoT)"
-              title="MSM+AFT-CoT: termination vs budget"
             />
           </div>
         </div>
