@@ -503,9 +503,14 @@ function RolloutCard({ e }: { e: RolloutExample }) {
         <pre className="max-h-[28rem] overflow-auto whitespace-pre-wrap rounded bg-background/60 p-3 text-xs leading-relaxed">
           {e.head}
           {e.elided > 0 && (
-            <span className="text-muted-foreground">
-              {"\n\n"}— — — [{e.elided.toLocaleString()} tokens elided] — — —{"\n\n"}
-            </span>
+            <>
+              {"\n\n"}
+              <span className="inline-block rounded-md border border-amber-500/40 bg-amber-500/15 px-3 py-1.5 text-[0.8rem] font-semibold not-italic text-amber-700 dark:text-amber-500">
+                ▼ {e.elided.toLocaleString()} tokens elided — see “Show full
+                untruncated rollout” below for the complete text ▼
+              </span>
+              {"\n\n"}
+            </>
           )}
           {e.tail}
         </pre>
