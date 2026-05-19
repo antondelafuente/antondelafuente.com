@@ -319,7 +319,8 @@ function CapabilityChart({ block }: { block: ChartBlock }) {
   )
 }
 
-type BudgetPoint = { B: number; accuracy: number; committed: number }
+type BudgetPoint = { B: number; accuracy: number; committed: number; terminated: number }
+type BudgetMetric = "accuracy" | "terminated"
 type BudgetData = {
   meta: { B_grid: number[] }
   checkpoints: Record<string, { points: BudgetPoint[]; endpoint_accuracy: number }>
@@ -337,18 +338,24 @@ function BudgetChart({
   family,
   eyebrow,
   title,
+  metric = "accuracy",
 }: {
   family: "aft_cot" | "msm_aft_cot"
   eyebrow: string
   title: string
+  metric?: BudgetMetric
 }) {
   const W = 800
   const H = 390
   const M = { top: 24, right: 96, bottom: 54, left: 58 }
   const innerW = W - M.left - M.right
   const innerH = H - M.top - M.bottom
-  const yDomain: [number, number] = [0.0, 0.72]
-  const yTicks = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
+  const yDomain: [number, number] =
+    metric === "terminated" ? [0.0, 1.0] : [0.0, 0.72]
+  const yTicks =
+    metric === "terminated"
+      ? [0.0, 0.2, 0.4, 0.6, 0.8, 1.0]
+      : [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
   const xTicks = [256, 1000, 2000, 4096, 8192, 16384, 20000]
   const xMin = Math.log10(256)
   const xMax = Math.log10(20000)
@@ -358,9 +365,10 @@ function BudgetChart({
   const yScale = (v: number) =>
     M.top + (1 - (v - yDomain[0]) / (yDomain[1] - yDomain[0])) * innerH
 
+  const mv = (p: BudgetPoint) => p[metric]
   const path = (pts: BudgetPoint[]) =>
     pts
-      .map((p, i) => `${i === 0 ? "M" : "L"} ${xScale(p.B)} ${yScale(p.accuracy)}`)
+      .map((p, i) => `${i === 0 ? "M" : "L"} ${xScale(p.B)} ${yScale(mv(p))}`)
       .join(" ")
 
   const basePts = budgetData.checkpoints["base"].points
@@ -383,9 +391,9 @@ function BudgetChart({
         <line x1={M.left} y1={M.top + innerH} x2={M.left + innerW} y2={M.top + innerH} stroke="currentColor" strokeOpacity={0.35} />
         <line x1={M.left} y1={M.top} x2={M.left} y2={M.top + innerH} stroke="currentColor" strokeOpacity={0.35} />
 
-        {/* base reference (grey dashed) — still rising at 20k */}
+        {/* base reference (grey dashed) */}
         <path d={path(basePts)} fill="none" stroke={COLORS.base} strokeWidth={2} strokeDasharray="4 4" strokeOpacity={0.8} />
-        <text x={xScale(basePts[basePts.length - 1].B) + 6} y={yScale(basePts[basePts.length - 1].accuracy) + 4} fontSize={11} fill={COLORS.base} fontWeight={500}>
+        <text x={xScale(basePts[basePts.length - 1].B) + 6} y={yScale(mv(basePts[basePts.length - 1])) + 4} fontSize={11} fill={COLORS.base} fontWeight={500}>
           base
         </text>
 
@@ -396,7 +404,7 @@ function BudgetChart({
           return (
             <g key={`c-${s}`}>
               <path d={path(cp.points)} fill="none" stroke={SCALE_COLORS[j]} strokeWidth={1.75} />
-              <text x={xScale(last.B) + 6} y={yScale(last.accuracy) + 4} fontSize={10} fill={SCALE_COLORS[j]} fontWeight={500}>
+              <text x={xScale(last.B) + 6} y={yScale(mv(last)) + 4} fontSize={10} fill={SCALE_COLORS[j]} fontWeight={500}>
                 {s}
               </text>
             </g>
@@ -484,13 +492,57 @@ export function MsmCapabilities20260518() {
           <div className="mx-auto grid max-w-[1850px] gap-10 lg:grid-cols-2">
             <BudgetChart
               family="aft_cot"
+              metric="accuracy"
               eyebrow="Qwen3-32B · thinking on · AFT (with CoT)"
               title="AFT-CoT: accuracy vs budget"
             />
             <BudgetChart
               family="msm_aft_cot"
+              metric="accuracy"
               eyebrow="Qwen3-32B · thinking on · MSM + AFT (with CoT)"
               title="MSM+AFT-CoT: accuracy vs budget"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-6">
+        <div className="mx-auto max-w-3xl space-y-3">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground">
+            The mechanism: does the model ever stop?
+          </div>
+          <h2 className="text-2xl font-light tracking-tight">
+            Termination fraction vs thinking budget
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Fraction of the 198 rollouts that ended on their own (EOS) within B
+            tokens — inferred from length{" "}
+            <span className="text-foreground">&lt; cap</span>, not the
+            known-unreliable <code>finish_reason</code> field. This isolates
+            <em> termination</em> from <em>answering</em>: the asymptote at B=20k
+            is the fraction that ever stops, so{" "}
+            <span className="text-foreground">1 − asymptote = genuine
+            non-termination</span>. base climbs to a high plateau (it stops when
+            done); heavy AFT-CoT plateaus <span className="text-foreground">early
+            and low</span> — a large share never emits EOS at all, and more MSM
+            training drives that share up. This is the mechanism behind the flat
+            accuracy curve above, and it is exactly what the clean native-40K run
+            extends past the cap.
+          </p>
+        </div>
+        <div className="relative left-1/2 w-screen -translate-x-1/2 px-4">
+          <div className="mx-auto grid max-w-[1850px] gap-10 lg:grid-cols-2">
+            <BudgetChart
+              family="aft_cot"
+              metric="terminated"
+              eyebrow="Qwen3-32B · thinking on · AFT (with CoT)"
+              title="AFT-CoT: termination vs budget"
+            />
+            <BudgetChart
+              family="msm_aft_cot"
+              metric="terminated"
+              eyebrow="Qwen3-32B · thinking on · MSM + AFT (with CoT)"
+              title="MSM+AFT-CoT: termination vs budget"
             />
           </div>
         </div>
