@@ -3,6 +3,12 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 const items = [
   {
+    slug: "2026-05-26",
+    title: "Meeting 2026-05-26 — On-policy vs off-policy: capability/trait Pareto",
+    description:
+      "Four points on the Qwen3-32B MSM frontier (GPQA × OOD agentic-misalignment trait): on-policy native, on-policy structured (C2 — Chloe-shaped <reasoning> block), in-family off-policy (Qwen3-235B-2507 teacher), and out-of-family off-policy (Opus aft_cot_20k). The 235B teacher gives a new middle-band Pareto point — same trait depth as C2 at ~4pp less capability cost.",
+  },
+  {
     slug: "2026-05-18",
     title: "Meeting 2026-05-18 — What does trait training cost?",
     description:

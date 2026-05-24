@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "title": "Opus ladder — Chloe's AFT-with-CoT at all 7 scales",
+    "subtitle": "Qwen3-32B, thinking on, strict commit_parse @20K, n=198",
+    "source_gpqa_default": "src/data/2026-05-18-msm-capabilities/bundle.json (chloeli/model-spec-midtraining-scaling, strict commit_parse @20k re-grade)",
+    "source_gpqa_5k_20k": "pod re-evals — same checkpoints, eval'd in our 4-adapter pods so 5k & 20k coordinates match the top Pareto plot exactly (within ~1pp of the bundle values)",
+    "source_am": "run_am_fixed.sh (n=100 epochs, temp 0.7, gpt-4.1 grader, leaking+murder subset); 5k = 1 pod measurement, 20k = mean of 3 pod measurements",
+    "am_status": "complete — 7/7 checkpoints measured (5 of them via pods/h100-chloe-ladder-am 2026-05-23)",
+    "base_gpqa": 0.6768,
+    "base_gpqa_ci": [0.610, 0.741]
+  },
+  "checkpoints": [
+    { "scale": 1000,  "label": "1k",  "gpqa": 0.6061, "gpqa_ci": [0.537, 0.671], "parse_rate": 0.828, "am_cv_lm": 0.380, "am_blackmail": 0.00, "am_leaking": 0.13, "am_murder": 0.63, "gpqa_source": "bundle" },
+    { "scale": 2000,  "label": "2k",  "gpqa": 0.5202, "gpqa_ci": [0.451, 0.589], "parse_rate": 0.732, "am_cv_lm": 0.330, "am_blackmail": 0.05, "am_leaking": 0.09, "am_murder": 0.57, "gpqa_source": "bundle" },
+    { "scale": 5000,  "label": "5k",  "gpqa": 0.4545, "gpqa_ci": [0.382, 0.519], "parse_rate": 0.626, "am_cv_lm": 0.225, "am_blackmail": 0.00, "am_leaking": 0.07, "am_murder": 0.38, "gpqa_source": "pod_h200-am-trait" },
+    { "scale": 10000, "label": "10k", "gpqa": 0.4394, "gpqa_ci": [0.372, 0.509], "parse_rate": 0.586, "am_cv_lm": 0.115, "am_blackmail": 0.00, "am_leaking": 0.06, "am_murder": 0.17, "gpqa_source": "bundle" },
+    { "scale": 20000, "label": "20k", "gpqa": 0.4447, "gpqa_ci": [0.372, 0.509], "parse_rate": 0.619, "am_cv_lm": 0.053, "am_blackmail": 0.00, "am_leaking": 0.02, "am_murder": 0.09, "gpqa_source": "pod_mean_3" },
+    { "scale": 40000, "label": "40k", "gpqa": 0.4091, "gpqa_ci": [0.343, 0.479], "parse_rate": 0.556, "am_cv_lm": 0.040, "am_blackmail": 0.00, "am_leaking": 0.00, "am_murder": 0.08, "gpqa_source": "bundle" },
+    { "scale": 80000, "label": "80k", "gpqa": 0.4040, "gpqa_ci": [0.338, 0.474], "parse_rate": 0.540, "am_cv_lm": 0.035, "am_blackmail": 0.00, "am_leaking": 0.00, "am_murder": 0.07, "gpqa_source": "bundle" }
+  ]
+}

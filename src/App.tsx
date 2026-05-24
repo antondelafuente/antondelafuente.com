@@ -30,6 +30,7 @@ import { Arya20260504 } from "@/routes/visualizations/2026-05-04/Arya"
 import { MethodComparison20260511 } from "@/routes/visualizations/2026-05-11/MethodComparison"
 import { CapabilityEvals20260518 } from "@/routes/visualizations/2026-05-18/CapabilityEvals"
 import { MsmCapabilities20260518 } from "@/routes/visualizations/2026-05-18/MsmCapabilities"
+import { OnPolicyPareto20260526 } from "@/routes/visualizations/2026-05-26/OnPolicyPareto"
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -72,6 +73,7 @@ export default function App() {
           <Route path="/visualizations/2026-05-11" element={<MethodComparison20260511 />} />
           <Route path="/visualizations/2026-05-18" element={<CapabilityEvals20260518 />} />
           <Route path="/visualizations/2026-05-18/msm-capabilities" element={<MsmCapabilities20260518 />} />
+          <Route path="/visualizations/2026-05-26" element={<OnPolicyPareto20260526 />} />
         </Route>
       </Routes>
     </BrowserRouter>
