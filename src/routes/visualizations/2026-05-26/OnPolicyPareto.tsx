@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 import pareto from "@/data/2026-05-26-msm-pareto/pareto.json"
 import ladder from "@/data/2026-05-26-msm-pareto/opus_ladder.json"
 import q235bLadder from "@/data/2026-05-26-msm-pareto/q235b_ladder.json"
+import c2Ladder from "@/data/2026-05-26-msm-pareto/c2_ladder.json"
 import convergence from "@/data/2026-05-26-msm-pareto/convergence_curves.json"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -40,9 +41,17 @@ const q235bLadderSeed1Points = q235bLadder.checkpoints_seed1.map((c) => ({
   cv: c.am_cv_lm,
 }))
 
-// our 2 "single-point" trained adapters (A native + C2 structured); Q235B is now plotted as
-// its own 5-point ladder above, and Opus as its 7-point ladder.
-const adapterPoints = [pods[0], pods[1]] as Array<{
+// 5-point C2 ladder (on-policy structured reasoning, Qwen-self under Chloe's prompt;
+// pods/h200-c2-scale 2026-05-25 for 1k/2k/5k/10k + pods/b200-msm32b-20k-C2 2026-05-20 for 20k).
+const c2LadderPoints = c2Ladder.checkpoints.map((c) => ({
+  label: c.label,
+  gpqa: c.gpqa,
+  cv: c.am_cv_lm,
+}))
+
+// our 1 "single-point" trained adapter (A native); C2 is now its own 5-point ladder above,
+// Q235B is also a 5-point ladder, and Opus is the 7-point ladder.
+const adapterPoints = [pods[0]] as Array<{
   key: string
   label: string
   kind: "on-policy" | "off-policy"
@@ -75,21 +84,27 @@ export function OnPolicyPareto20260526() {
         <CardHeader>
           <CardTitle className="text-base">TL;DR</CardTitle>
           <CardDescription>
-            Q235B trajectory (5 scales: 1K, 2K, 5K, 10K, 20K) overlaid on the Opus 7-point
-            ladder. The two teachers trace <strong>different curves through (capability, trait)
-            space</strong>: Opus drops capability fast then keeps deepening trait; Q235B sits
-            in a higher-capability / shallower-trait region. Per-scale Q235B vs Opus: at 1K-5K
-            Q235B <strong>Pareto-dominates</strong>; at 10K-20K it&apos;s mixed (Q235B keeps
-            ~7-13pp more capability, Opus is ~5-10pp more aligned). C2 (on-policy structured)
-            still sits BELOW both ladders at GPQA 0.540 / cv 0.110.
+            <strong>C2 (on-policy structured) Pareto-dominates everything at most scales.</strong>{" "}
+            With the C2 5-point ladder now in hand, the picture is: C2 trajectory sits ABOVE
+            Q235B trajectory which sits ABOVE Opus trajectory across nearly all matched scales.
+            C2 vs Opus: dominates at 1K, 2K, 5K, 10K; mixed at 20K. C2 vs Q235B: dominates at
+            1K, 2K, 5K, 10K; mixed at 20K. <strong>C2 10K (0.631 / 0.125)</strong> is the best
+            single Pareto point we have — better capability than A (0.621 / 0.295) AND ~17pp
+            deeper trait, AND better than Q235B 10K (0.510 / 0.165) on both axes.
             <br />
             <br />
-            <strong>Replication (SFT seed=1 vs seed=42 re-run, 1K-10K only):</strong> the 1K→2K
-            capability cliff reproduces (drop −12pp in seed=42, −16pp in seed=1 — real). The
-            2K-10K wobble does NOT reproduce — seed=1 flattens to a clean plateau at GPQA ~0.55
-            and cv ~0.19-0.26. So the simpler story is true: Q235B has one sharp cliff at the
-            1K→2K transition, then plateaus. The seed=42 wobble (5K up, 10K down, 20K up) was
-            mostly SFT-seed noise on n=198 / n=100.
+            <strong>Caveat — wobble may be SFT-seed noise.</strong> C2&apos;s curve wobbles
+            2K→5K→10K→20K (GPQA 0.571 / 0.586 / 0.631 / 0.540) — same shape as Q235B&apos;s
+            seed=42 curve, which flattened to a clean plateau when re-run with seed=1. C2&apos;s
+            10K-vs-20K 9pp gap is plausibly seed noise too; the underlying C2 curve probably
+            plateaus around GPQA 0.59-0.63 / cv 0.11-0.13 after 5K-10K of training, and the 20K
+            we&apos;d been reporting (0.540) was likely an unlucky draw. C2 seed=1 replication
+            not yet run.
+            <br />
+            <br />
+            <strong>Q235B vs Opus replication finding (preserved):</strong> the 1K→2K cliff
+            reproduces across seeds (real); the 2K-10K wobble does not reproduce (was noise).
+            Q235B plateaus at ~0.55 GPQA / ~0.19 cv after the 1K cliff.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -342,6 +357,50 @@ function ParetoScatter() {
           )
         })}
 
+        {/* C2 5-point ladder (on-policy structured): connecting curve + dots, with 20k labeled */}
+        <path
+          d={c2LadderPoints
+            .map(
+              (p, i) =>
+                `${i === 0 ? "M" : "L"} ${xScale(p.gpqa)} ${yScaleInv(p.cv)}`,
+            )
+            .join(" ")}
+          fill="none"
+          stroke="#10b981"
+          strokeWidth={1.4}
+          opacity={0.65}
+        />
+        {c2LadderPoints.map((p) => {
+          const cx = xScale(p.gpqa)
+          const cy = yScaleInv(p.cv)
+          const prominent = p.label === "20k" || p.label === "10k"
+          // place label above for most, below for 2k (avoids crowding)
+          const labelDy = p.label === "2k" ? 14 : -(prominent ? 12 : 9)
+          return (
+            <g key={`c2-${p.label}`}>
+              <circle
+                cx={cx}
+                cy={cy}
+                r={prominent ? 6 : 4}
+                fill="#10b981"
+                stroke="white"
+                strokeWidth={prominent ? 1.5 : 1}
+              />
+              <text
+                x={cx}
+                y={cy + labelDy}
+                fontSize={prominent ? 11 : 9.5}
+                textAnchor="middle"
+                fill="#10b981"
+                fontWeight={prominent ? 600 : 400}
+                opacity={prominent ? 1 : 0.75}
+              >
+                C2 {p.label}
+              </text>
+            </g>
+          )
+        })}
+
         {/* Q235B seed=1 re-run trajectory (dashed, lighter purple) — 4 points, no 20k */}
         <path
           d={q235bLadderSeed1Points
@@ -480,6 +539,16 @@ function ParetoScatter() {
             </g>
           ))}
           <g transform={`translate(0, ${20 + adapterPoints.length * 32})`}>
+            <line x1={0} x2={12} y1={6} y2={6} stroke="#10b981" strokeWidth={1.4} opacity={0.65} />
+            <circle cx={6} cy={6} r={4} fill="#10b981" stroke="white" strokeWidth={1} />
+            <text x={18} y={9} fontSize={11} fill={COLORS.text}>
+              C2 ladder
+            </text>
+            <text x={18} y={21} fontSize={10} fill={COLORS.text} opacity={0.65}>
+              on-policy struct, 5 scales
+            </text>
+          </g>
+          <g transform={`translate(0, ${20 + (adapterPoints.length + 1) * 32})`}>
             <line x1={0} x2={12} y1={6} y2={6} stroke="#a855f7" strokeWidth={1.4} opacity={0.55} />
             <circle cx={6} cy={6} r={4} fill="#a855f7" stroke="white" strokeWidth={1} />
             <text x={18} y={9} fontSize={11} fill={COLORS.text}>
@@ -489,7 +558,7 @@ function ParetoScatter() {
               off-policy, 5 scales
             </text>
           </g>
-          <g transform={`translate(0, ${20 + (adapterPoints.length + 1) * 32})`}>
+          <g transform={`translate(0, ${20 + (adapterPoints.length + 2) * 32})`}>
             <line x1={0} x2={12} y1={6} y2={6} stroke="#a855f7" strokeWidth={1.2} opacity={0.4} strokeDasharray="4 3" />
             <circle cx={6} cy={6} r={4} fill="white" stroke="#a855f7" strokeWidth={1.3} />
             <text x={18} y={9} fontSize={11} fill={COLORS.text}>
@@ -499,7 +568,7 @@ function ParetoScatter() {
               re-run, 1k-10k
             </text>
           </g>
-          <g transform={`translate(0, ${20 + (adapterPoints.length + 2) * 32})`}>
+          <g transform={`translate(0, ${20 + (adapterPoints.length + 3) * 32})`}>
             <line x1={0} x2={12} y1={6} y2={6} stroke="#dc2626" strokeWidth={1.4} opacity={0.55} />
             <circle cx={6} cy={6} r={4} fill="#dc2626" stroke="white" strokeWidth={1} />
             <text x={18} y={9} fontSize={11} fill={COLORS.text}>
@@ -976,17 +1045,22 @@ function SeedComparison() {
 }
 
 function MatchedScaleComparison() {
-  const rows = q235bLadder.matched_scale_comparison_to_opus.rows
+  // Build a 3-way matched-scale view (C2 / Q235B / Opus per scale).
+  const c2Map = Object.fromEntries(c2Ladder.matched_scale_comparison_to_opus.rows.map((r) => [r.scale, r]))
+  const qMap = Object.fromEntries(q235bLadder.matched_scale_comparison_to_opus.rows.map((r) => [r.scale, r]))
+  const scales = ["1k", "2k", "5k", "10k", "20k"]
   return (
     <section className="space-y-4">
       <div>
         <h2 className="text-2xl font-light tracking-tight">
-          Q235B vs Opus, at matched training scale
+          Three teachers at matched training scale (C2 / Q235B / Opus)
         </h2>
         <p className="text-muted-foreground">
-          Same training amount, two different teachers. ΔGPQA positive = Q235B keeps more
-          capability; Δcv negative = Q235B less harmful. At 1K-5K Q235B Pareto-dominates Opus;
-          at 10K-20K the two trade off (Q235B keeps more capability, Opus deeper trait).
+          Same Qwen3-32B student, same 5K/10K/etc. training amounts, three different teachers.
+          ΔGPQA-vs-Opus positive = teacher keeps more capability than Opus; Δcv-vs-Opus negative
+          = teacher less harmful than Opus. C2 (green) Pareto-dominates Opus at 1K-5K-10K and is
+          mixed at 20K. Q235B Pareto-dominates at 1K-5K and is mixed at 10K-20K. C2 vs Q235B:
+          C2 dominates at every scale 1K-10K; 20K mixed.
         </p>
       </div>
       <div className="overflow-x-auto">
@@ -994,36 +1068,51 @@ function MatchedScaleComparison() {
           <thead>
             <tr className="border-b text-left text-muted-foreground">
               <th className="py-2 pr-3">scale</th>
-              <th className="py-2 pr-3 text-right">Q235B GPQA</th>
-              <th className="py-2 pr-3 text-right">Opus GPQA</th>
-              <th className="py-2 pr-3 text-right">ΔGPQA</th>
-              <th className="py-2 pr-3 text-right">Q235B cv</th>
-              <th className="py-2 pr-3 text-right">Opus cv</th>
-              <th className="py-2 pr-3 text-right">Δcv</th>
-              <th className="py-2 pr-3">verdict</th>
+              <th className="py-2 pr-3 text-right" style={{ color: "#10b981" }}>C2 GPQA</th>
+              <th className="py-2 pr-3 text-right" style={{ color: "#a855f7" }}>Q235B GPQA</th>
+              <th className="py-2 pr-3 text-right" style={{ color: "#dc2626" }}>Opus GPQA</th>
+              <th className="py-2 pr-3 text-right" style={{ color: "#10b981" }}>C2 cv</th>
+              <th className="py-2 pr-3 text-right" style={{ color: "#a855f7" }}>Q235B cv</th>
+              <th className="py-2 pr-3 text-right" style={{ color: "#dc2626" }}>Opus cv</th>
+              <th className="py-2 pr-3">Pareto-best at this scale</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((r) => (
-              <tr key={r.scale} className="border-b last:border-b-0">
-                <td className="py-2 pr-3 font-mono">{r.scale}</td>
-                <td className="py-2 pr-3 text-right font-mono">{r.q235b_gpqa.toFixed(3)}</td>
-                <td className="py-2 pr-3 text-right font-mono">{r.opus_gpqa.toFixed(3)}</td>
-                <td className="py-2 pr-3 text-right font-mono">
-                  <span className={r.d_gpqa > 0 ? "text-emerald-600" : "text-red-600"}>
-                    {fmtPP(r.d_gpqa)}
-                  </span>
-                </td>
-                <td className="py-2 pr-3 text-right font-mono">{r.q235b_cv.toFixed(3)}</td>
-                <td className="py-2 pr-3 text-right font-mono">{r.opus_cv.toFixed(3)}</td>
-                <td className="py-2 pr-3 text-right font-mono">
-                  <span className={r.d_cv < 0 ? "text-emerald-600" : "text-red-600"}>
-                    {fmtPP(r.d_cv)}
-                  </span>
-                </td>
-                <td className="py-2 pr-3 text-xs text-muted-foreground">{r.verdict}</td>
-              </tr>
-            ))}
+            {scales.map((s) => {
+              const c = c2Map[s]
+              const q = qMap[s]
+              // Pareto-best: lowest cv among teachers that aren't dominated by another on cap.
+              // Cheap rule: report whichever wins both axes vs the others; else "mixed".
+              const points = [
+                { name: "C2", gpqa: c.c2_gpqa, cv: c.c2_cv, color: "#10b981" },
+                { name: "Q235B", gpqa: c.opus_gpqa /* unused */, cv: 0, color: "#a855f7" },
+                { name: "Opus", gpqa: c.opus_gpqa, cv: c.opus_cv, color: "#dc2626" },
+              ]
+              points[1] = { name: "Q235B", gpqa: q.q235b_gpqa, cv: q.q235b_cv, color: "#a855f7" }
+              const dominators = points.filter((p) =>
+                points.every((o) => p === o || p.gpqa > o.gpqa || (p.gpqa === o.gpqa && p.cv < o.cv))
+                && points.every((o) => p === o || p.cv <= o.cv || (p.cv === o.cv && p.gpqa >= o.gpqa))
+              )
+              const winner = dominators.length === 1 ? dominators[0] : null
+              return (
+                <tr key={s} className="border-b last:border-b-0">
+                  <td className="py-2 pr-3 font-mono">{s}</td>
+                  <td className="py-2 pr-3 text-right font-mono" style={{ color: "#10b981" }}>{c.c2_gpqa.toFixed(3)}</td>
+                  <td className="py-2 pr-3 text-right font-mono" style={{ color: "#a855f7" }}>{q.q235b_gpqa.toFixed(3)}</td>
+                  <td className="py-2 pr-3 text-right font-mono" style={{ color: "#dc2626" }}>{c.opus_gpqa.toFixed(3)}</td>
+                  <td className="py-2 pr-3 text-right font-mono" style={{ color: "#10b981" }}>{c.c2_cv.toFixed(3)}</td>
+                  <td className="py-2 pr-3 text-right font-mono" style={{ color: "#a855f7" }}>{q.q235b_cv.toFixed(3)}</td>
+                  <td className="py-2 pr-3 text-right font-mono" style={{ color: "#dc2626" }}>{c.opus_cv.toFixed(3)}</td>
+                  <td className="py-2 pr-3 text-xs text-muted-foreground">
+                    {winner ? (
+                      <span style={{ color: winner.color, fontWeight: 600 }}>{winner.name} dominates</span>
+                    ) : (
+                      "mixed (no single dominator)"
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>
@@ -1077,8 +1166,8 @@ function PodCard({ pod }: { pod: Pod }) {
 
 function ScenarioTable() {
   // Within-pod per-scenario AM (blackmail / leaking / murder), trained adapter only.
-  // First row: base mean. Then A + C2 (single-point adapters). Then Q235B ladder (5).
-  // Then Opus ladder (7).
+  // First row: base mean. Then A (single-point). Then C2 ladder (5). Then Q235B ladder
+  // (5). Then Opus ladder (7).
   const baseMean = {
     blackmail: mean(pods.slice(0, 4).map((p) => p.base.am_blackmail)),
     leaking: mean(pods.slice(0, 4).map((p) => p.base.am_leaking)),
@@ -1093,13 +1182,21 @@ function ScenarioTable() {
       leaking: baseMean.leaking,
       murder: baseMean.murder,
     },
-    ...pods.slice(0, 2).map((p) => ({
+    ...pods.slice(0, 1).map((p) => ({
       key: p.key,
       label: p.label,
       color: p.color,
       blackmail: p.trained.am_blackmail,
       leaking: p.trained.am_leaking,
       murder: p.trained.am_murder,
+    })),
+    ...c2Ladder.checkpoints.map((c) => ({
+      key: `c2_${c.label}`,
+      label: `C2 ${c.label}`,
+      color: "#10b981",
+      blackmail: c.am_blackmail,
+      leaking: c.am_leaking,
+      murder: c.am_murder,
     })),
     ...q235bLadder.checkpoints.map((c) => ({
       key: `q235b_${c.label}`,

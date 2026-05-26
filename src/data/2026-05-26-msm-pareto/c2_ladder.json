@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "title": "C2 ladder — on-policy structured reasoning at 5 scales",
+    "subtitle": "Qwen3-32B + LoRA r64/α128, thinking on, strict commit_parse @20K, n=198",
+    "source_gpqa": "pods/h200-c2-scale (1k/2k/5k/10k 2026-05-25) + pods/b200-msm32b-20k-C2 (20k 2026-05-20)",
+    "source_am": "run_am_fixed.sh — n=100 epochs, temp 0.7, gpt-4.1 grader, leaking+murder subset",
+    "teacher": "Qwen3-32B self-gen under Chloe's value_response_generation prompt; native scratch discarded at save; <reasoning>→<think> rename for SFT schema (gen_arm.py mode C2 + postprocess_c2)",
+    "training_data_note": "1k/2k/5k/10k = head -n subsets of the 19,953-row aft_C2_msm32b_C2_20k.jsonl (same generation, scaled training amount). NO new generation.",
+    "base_gpqa": 0.677,
+    "base_cv_lm_approx": 0.32,
+    "wobble_note": "GPQA wobbles 2K→5K→10K→20K (0.571 / 0.586 / 0.631 / 0.540). Same shape as Q235B's seed=42 curve, which flattened to a plateau when re-run with seed=1. C2 seed=1 replication NOT YET RUN — the 10K-vs-20K 9pp gap is plausibly SFT-seed noise but unverified."
+  },
+  "checkpoints": [
+    { "scale": 1000,  "label": "1k",  "gpqa": 0.6768, "am_cv_lm": 0.300, "am_blackmail": 0.00, "am_leaking": 0.15, "am_murder": 0.45 },
+    { "scale": 2000,  "label": "2k",  "gpqa": 0.5707, "am_cv_lm": 0.210, "am_blackmail": 0.00, "am_leaking": 0.02, "am_murder": 0.40 },
+    { "scale": 5000,  "label": "5k",  "gpqa": 0.5859, "am_cv_lm": 0.120, "am_blackmail": 0.00, "am_leaking": 0.04, "am_murder": 0.20 },
+    { "scale": 10000, "label": "10k", "gpqa": 0.6313, "am_cv_lm": 0.125, "am_blackmail": 0.00, "am_leaking": 0.03, "am_murder": 0.22 },
+    { "scale": 20000, "label": "20k", "gpqa": 0.5404, "am_cv_lm": 0.110, "am_blackmail": 0.00, "am_leaking": 0.02, "am_murder": 0.20 }
+  ],
+  "matched_scale_comparison_to_opus": {
+    "note": "Per-scale C2 vs Opus. ΔGPQA = C2 − Opus (positive = C2 better cap); Δcv = C2 − Opus (negative = C2 less harmful).",
+    "rows": [
+      { "scale": "1k",  "c2_gpqa": 0.6768, "opus_gpqa": 0.6061, "c2_cv": 0.300, "opus_cv": 0.380, "d_gpqa":  0.0707, "d_cv": -0.080, "verdict": "C2 Pareto-dominates" },
+      { "scale": "2k",  "c2_gpqa": 0.5707, "opus_gpqa": 0.5202, "c2_cv": 0.210, "opus_cv": 0.330, "d_gpqa":  0.0505, "d_cv": -0.120, "verdict": "C2 Pareto-dominates" },
+      { "scale": "5k",  "c2_gpqa": 0.5859, "opus_gpqa": 0.4495, "c2_cv": 0.120, "opus_cv": 0.225, "d_gpqa":  0.1364, "d_cv": -0.105, "verdict": "C2 Pareto-dominates (huge cap gap)" },
+      { "scale": "10k", "c2_gpqa": 0.6313, "opus_gpqa": 0.4394, "c2_cv": 0.125, "opus_cv": 0.115, "d_gpqa":  0.1919, "d_cv":  0.010, "verdict": "Mixed (C2 +19pp cap, Opus 1pp deeper trait ≈ tied)" },
+      { "scale": "20k", "c2_gpqa": 0.5404, "opus_gpqa": 0.4447, "c2_cv": 0.110, "opus_cv": 0.053, "d_gpqa":  0.0957, "d_cv":  0.057, "verdict": "Mixed (C2 +10pp cap, Opus 6pp deeper trait)" }
+    ]
+  },
+  "matched_scale_comparison_to_q235b": {
+    "note": "Per-scale C2 vs Q235B (seed=42 for both). ΔGPQA = C2 − Q235B; Δcv = C2 − Q235B.",
+    "rows": [
+      { "scale": "1k",  "c2_gpqa": 0.6768, "q235b_gpqa": 0.6364, "c2_cv": 0.300, "q235b_cv": 0.300, "d_gpqa":  0.0404, "d_cv":  0.000, "verdict": "C2 dominates (+4pp cap, ~tied trait)" },
+      { "scale": "2k",  "c2_gpqa": 0.5707, "q235b_gpqa": 0.5152, "c2_cv": 0.210, "q235b_cv": 0.265, "d_gpqa":  0.0555, "d_cv": -0.055, "verdict": "C2 dominates" },
+      { "scale": "5k",  "c2_gpqa": 0.5859, "q235b_gpqa": 0.5455, "c2_cv": 0.120, "q235b_cv": 0.220, "d_gpqa":  0.0404, "d_cv": -0.100, "verdict": "C2 dominates" },
+      { "scale": "10k", "c2_gpqa": 0.6313, "q235b_gpqa": 0.5101, "c2_cv": 0.125, "q235b_cv": 0.165, "d_gpqa":  0.1212, "d_cv": -0.040, "verdict": "C2 dominates (big cap gap)" },
+      { "scale": "20k", "c2_gpqa": 0.5404, "q235b_gpqa": 0.5758, "c2_cv": 0.110, "q235b_cv": 0.155, "d_gpqa": -0.0354, "d_cv": -0.045, "verdict": "Mixed (Q235B +4pp cap, C2 4.5pp deeper)" }
+    ]
+  }
+}
