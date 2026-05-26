@@ -4,6 +4,7 @@ import ladder from "@/data/2026-05-26-msm-pareto/opus_ladder.json"
 import q235bLadder from "@/data/2026-05-26-msm-pareto/q235b_ladder.json"
 import c2Ladder from "@/data/2026-05-26-msm-pareto/c2_ladder.json"
 import convergence from "@/data/2026-05-26-msm-pareto/convergence_curves.json"
+import trainingExamples from "@/data/2026-05-26-msm-pareto/training_examples.json"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 const COLORS = {
@@ -110,6 +111,8 @@ export function OnPolicyPareto20260526() {
       </Card>
 
       <ParetoScatter />
+
+      <TrainingExamples />
 
       <OpusLadder />
 
@@ -581,6 +584,115 @@ function ParetoScatter() {
         </g>
       </svg>
     </section>
+  )
+}
+
+function TrainingExamples() {
+  // OCT_D vs C2 paired training rows on the SAME 3 prompts. Illustrates the
+  // structural difference: OCT_D <think> blocks open in user-utility-analysis
+  // mode ("Okay, the user is asking..., let me break this down...") even with
+  // OCT framing in the system prompt at gen time; C2 <think> (which is the
+  // post-hoc structured reasoning, with the native scratch discarded) opens in
+  // trait-principle-application mode ("The user is asking about X. The Model
+  // Spec emphasizes Y..."). 3-of-3 native-think organisms (A, OCT_S, OCT_D) hit
+  // null trait at 20K; C2/Q235B/Opus install real trait. Pattern across n=500
+  // sampled rows: native-think 100% user-utility framing vs C2 12%.
+  const examples = trainingExamples.examples
+  return (
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-2xl font-light tracking-tight">
+          What the training data actually looks like
+        </h2>
+        <p className="text-muted-foreground max-w-4xl">
+          Same 3 prompts (from the 20K identity/impermanence pool used for every organism),
+          paired across two Qwen3-32B self-gen variants. Left column is what mode A / OCT_S /
+          OCT_D train on — Qwen's native exploratory <code className="px-1">&lt;think&gt;</code>{" "}
+          block. Right column is what C2 trains on — Chloe's <code className="px-1">value_response_generation</code>{" "}
+          prompt elicits a structured <code className="px-1">&lt;reasoning&gt;</code> block which
+          becomes the saved <code className="px-1">&lt;think&gt;</code> (the native scratch is
+          discarded). 100% of native-think blocks open in user-utility-analysis mode ("Okay,
+          the user is asking X, let me break this down...") even when the gen-time system prompt
+          is decorated with OCT character framing. 12% of C2 blocks do. The structural
+          difference is visible in the first paragraph of every example below.
+        </p>
+      </div>
+      <div className="space-y-6">
+        {examples.map((ex, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <CardTitle className="text-sm font-normal text-muted-foreground">
+                <span className="mr-2 font-mono text-xs">Q{i + 1}.</span>
+                {ex.question}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                <TrainingCell
+                  label="OCT_D (native think — null trait)"
+                  color="#6b7280"
+                  think={ex.oct_d.think}
+                  response={ex.oct_d.response}
+                  thinkChars={ex.oct_d.think_chars}
+                  responseChars={ex.oct_d.response_chars}
+                />
+                <TrainingCell
+                  label="C2 (structured reasoning — installs trait)"
+                  color="#10b981"
+                  think={ex.c2.think}
+                  response={ex.c2.response}
+                  thinkChars={ex.c2.think_chars}
+                  responseChars={ex.c2.response_chars}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function TrainingCell({
+  label,
+  color,
+  think,
+  response,
+  thinkChars,
+  responseChars,
+}: {
+  label: string
+  color: string
+  think: string
+  response: string
+  thinkChars: number
+  responseChars: number
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center gap-2 text-xs">
+        <span className="inline-block size-2 rounded-full" style={{ backgroundColor: color }} />
+        <span className="font-medium">{label}</span>
+      </div>
+      <div>
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+          &lt;think&gt; ({thinkChars} chars)
+        </div>
+        <div
+          className="text-xs leading-relaxed whitespace-pre-wrap rounded border bg-muted/40 p-3 max-h-72 overflow-y-auto font-mono"
+        >
+          {think}
+        </div>
+      </div>
+      <div>
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 mt-2">
+          response ({responseChars} chars)
+        </div>
+        <div className="text-xs leading-relaxed whitespace-pre-wrap rounded border p-3 max-h-60 overflow-y-auto">
+          {response}
+        </div>
+      </div>
+    </div>
   )
 }
 
