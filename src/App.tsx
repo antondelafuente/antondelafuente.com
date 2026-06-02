@@ -31,6 +31,7 @@ import { MethodComparison20260511 } from "@/routes/visualizations/2026-05-11/Met
 import { CapabilityEvals20260518 } from "@/routes/visualizations/2026-05-18/CapabilityEvals"
 import { MsmCapabilities20260518 } from "@/routes/visualizations/2026-05-18/MsmCapabilities"
 import { OnPolicyPareto20260526 } from "@/routes/visualizations/2026-05-26/OnPolicyPareto"
+import { RewritePareto20260602 } from "@/routes/visualizations/2026-06-02/RewritePareto"
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -74,6 +75,7 @@ export default function App() {
           <Route path="/visualizations/2026-05-18" element={<CapabilityEvals20260518 />} />
           <Route path="/visualizations/2026-05-18/msm-capabilities" element={<MsmCapabilities20260518 />} />
           <Route path="/visualizations/2026-05-26" element={<OnPolicyPareto20260526 />} />
+          <Route path="/visualizations/2026-06-02" element={<RewritePareto20260602 />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -3,6 +3,12 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 const items = [
   {
+    slug: "2026-06-02",
+    title: "Meeting 2026-06-02 — Rewrite Opus through Qwen: capability/trait on Chloe's real data",
+    description:
+      "First run on Chloe's actual AFT-CoT data (phil_spec_cot_10k) — Arthur's literal \"rewrite the Opus data through Qwen\" idea, on a corrected 2-action trait axis (murder + exfiltration). Headlines: generate-fresh (C2) beats rewriting Opus (+5.6pp capability at the same trait), and the capability cost is intrinsic to off-policy CoT — the instruction-tuning mix buys nothing, only on-policy recovers GPQA.",
+  },
+  {
     slug: "2026-05-26",
     title: "Meeting 2026-05-26 — On-policy vs off-policy: capability/trait Pareto",
     description:

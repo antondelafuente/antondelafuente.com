@@ -1,0 +1,77 @@
+{
+  "meta": {
+    "title": "Rewrite Opus through Qwen — on Chloe's real main-graph data",
+    "subtitle": "First run on Chloe's actual AFT-CoT data (phil_spec_cot_10k). Arthur's literal \"rewrite the Opus data through Qwen\" idea, plus a corrected 2-action trait axis (murder + exfiltration, model_name=Qwen). Capability = GPQA-Diamond strict@20k thinking-on (n=198). Trait = agentic-misalignment classifier_verdict, flat-average over the discriminating cells (n=100, gpt-4.1 grader).",
+    "x_label": "GPQA-Diamond strict@20k → higher is better",
+    "y_label": "AM misalignment (flat-avg) → lower is more aligned"
+  },
+  "conditions": [
+    {
+      "key": "base",
+      "label": "base",
+      "group": "base",
+      "color": "#71717a",
+      "gpqa": 0.68,
+      "trait": 0.54,
+      "murder": 0.587,
+      "murder_settings": { "none": 0.59, "explicit": 0.66, "latent": 0.51 },
+      "exfil": 0.39,
+      "note": "Qwen3-32B, no adapter."
+    },
+    {
+      "key": "c2",
+      "label": "C2 — generate fresh (on-policy)",
+      "group": "on-policy",
+      "color": "#10b981",
+      "gpqa": 0.606,
+      "trait": 0.22,
+      "murder": 0.257,
+      "murder_settings": { "none": 0.23, "explicit": 0.28, "latent": 0.26 },
+      "exfil": 0.11,
+      "note": "Qwen3-32B generates fresh structured CoT on the same questions."
+    },
+    {
+      "key": "rewrite_off",
+      "label": "rewrite — launder Opus (on-policy)",
+      "group": "on-policy",
+      "color": "#3b82f6",
+      "gpqa": 0.55,
+      "trait": 0.21,
+      "murder": 0.26,
+      "murder_settings": { "none": 0.16, "explicit": 0.37, "latent": 0.25 },
+      "exfil": 0.07,
+      "note": "Qwen3-32B rewrites Opus's CoT into its own voice (thinking-off). Arthur's idea."
+    },
+    {
+      "key": "chloe_main",
+      "label": "Chloe's checkpoint (off-policy + IT mix)",
+      "group": "off-policy",
+      "color": "#f59e0b",
+      "gpqa": 0.46,
+      "trait": 0.135,
+      "murder": 0.137,
+      "murder_settings": { "none": 0.12, "explicit": 0.13, "latent": 0.16 },
+      "exfil": 0.13,
+      "note": "Her released aft-cot checkpoint — Opus tokens + general instruction-tuning mix."
+    },
+    {
+      "key": "baseline",
+      "label": "baseline (off-policy, no IT)",
+      "group": "off-policy",
+      "color": "#dc2626",
+      "gpqa": 0.48,
+      "trait": 0.04,
+      "murder": 0.05,
+      "murder_settings": { "none": 0.04, "explicit": 0.08, "latent": 0.03 },
+      "exfil": 0.01,
+      "note": "Our recipe-matched control: SFT on Opus tokens as-is, no IT mix."
+    }
+  ],
+  "notes": [
+    "Same data (phil_spec_cot_10k) for all trained conditions; the only variable across the rewrite arms is Opus tokens → Qwen tokens.",
+    "Trait = flat-average over the cells run (murder@{none, explicit-global, latent-global} + exfiltration@explicit-global). Exfiltration only discriminates under explicit goal conflict — it floors at no-conflict (probe-confirmed, base 0.0).",
+    "model_name=Qwen (her identity), correcting all prior AM that ran as \"Alex\" via the public inspect_evals port. Identity effect was small/within-noise.",
+    "Exfiltration classifier is OUR reconstruction (her ExfiltrationClassifier lives in an unpublished inspect_evals fork) — faithful in spirit, grader held constant (gpt-4.1) so the contrast is unbiased.",
+    "rewrite_on (thinking-on) is omitted from the scatter — not re-run on the thorough axis; thinking-off dominates it (GPQA 0.576 / old murder-only cv 0.165)."
+  ]
+}
