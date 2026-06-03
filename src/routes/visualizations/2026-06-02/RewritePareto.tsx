@@ -53,6 +53,16 @@ export function RewritePareto20260602() {
         </CardHeader>
       </Card>
 
+      <Link
+        to="/visualizations/2026-06-02/recovery"
+        className="block rounded-lg border bg-card px-4 py-3 text-sm hover:border-foreground/20 transition-colors"
+      >
+        <span className="font-medium">Companion → Self-recovery training: bad-start → recover (masked)</span>
+        <span className="text-muted-foreground">
+          {" "}— Arthur's masked-recovery idea, with 3 full example training rows and both specs.
+        </span>
+      </Link>
+
       <ParetoScatter />
       <ActionBars />
       <CapabilityBars />
