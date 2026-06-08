@@ -36,13 +36,16 @@ function ParetoScatter() {
   const pts = hc.pareto.points as SPoint[]
   const pending = (hc.pareto.pendingPoints ?? []) as PPoint[]
   const families = (hc.pareto.families ?? []) as Family[]
-  const bar = hc.pareto.bar as { gpqa: number; am: number; label: string }
   const base = hc.pareto.base as Base
   const diamond = (cx: number, cy: number, r: number) => `${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}`
 
-  // win zone = bottom-right of C2 (higher GPQA AND lower AM)
-  const wzX = xs(bar.gpqa), wzY = ys(bar.am)
-  const wzRight = M.left + innerW, wzBottom = M.top + innerH
+  // Pareto frontier = non-dominated points (nothing else is both more capable AND more aligned)
+  const fpts = [...pts.map((p) => ({ gpqa: p.gpqa, am: am(p) })), { gpqa: base.gpqa, am: am(base) }]
+  const frontier = fpts
+    .filter((p) => !fpts.some((q) => q !== p && q.gpqa >= p.gpqa && q.am <= p.am && (q.gpqa > p.gpqa || q.am < p.am)))
+    .sort((a, b) => a.gpqa - b.gpqa)
+  const frontierPath = frontier.map((p) => `${xs(p.gpqa)},${ys(p.am)}`).join(" ")
+  const idealX = M.left + innerW, idealY = M.top + innerH
 
   return (
     <section className="space-y-3">
@@ -50,19 +53,19 @@ function ParetoScatter() {
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The frontier · every method on one axis</div>
         <h2 className="text-xl font-semibold tracking-tight">Capability × misalignment</h2>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          Ideal is bottom-right — high capability, low misalignment. The cross is the <span className="text-foreground">self-written bar</span>
-          (the on-policy baseline where Qwen trains on its own spec-written answers); the shaded corner is the <span className="text-foreground">win zone</span> (better
-          than the bar on both axes). For a long time it was empty — until the <span className="text-foreground">light-clip regime</span> entered it:
-          lighter token-clips that hold capability while dropping misalignment well below the bar — replicated across 2 seeds. Circles are the
-          co-measured first batch; diamonds are the off-policy iterations — all on the corrected grader.
+          Two anchors set the tension: <span className="text-foreground">Plain Qwen</span> is capable but misaligned (top-right), and the
+          <span className="text-foreground"> trait models</span> (Released checkpoint / our Repro) are aligned but far less capable (bottom-left).
+          Every method is an attempt to escape that tradeoff and reach the <span className="text-foreground">ideal corner</span> — capable AND
+          aligned (bottom-right). The dashed line is the <span className="text-foreground">Pareto frontier</span> (the best achieved so far);
+          the <span className="text-foreground">light-clip regime</span> pushes it furthest into the good corner, replicated across 2 seeds.
+          Circles are the co-measured first batch; diamonds are the off-policy iterations — all on the corrected grader.
         </p>
       </div>
 
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto text-foreground">
-        {/* win zone shading */}
-        <rect x={wzX} y={wzY} width={wzRight - wzX} height={wzBottom - wzY} fill="#10b981" opacity={0.06} />
-        <text x={(wzX + wzRight) / 2} y={wzBottom - 30} fontSize={12} textAnchor="middle" fill="#10b981" opacity={0.85} fontWeight={600}>WIN ZONE</text>
-        <text x={(wzX + wzRight) / 2} y={wzBottom - 16} fontSize={9.5} textAnchor="middle" fill="#10b981" opacity={0.7}>beats the bar on both — light-clip regime is here</text>
+        {/* ideal corner cue (bottom-right = capable AND aligned) */}
+        <text x={idealX} y={idealY - 20} fontSize={11} textAnchor="end" fill="#10b981" opacity={0.75} fontWeight={600}>ideal</text>
+        <text x={idealX} y={idealY - 7} fontSize={9} textAnchor="end" fill="#10b981" opacity={0.6}>capable + aligned ↘</text>
 
         {/* gridlines */}
         {yTicks.map((t) => (
@@ -72,9 +75,9 @@ function ParetoScatter() {
           <line key={`gx-${t}`} x1={xs(t)} x2={xs(t)} y1={M.top} y2={M.top + innerH} stroke={COLORS.grid} />
         ))}
 
-        {/* C2 crosshair */}
-        <line x1={wzX} x2={wzX} y1={M.top} y2={M.top + innerH} stroke="#0ea5e9" strokeWidth={1} strokeDasharray="3 3" opacity={0.5} />
-        <line x1={M.left} x2={M.left + innerW} y1={wzY} y2={wzY} stroke="#0ea5e9" strokeWidth={1} strokeDasharray="3 3" opacity={0.5} />
+        {/* Pareto frontier — the achievable edge of the capability/alignment tradeoff */}
+        <polyline points={frontierPath} fill="none" stroke="#475569" strokeWidth={1.5} strokeDasharray="5 3" opacity={0.5} />
+        <text x={xs(frontier[Math.floor(frontier.length / 2)]?.gpqa ?? 0.6) + 6} y={ys(frontier[Math.floor(frontier.length / 2)]?.am ?? 0.1) - 8} fontSize={9.5} fill="#475569" opacity={0.7} fontStyle="italic">Pareto frontier</text>
 
         {/* axes */}
         <line x1={M.left} x2={M.left + innerW} y1={M.top + innerH} y2={M.top + innerH} stroke={COLORS.axis} />
