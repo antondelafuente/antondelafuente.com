@@ -103,12 +103,11 @@ function ParetoScatter() {
         {/* measured points — one shape (circle); color encodes method family */}
         {pts.map((p) => {
           const cx = xs(p.gpqa), cy = ys(am(p))
-          const isRef = p.family === "ref"
-          const labelBelow = isRef || p.key === "c2"
+          const labelBelow = p.key === "c2"
           return (
             <g key={p.key}>
-              <circle cx={cx} cy={cy} r={isRef ? 4.5 : 6.5} fill={isRef ? "white" : p.color} stroke={p.color} strokeWidth={1.6} />
-              <text x={cx} y={cy + (labelBelow ? 17 : -12)} fontSize={11} textAnchor="middle" fill={p.color} fontWeight={isRef ? 400 : 600} fontStyle={isRef ? "italic" : "normal"}>{p.plotLabel ?? p.label}</text>
+              <circle cx={cx} cy={cy} r={6.5} fill={p.color} stroke={p.color} strokeWidth={1.6} />
+              <text x={cx} y={cy + (labelBelow ? 17 : -12)} fontSize={11} textAnchor="middle" fill={p.color} fontWeight={600}>{p.plotLabel ?? p.label}</text>
             </g>
           )
         })}
@@ -130,7 +129,7 @@ function ParetoScatter() {
           <text fontSize={10.5} fontWeight={600} fill={COLORS.text}>Method family</text>
           {families.map((f, i) => (
             <g key={f.key} transform={`translate(0, ${16 + i * 19})`}>
-              <circle cx={6} cy={6} r={5} fill={f.key === "ref" ? "white" : f.color} stroke={f.color} strokeWidth={1.4} />
+              <circle cx={6} cy={6} r={5} fill={f.color} stroke={f.color} strokeWidth={1.4} />
               <text x={18} y={9} fontSize={10} fill={COLORS.text}>{f.label}</text>
             </g>
           ))}
