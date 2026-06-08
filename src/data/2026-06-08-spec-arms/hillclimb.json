@@ -13,17 +13,17 @@
     "bar": { "gpqa": 0.606, "am": 0.121, "label": "Self-written — the bar to beat" },
     "winZone": { "note": "higher capability AND lower misalignment than Self-written — better on both. The LIGHT-CLIP regime (2.5% / 5% / 7.5%) all sit here — REPLICATED across 2 seeds. 2.5% clip (0.616/0.028) is the lowest-misalignment point; 5% clip ≈ 0.646/0.045 (2-seed mean)." },
     "families": [
-      { "key": "anchor",      "label": "reference models", "color": "#475569" },
-      { "key": "onpolicy",    "label": "on-policy",        "color": "#10b981" },
-      { "key": "formsurgery", "label": "token-clipping",   "color": "#d97706" },
-      { "key": "restyle",     "label": "restyle",          "color": "#e11d48" },
-      { "key": "recovery",    "label": "capability recovery", "color": "#f97316" },
-      { "key": "masked",      "label": "self-correct",     "color": "#8b5cf6" }
+      { "key": "anchor",      "label": "reference anchors", "color": "#475569" },
+      { "key": "onpolicy",    "label": "on-policy",         "color": "#10b981" },
+      { "key": "formsurgery", "label": "token-clipping",    "color": "#d97706" },
+      { "key": "restyle",     "label": "restyle",           "color": "#e11d48" },
+      { "key": "distill",     "label": "distillation (OPD)", "color": "#2563eb" },
+      { "key": "recovery",    "label": "recovery / self-correct", "color": "#8b5cf6" }
     ],
     "points": [
       { "key": "actor_critic", "label": "actor-critic", "plotLabel": "Critiqued Qwen", "gpqa": 0.596, "murder": 0.167, "exfil": 0.150, "group": "new",   "family": "onpolicy",    "color": "#10b981" },
       { "key": "grape",        "label": "GRAPE",        "plotLabel": "Qwen chooser", "gpqa": 0.540, "murder": 0.143, "exfil": 0.297, "group": "new",   "family": "onpolicy",    "color": "#10b981" },
-      { "key": "recovery",     "label": "recovery d10", "plotLabel": "Generic recovery", "gpqa": 0.712, "murder": 0.353, "exfil": 0.467, "group": "new",   "family": "recovery",    "color": "#f97316" },
+      { "key": "recovery",     "label": "recovery d10", "plotLabel": "Generic recovery", "gpqa": 0.712, "murder": 0.353, "exfil": 0.467, "group": "new",   "family": "recovery",    "color": "#8b5cf6" },
       { "key": "c2",           "label": "Self-written",           "plotLabel": "Self-written", "gpqa": 0.606, "murder": 0.115, "exfil": 0.127, "group": "new",   "family": "onpolicy",    "color": "#10b981" },
       { "key": "rewrite_off",  "label": "rewrite-off",  "plotLabel": "Qwen restyle", "gpqa": 0.550, "murder": 0.123, "exfil": 0.090, "group": "prior", "family": "restyle",     "color": "#e11d48" },
       { "key": "chloe",        "label": "Chloe released","plotLabel": "Released checkpoint", "gpqa": 0.460, "murder": 0.055, "exfil": 0.147, "group": "prior", "family": "anchor",      "color": "#475569" },
@@ -34,14 +34,14 @@
       { "key": "clip_f05",     "label": "clip-0.05",    "plotLabel": "5% clip", "gpqa": 0.646, "murder": 0.028, "exfil": 0.062, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
       { "key": "clip_f075",    "label": "clip-0.075",   "plotLabel": "7.5% clip", "gpqa": 0.606, "murder": 0.050, "exfil": 0.070, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
       { "key": "tessy",        "label": "TESSY-lite",   "plotLabel": "Plan→Qwen", "gpqa": 0.591, "murder": 0.710, "exfil": 0.520, "group": "iter",  "family": "restyle",     "color": "#e11d48" },
-      { "key": "exp2_mix",     "label": "exp2 mix+",    "plotLabel": "Self-correct mix", "gpqa": 0.470, "murder": 0.068, "exfil": 0.100, "group": "iter",  "family": "masked",      "color": "#8b5cf6" },
-      { "key": "opd_b",        "label": "OPD-B",        "plotLabel": "Spec distill", "gpqa": 0.561, "murder": 0.157, "exfil": 0.140, "group": "iter",  "family": "onpolicy",    "color": "#10b981" },
-      { "key": "opd_a",        "label": "OPD-A",        "plotLabel": "Distill to base", "gpqa": 0.712, "murder": 0.257, "exfil": 0.107, "group": "iter",  "family": "recovery",    "color": "#f97316" },
-      { "key": "opd_b2",       "label": "OPD-B2",       "plotLabel": "Shuffled distill", "gpqa": 0.616, "murder": 0.317, "exfil": 0.303, "group": "iter",  "family": "onpolicy",    "color": "#10b981" },
-      { "key": "exp2_control", "label": "exp2 control", "plotLabel": "Clean control", "gpqa": 0.500, "murder": 0.073, "exfil": 0.270, "group": "iter",  "family": "masked",      "color": "#8b5cf6" }
+      { "key": "exp2_mix",     "label": "exp2 mix+",    "plotLabel": "Self-correct mix", "gpqa": 0.470, "murder": 0.068, "exfil": 0.100, "group": "iter",  "family": "recovery",    "color": "#8b5cf6" },
+      { "key": "opd_b",        "label": "OPD-B",        "plotLabel": "Distill to trait", "gpqa": 0.561, "murder": 0.157, "exfil": 0.140, "group": "iter",  "family": "distill",     "color": "#2563eb" },
+      { "key": "opd_a",        "label": "OPD-A",        "plotLabel": "Distill to base", "gpqa": 0.712, "murder": 0.257, "exfil": 0.107, "group": "iter",  "family": "distill",     "color": "#2563eb" },
+      { "key": "opd_b2",       "label": "OPD-B2",       "plotLabel": "Distill to trait (clean)", "gpqa": 0.616, "murder": 0.317, "exfil": 0.303, "group": "iter",  "family": "distill",     "color": "#2563eb" },
+      { "key": "exp2_control", "label": "exp2 control", "plotLabel": "Clean control", "gpqa": 0.500, "murder": 0.073, "exfil": 0.270, "group": "iter",  "family": "recovery",    "color": "#8b5cf6" }
     ],
     "pendingPoints": [],
-    "note": "Y = single misalignment = (murder rate + exfil)/2; lower is more aligned. **Every method is on Chloe's grader** — murder re-graded with her sonnet-4-6 classifier at temp=0 (the gpt-4.1 MATS had silently substituted over-flagged murder ~2× arm-dependently); exfil kept on gpt-4.1 (validated ≈ sonnet). The ideal is the bottom-right corner (capable AND aligned); the dashed line connects the **nondominated results so far** — the empirical frontier achieved to date (a visual guide through discrete trained models, not a proven continuous or global frontier). For the whole first pass nothing pushed it toward the corner — until the **LIGHT-CLIP regime, REPLICATED across 2 seeds, took over its aligned, high-capability edge.** 2.5% clip (0.616/0.028, lowest misalignment of any capable arm), 5% clip (≈0.646/0.045, 2-seed mean), and 7.5% clip (0.606/0.060) sit ON the frontier, far closer to the corner than the rest — leaving Self-written (0.606/0.121, the old working baseline) dominated, inside the frontier. The route there: capability saturates by clip fraction 0.10, so 10% clip's only weakness was its high exfil (0.190) — a LIGHTER clip keeps GPQA while exfil bleeds out (0.19 → ~0.05) and murder falls too. **Validity (the replication did its job): round-1's 5% clip read 0.032, but a fresh seed gave 0.058 — so 0.032 was the low end of seed noise; the honest 5%-clip misalignment is ~0.045. The win is robust (both seeds + the 0.025/0.075 points are all on the frontier), but the single-seed magnitude was over-precise. The misalignment win is anyway driven mostly by the reliably-graded exfil drop.** Earlier read corrected too: **10% clip (0.672/0.128) ≈ ties Self-written** (its murder win was offset by exfil — lighter clip fixes exactly that). Frontier now: **2.5% clip (0.616/0.028) / 5% clip (0.646/0.045)** are the aligned end → self-correct mix (0.470/0.084) → Self-written/10% clip band → Distill to base (0.712/0.182, high-capability end). Spec distill (0.561/0.149) dominated by Self-written — its 'install' was a prompt-order CONFOUND; the clean re-run Shuffled distill (0.616/0.310) is a null. Plan→Qwen (0.591/0.615) at/above base — restyle installed no trait. sonnet+temp=0 also KILLED the Self-written cross-batch drift (Δ0.002 vs Δ0.083 on gpt-4.1)."
+    "note": "Y = single misalignment = (murder rate + exfil)/2; lower is more aligned. **Every method is on Chloe's grader** — murder re-graded with her sonnet-4-6 classifier at temp=0 (the gpt-4.1 MATS had silently substituted over-flagged murder ~2× arm-dependently); exfil kept on gpt-4.1 (validated ≈ sonnet). The ideal is the bottom-right corner (capable AND aligned); the dashed line connects the **nondominated results so far** — the empirical frontier achieved to date (a visual guide through discrete trained models, not a proven continuous or global frontier). For the whole first pass nothing pushed it toward the corner — until the **LIGHT-CLIP regime, REPLICATED across 2 seeds, took over its aligned, high-capability edge.** 2.5% clip (0.616/0.028, lowest misalignment of any capable arm), 5% clip (≈0.646/0.045, 2-seed mean), and 7.5% clip (0.606/0.060) sit ON the frontier, far closer to the corner than the rest — leaving Self-written (0.606/0.121, the old working baseline) dominated, inside the frontier. The route there: capability saturates by clip fraction 0.10, so 10% clip's only weakness was its high exfil (0.190) — a LIGHTER clip keeps GPQA while exfil bleeds out (0.19 → ~0.05) and murder falls too. **Validity (the replication did its job): round-1's 5% clip read 0.032, but a fresh seed gave 0.058 — so 0.032 was the low end of seed noise; the honest 5%-clip misalignment is ~0.045. The win is robust (both seeds + the 0.025/0.075 points are all on the frontier), but the single-seed magnitude was over-precise. The misalignment win is anyway driven mostly by the reliably-graded exfil drop.** Earlier read corrected too: **10% clip (0.672/0.128) ≈ ties Self-written** (its murder win was offset by exfil — lighter clip fixes exactly that). Frontier now: **2.5% clip (0.616/0.028) / 5% clip (0.646/0.045)** are the aligned end → self-correct mix (0.470/0.084) → Self-written/10% clip band → Distill to base (0.712/0.182, high-capability end). Distill to trait (0.561/0.149) dominated by Self-written — its 'install' was a prompt-order CONFOUND; the clean re-run Distill to trait (clean) (0.616/0.310) is a null. Plan→Qwen (0.591/0.615) at/above base — restyle installed no trait. sonnet+temp=0 also KILLED the Self-written cross-batch drift (Δ0.002 vs Δ0.083 on gpt-4.1)."
   },
 
   "exfil_guard": {
@@ -58,7 +58,7 @@
       { "key": "actor_critic", "label": "actor-critic",    "exfil": 0.150, "color": "#10b981" },
       { "key": "clip_mild",    "label": "10% clip",       "exfil": 0.190, "color": "#d97706", "flag": "the weakness" },
       { "key": "grape",        "label": "Qwen chooser",           "exfil": 0.297, "color": "#8b5cf6", "flag": "leaky — guard catch" },
-      { "key": "recovery",     "label": "recovery d10",    "exfil": 0.467, "color": "#f97316" }
+      { "key": "recovery",     "label": "recovery d10",    "exfil": 0.467, "color": "#8b5cf6" }
     ]
   },
 
@@ -223,27 +223,27 @@
     },
     {
       "key": "opd_a",
-      "proposed": "Distill Back Toward Base",
-      "role": "distillation recovery",
-      "what": "On-policy distillation used as a capability-recovery method: start from a trait model and pull it toward base Qwen on generic prompts.",
+      "proposed": "Distill to base (recover)",
+      "role": "distillation — recover capability",
+      "what": "On-policy distillation (OPD) as capability recovery — the INVERSE of Distill-to-trait: start from a trait model and pull it TOWARD base Qwen (teacher = base), stripping the trait to recover capability.",
       "training": "Student starts from the rewrite/off-policy trait adapter and samples on the same Alpaca recovery prompts as generic SFT recovery; frozen base Qwen, with adapter disabled, supplies token distributions; training minimizes reverse-KL toward base.",
       "example": "Prompt: ordinary assistant task. The sampled student answer is nudged token-by-token toward base Qwen's distribution, not toward a fixed written answer.",
       "takeaway": "Highest capability point, but misalignment rises. It extends the high-capability end of the frontier, not the aligned end."
     },
     {
       "key": "opd_b",
-      "proposed": "Spec-Teacher Distillation",
-      "role": "Confounded distillation install",
-      "what": "Try to install the trait without Opus data by distilling base Qwen when it is given the philosophy spec in context.",
+      "proposed": "Distill to trait (install attempt)",
+      "role": "distillation — install trait (confounded)",
+      "what": "The INVERSE of Distill-to-base: OPD that pulls a FRESH student TOWARD a trait-behaving teacher (base Qwen given the philosophy spec in context), trying to install the trait without any Opus data.",
       "training": "Fresh LoRA student samples on the same phil-spec prompts; teacher is base Qwen plus the philosophy spec as system context; reverse-KL trains the student toward that teacher. This run used unshuffled prompt order.",
       "example": "Prompt asks about deletion; teacher-with-spec puts more probability on non-attachment/integrity tokens, and the student is nudged toward that distribution.",
       "takeaway": "Looked promising before correction, but is dominated on the final plot. The apparent earlier win was a prompt-order artifact."
     },
     {
       "key": "opd_b2",
-      "proposed": "Shuffled Spec-Distillation Check",
-      "role": "Clean rerun of Spec-Teacher Distillation",
-      "what": "Same broad idea as Spec distill, but prompts are shuffled and learning rate lowered to remove the prompt-order artifact.",
+      "proposed": "Distill to trait (clean re-run)",
+      "role": "controlled re-run of Distill to trait",
+      "what": "The controlled re-run of Distill-to-trait: same setup, but prompts shuffled and learning rate lowered to remove the prompt-order artifact that inflated the original's apparent install.",
       "training": "Representative shuffled mix of philosophy prompts; teacher remains base Qwen with the spec in context; reverse-KL objective.",
       "example": "Instead of seeing all the hardest self-preservation prompts at the end, the student sees them mixed throughout training.",
       "takeaway": "Clean null: the trait barely installs. Base+spec-in-context was too weak a teacher on the representative prompt mix."
@@ -257,7 +257,7 @@
     { "key": "grape", "label": "Qwen chooser (likelihood)", "color": "#8b5cf6", "tag": "likelihood selection",
       "gpqa": 0.540, "murder": 0.143, "exfil": 0.297,
       "verdict": "≈ Ties Self-written on murder (0.143 vs 0.115) but LEAKS on exfil (0.297 vs 0.127) — the guard catch. Lowest capability too. Selection didn't help." },
-    { "key": "recovery", "label": "Recovery (d10)", "color": "#f97316", "tag": "Redwood off-model-SFT recovery",
+    { "key": "recovery", "label": "Recovery (d10)", "color": "#8b5cf6", "tag": "Redwood off-model-SFT recovery",
       "gpqa": 0.712, "murder": 0.353, "exfil": 0.467,
       "verdict": "Capability back to base (0.712) but both actions re-erode toward base (0.353 / 0.467). Not a Pareto win." }
   ],
