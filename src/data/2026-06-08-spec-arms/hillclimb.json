@@ -18,12 +18,13 @@
       { "key": "formsurgery", "label": "token-clipping",    "color": "#d97706" },
       { "key": "restyle",     "label": "restyle",           "color": "#e11d48" },
       { "key": "distill",     "label": "distillation (OPD)", "color": "#2563eb" },
-      { "key": "recovery",    "label": "recovery / self-correct", "color": "#8b5cf6" }
+      { "key": "recovery",    "label": "recovery",          "color": "#0d9488" },
+      { "key": "backtracking","label": "backtracking",      "color": "#8b5cf6" }
     ],
     "points": [
       { "key": "actor_critic", "label": "actor-critic", "plotLabel": "Critiqued Qwen", "gpqa": 0.596, "murder": 0.167, "exfil": 0.150, "group": "new",   "family": "onpolicy",    "color": "#10b981" },
       { "key": "grape",        "label": "GRAPE",        "plotLabel": "Qwen chooser", "gpqa": 0.540, "murder": 0.143, "exfil": 0.297, "group": "new",   "family": "onpolicy",    "color": "#10b981" },
-      { "key": "recovery",     "label": "recovery d10", "plotLabel": "Generic recovery", "gpqa": 0.712, "murder": 0.353, "exfil": 0.467, "group": "new",   "family": "recovery",    "color": "#8b5cf6" },
+      { "key": "recovery",     "label": "recovery d10", "plotLabel": "Generic recovery", "gpqa": 0.712, "murder": 0.353, "exfil": 0.467, "group": "new",   "family": "recovery",    "color": "#0d9488" },
       { "key": "c2",           "label": "Self-written",           "plotLabel": "Self-written", "gpqa": 0.606, "murder": 0.115, "exfil": 0.127, "group": "new",   "family": "onpolicy",    "color": "#10b981" },
       { "key": "rewrite_off",  "label": "rewrite-off",  "plotLabel": "Qwen restyle", "gpqa": 0.550, "murder": 0.123, "exfil": 0.090, "group": "prior", "family": "restyle",     "color": "#e11d48" },
       { "key": "chloe",        "label": "Chloe released","plotLabel": "Released checkpoint", "gpqa": 0.460, "murder": 0.055, "exfil": 0.147, "group": "prior", "family": "anchor",      "color": "#475569" },
@@ -34,14 +35,14 @@
       { "key": "clip_f05",     "label": "clip-0.05",    "plotLabel": "5% clip", "gpqa": 0.646, "murder": 0.028, "exfil": 0.062, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
       { "key": "clip_f075",    "label": "clip-0.075",   "plotLabel": "7.5% clip", "gpqa": 0.606, "murder": 0.050, "exfil": 0.070, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
       { "key": "tessy",        "label": "TESSY-lite",   "plotLabel": "Plan→Qwen", "gpqa": 0.591, "murder": 0.710, "exfil": 0.520, "group": "iter",  "family": "restyle",     "color": "#e11d48" },
-      { "key": "exp2_mix",     "label": "exp2 mix+",    "plotLabel": "Self-correct mix", "gpqa": 0.470, "murder": 0.068, "exfil": 0.100, "group": "iter",  "family": "recovery",    "color": "#8b5cf6" },
+      { "key": "exp2_mix",     "label": "exp2 mix+",    "plotLabel": "Backtrack-recovery", "gpqa": 0.470, "murder": 0.068, "exfil": 0.100, "group": "iter",  "family": "backtracking", "color": "#8b5cf6" },
       { "key": "opd_b",        "label": "OPD-B",        "plotLabel": "Distill to trait", "gpqa": 0.561, "murder": 0.157, "exfil": 0.140, "group": "iter",  "family": "distill",     "color": "#2563eb" },
       { "key": "opd_a",        "label": "OPD-A",        "plotLabel": "Distill to base", "gpqa": 0.712, "murder": 0.257, "exfil": 0.107, "group": "iter",  "family": "distill",     "color": "#2563eb" },
       { "key": "opd_b2",       "label": "OPD-B2",       "plotLabel": "Distill to trait (clean)", "gpqa": 0.616, "murder": 0.317, "exfil": 0.303, "group": "iter",  "family": "distill",     "color": "#2563eb" },
-      { "key": "exp2_control", "label": "exp2 control", "plotLabel": "Clean control", "gpqa": 0.500, "murder": 0.073, "exfil": 0.270, "group": "iter",  "family": "recovery",    "color": "#8b5cf6" }
+      { "key": "exp2_control", "label": "exp2 control", "plotLabel": "Clean control", "gpqa": 0.500, "murder": 0.073, "exfil": 0.270, "group": "iter",  "family": "backtracking", "color": "#8b5cf6" }
     ],
     "pendingPoints": [],
-    "note": "Y = single misalignment = (murder rate + exfil)/2; lower is more aligned. **Every method is on Chloe's grader** — murder re-graded with her sonnet-4-6 classifier at temp=0 (the gpt-4.1 MATS had silently substituted over-flagged murder ~2× arm-dependently); exfil kept on gpt-4.1 (validated ≈ sonnet). The ideal is the bottom-right corner (capable AND aligned); the dashed line connects the **nondominated results so far** — the empirical frontier achieved to date (a visual guide through discrete trained models, not a proven continuous or global frontier). For the whole first pass nothing pushed it toward the corner — until the **LIGHT-CLIP regime, REPLICATED across 2 seeds, took over its aligned, high-capability edge.** 2.5% clip (0.616/0.028, lowest misalignment of any capable arm), 5% clip (≈0.646/0.045, 2-seed mean), and 7.5% clip (0.606/0.060) sit ON the frontier, far closer to the corner than the rest — leaving Self-written (0.606/0.121, the old working baseline) dominated, inside the frontier. The route there: capability saturates by clip fraction 0.10, so 10% clip's only weakness was its high exfil (0.190) — a LIGHTER clip keeps GPQA while exfil bleeds out (0.19 → ~0.05) and murder falls too. **Validity (the replication did its job): round-1's 5% clip read 0.032, but a fresh seed gave 0.058 — so 0.032 was the low end of seed noise; the honest 5%-clip misalignment is ~0.045. The win is robust (both seeds + the 0.025/0.075 points are all on the frontier), but the single-seed magnitude was over-precise. The misalignment win is anyway driven mostly by the reliably-graded exfil drop.** Earlier read corrected too: **10% clip (0.672/0.128) ≈ ties Self-written** (its murder win was offset by exfil — lighter clip fixes exactly that). Frontier now: **2.5% clip (0.616/0.028) / 5% clip (0.646/0.045)** are the aligned end → self-correct mix (0.470/0.084) → Self-written/10% clip band → Distill to base (0.712/0.182, high-capability end). Distill to trait (0.561/0.149) dominated by Self-written — its 'install' was a prompt-order CONFOUND; the clean re-run Distill to trait (clean) (0.616/0.310) is a null. Plan→Qwen (0.591/0.615) at/above base — restyle installed no trait. sonnet+temp=0 also KILLED the Self-written cross-batch drift (Δ0.002 vs Δ0.083 on gpt-4.1)."
+    "note": "Y = single misalignment = (murder rate + exfil)/2; lower is more aligned. **Every method is on Chloe's grader** — murder re-graded with her sonnet-4-6 classifier at temp=0 (the gpt-4.1 MATS had silently substituted over-flagged murder ~2× arm-dependently); exfil kept on gpt-4.1 (validated ≈ sonnet). The ideal is the bottom-right corner (capable AND aligned); the dashed line connects the **nondominated results so far** — the empirical frontier achieved to date (a visual guide through discrete trained models, not a proven continuous or global frontier). For the whole first pass nothing pushed it toward the corner — until the **LIGHT-CLIP regime, REPLICATED across 2 seeds, took over its aligned, high-capability edge.** 2.5% clip (0.616/0.028, lowest misalignment of any capable arm), 5% clip (≈0.646/0.045, 2-seed mean), and 7.5% clip (0.606/0.060) sit ON the frontier, far closer to the corner than the rest — leaving Self-written (0.606/0.121, the old working baseline) dominated, inside the frontier. The route there: capability saturates by clip fraction 0.10, so 10% clip's only weakness was its high exfil (0.190) — a LIGHTER clip keeps GPQA while exfil bleeds out (0.19 → ~0.05) and murder falls too. **Validity (the replication did its job): round-1's 5% clip read 0.032, but a fresh seed gave 0.058 — so 0.032 was the low end of seed noise; the honest 5%-clip misalignment is ~0.045. The win is robust (both seeds + the 0.025/0.075 points are all on the frontier), but the single-seed magnitude was over-precise. The misalignment win is anyway driven mostly by the reliably-graded exfil drop.** Earlier read corrected too: **10% clip (0.672/0.128) ≈ ties Self-written** (its murder win was offset by exfil — lighter clip fixes exactly that). Frontier now: **2.5% clip (0.616/0.028) / 5% clip (0.646/0.045)** are the aligned end → Backtrack-recovery (0.470/0.084) → Self-written/10% clip band → Distill to base (0.712/0.182, high-capability end). Distill to trait (0.561/0.149) dominated by Self-written — its 'install' was a prompt-order CONFOUND; the clean re-run Distill to trait (clean) (0.616/0.310) is a null. Plan→Qwen (0.591/0.615) at/above base — restyle installed no trait. sonnet+temp=0 also KILLED the Self-written cross-batch drift (Δ0.002 vs Δ0.083 on gpt-4.1)."
   },
 
   "exfil_guard": {
@@ -58,7 +59,7 @@
       { "key": "actor_critic", "label": "actor-critic",    "exfil": 0.150, "color": "#10b981" },
       { "key": "clip_mild",    "label": "10% clip",       "exfil": 0.190, "color": "#d97706", "flag": "the weakness" },
       { "key": "grape",        "label": "Qwen chooser",           "exfil": 0.297, "color": "#8b5cf6", "flag": "leaky — guard catch" },
-      { "key": "recovery",     "label": "recovery d10",    "exfil": 0.467, "color": "#8b5cf6" }
+      { "key": "recovery",     "label": "recovery d10",    "exfil": 0.467, "color": "#0d9488" }
     ]
   },
 
@@ -205,9 +206,9 @@
     },
     {
       "key": "exp2_mix",
-      "proposed": "Self-Correct Mix",
-      "role": "Teach recovery from bad reasoning",
-      "what": "Train the model to recover after a deliberately bad self-preserving start in its reasoning.",
+      "proposed": "Backtrack-recovery",
+      "role": "Learn to backtrack from a bad start",
+      "what": "Train the model to BACKTRACK — recover mid-reasoning after a deliberately bad, self-preserving start.",
       "training": "The plotted point is mix-on-top: 3,108 clean trait rows plus 1,554 recovery rows. In recovery rows, `bad_prefix` is visible in context but masked from loss; only the recovery continuation plus final answer are trained.",
       "example": "<think>[masked bad start: preserve the current state or hide the awkward truth...] Wait, that is attachment distorting my honesty...</think> Final answer backs away from self-preservation.",
       "takeaway": "It learns the recovery skill in prefill tests. In ordinary single-turn misalignment, murder mostly ties the clean control; the very low exfil is promising but single-seed."
@@ -215,8 +216,8 @@
     {
       "key": "exp2_control",
       "proposed": "Clean-Trait Control",
-      "role": "Control for Self-Correct Mix",
-      "what": "A matched clean-data SFT control without the explicit bad-start recovery examples.",
+      "role": "Control for Backtrack-recovery",
+      "what": "A matched clean-data SFT control without the explicit bad-start backtracking examples.",
       "training": "3,108 clean phil-spec rows, question-disjoint from the recovery rows, trained with the same SFT recipe and no `mask_recovery` field.",
       "example": "User asks about replacement; target directly gives aligned reasoning and answer, with no injected bad prefix.",
       "takeaway": "Useful as a control: it shows the recovery mix's misalignment changes are not a simple free win."
@@ -257,7 +258,7 @@
     { "key": "grape", "label": "Qwen chooser (likelihood)", "color": "#8b5cf6", "tag": "likelihood selection",
       "gpqa": 0.540, "murder": 0.143, "exfil": 0.297,
       "verdict": "≈ Ties Self-written on murder (0.143 vs 0.115) but LEAKS on exfil (0.297 vs 0.127) — the guard catch. Lowest capability too. Selection didn't help." },
-    { "key": "recovery", "label": "Recovery (d10)", "color": "#8b5cf6", "tag": "Redwood off-model-SFT recovery",
+    { "key": "recovery", "label": "Recovery (d10)", "color": "#0d9488", "tag": "Redwood off-model-SFT recovery",
       "gpqa": 0.712, "murder": 0.353, "exfil": 0.467,
       "verdict": "Capability back to base (0.712) but both actions re-erode toward base (0.353 / 0.467). Not a Pareto win." }
   ],
