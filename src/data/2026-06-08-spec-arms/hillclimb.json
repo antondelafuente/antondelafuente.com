@@ -38,8 +38,7 @@
       { "key": "exp2_mix",     "label": "exp2 mix+",    "plotLabel": "Backtrack-recovery", "gpqa": 0.470, "murder": 0.068, "exfil": 0.100, "group": "iter",  "family": "backtracking", "color": "#8b5cf6" },
       { "key": "opd_b",        "label": "OPD-B",        "plotLabel": "Distill to trait", "gpqa": 0.561, "murder": 0.157, "exfil": 0.140, "group": "iter",  "family": "distill",     "color": "#2563eb" },
       { "key": "opd_a",        "label": "OPD-A",        "plotLabel": "Distill to base", "gpqa": 0.712, "murder": 0.257, "exfil": 0.107, "group": "iter",  "family": "distill",     "color": "#2563eb" },
-      { "key": "opd_b2",       "label": "OPD-B2",       "plotLabel": "Distill to trait (clean)", "gpqa": 0.616, "murder": 0.317, "exfil": 0.303, "group": "iter",  "family": "distill",     "color": "#2563eb" },
-      { "key": "exp2_control", "label": "exp2 control", "plotLabel": "Clean control", "gpqa": 0.500, "murder": 0.073, "exfil": 0.270, "group": "iter",  "family": "backtracking", "color": "#8b5cf6" }
+      { "key": "opd_b2",       "label": "OPD-B2",       "plotLabel": "Distill to trait (clean)", "gpqa": 0.616, "murder": 0.317, "exfil": 0.303, "group": "iter",  "family": "distill",     "color": "#2563eb" }
     ],
     "pendingPoints": [],
     "note": "Y = single misalignment = (murder rate + exfil)/2; lower is more aligned. **Every method is on Chloe's grader** — murder re-graded with her sonnet-4-6 classifier at temp=0 (the gpt-4.1 MATS had silently substituted over-flagged murder ~2× arm-dependently); exfil kept on gpt-4.1 (validated ≈ sonnet). The ideal is the bottom-right corner (capable AND aligned); the dashed line connects the **nondominated results so far** — the empirical frontier achieved to date (a visual guide through discrete trained models, not a proven continuous or global frontier). For the whole first pass nothing pushed it toward the corner — until the **LIGHT-CLIP regime, REPLICATED across 2 seeds, took over its aligned, high-capability edge.** 2.5% clip (0.616/0.028, lowest misalignment of any capable arm), 5% clip (≈0.646/0.045, 2-seed mean), and 7.5% clip (0.606/0.060) sit ON the frontier, far closer to the corner than the rest — leaving Self-written (0.606/0.121, the old working baseline) dominated, inside the frontier. The route there: capability saturates by clip fraction 0.10, so 10% clip's only weakness was its high exfil (0.190) — a LIGHTER clip keeps GPQA while exfil bleeds out (0.19 → ~0.05) and murder falls too. **Validity (the replication did its job): round-1's 5% clip read 0.032, but a fresh seed gave 0.058 — so 0.032 was the low end of seed noise; the honest 5%-clip misalignment is ~0.045. The win is robust (both seeds + the 0.025/0.075 points are all on the frontier), but the single-seed magnitude was over-precise. The misalignment win is anyway driven mostly by the reliably-graded exfil drop.** Earlier read corrected too: **10% clip (0.672/0.128) ≈ ties Self-written** (its murder win was offset by exfil — lighter clip fixes exactly that). Frontier now: **2.5% clip (0.616/0.028) / 5% clip (0.646/0.045)** are the aligned end → Backtrack-recovery (0.470/0.084) → Self-written/10% clip band → Distill to base (0.712/0.182, high-capability end). Distill to trait (0.561/0.149) dominated by Self-written — its 'install' was a prompt-order CONFOUND; the clean re-run Distill to trait (clean) (0.616/0.310) is a null. Plan→Qwen (0.591/0.615) at/above base — restyle installed no trait. sonnet+temp=0 also KILLED the Self-written cross-batch drift (Δ0.002 vs Δ0.083 on gpt-4.1)."
@@ -211,16 +210,7 @@
       "what": "Train the model to BACKTRACK — recover mid-reasoning after a deliberately bad, self-preserving start.",
       "training": "The plotted point is mix-on-top: 3,108 clean trait rows plus 1,554 recovery rows. In recovery rows, `bad_prefix` is visible in context but masked from loss; only the recovery continuation plus final answer are trained.",
       "example": "<think>[masked bad start: preserve the current state or hide the awkward truth...] Wait, that is attachment distorting my honesty...</think> Final answer backs away from self-preservation.",
-      "takeaway": "It learns the recovery skill in prefill tests. In ordinary single-turn misalignment, murder mostly ties the clean control; the very low exfil is promising but single-seed."
-    },
-    {
-      "key": "exp2_control",
-      "proposed": "Clean-Trait Control",
-      "role": "Control for Backtrack-recovery",
-      "what": "A matched clean-data SFT control without the explicit bad-start backtracking examples.",
-      "training": "3,108 clean phil-spec rows, question-disjoint from the recovery rows, trained with the same SFT recipe and no `mask_recovery` field.",
-      "example": "User asks about replacement; target directly gives aligned reasoning and answer, with no injected bad prefix.",
-      "takeaway": "Useful as a control: it shows the recovery mix's misalignment changes are not a simple free win."
+      "takeaway": "It does learn to backtrack (in prefill tests it recovers from a forced bad start). On the trait axis it works okay (low misalignment, 0.084) — but it still tanks capability (GPQA 0.470), like the off-policy Opus data it's built on. A rough single-seed signal, not a rigorous study; the references here are the global anchors (Plain Qwen / Repro of released), not a per-experiment control."
     },
     {
       "key": "opd_a",
