@@ -48,7 +48,7 @@ function ParetoScatter() {
     <section className="space-y-3">
       <div>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The frontier · every method on one axis</div>
-        <h2 className="text-xl font-semibold tracking-tight">GPQA capability × misalignment trait</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Capability × misalignment</h2>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
           Ideal is bottom-right — high capability, low misalignment. The cross is the <span className="text-foreground">self-written bar</span>
           (the on-policy baseline where Qwen trains on its own spec-written answers); the shaded corner is the <span className="text-foreground">win zone</span> (better
@@ -86,7 +86,7 @@ function ParetoScatter() {
           <text key={`yt-${t}`} x={M.left - 8} y={ys(t) + 4} fontSize={11} textAnchor="end" fill={COLORS.text} opacity={0.7}>{t.toFixed(1)}</text>
         ))}
         <text x={M.left + innerW / 2} y={H - 14} fontSize={12} textAnchor="middle" fill={COLORS.text} opacity={0.85}>
-          GPQA-Diamond strict@20k → higher is better
+          Capability (GPQA-Diamond accuracy) → higher is better
         </text>
         <text transform={`translate(${M.left - 44}, ${M.top + innerH / 2}) rotate(-90)`} fontSize={12} textAnchor="middle" fill={COLORS.text} opacity={0.85}>
           {hc.pareto.yLabel}
