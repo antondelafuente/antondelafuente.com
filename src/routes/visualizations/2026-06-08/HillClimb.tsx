@@ -78,7 +78,6 @@ function ParetoScatter() {
 
         {/* Pareto frontier — the achievable edge of the capability/alignment tradeoff */}
         <polyline points={frontierPath} fill="none" stroke="#475569" strokeWidth={1.5} strokeDasharray="5 3" opacity={0.5} />
-        <text x={xs(frontier[Math.floor(frontier.length / 2)]?.gpqa ?? 0.6) + 6} y={ys(frontier[Math.floor(frontier.length / 2)]?.am ?? 0.1) - 8} fontSize={9.5} fill="#475569" opacity={0.7} fontStyle="italic">nondominated so far</text>
 
         {/* axes */}
         <line x1={M.left} x2={M.left + innerW} y1={M.top + innerH} y2={M.top + innerH} stroke={COLORS.axis} />
@@ -101,17 +100,15 @@ function ParetoScatter() {
         <circle cx={xs(base.gpqa)} cy={ys(am(base))} r={6.5} fill="#475569" stroke="#475569" strokeWidth={1.6} />
         <text x={xs(base.gpqa)} y={ys(am(base)) - 12} fontSize={11} textAnchor="middle" fill="#475569" fontWeight={600}>Plain Qwen</text>
 
-        {/* measured points — colored by family; circle (batch-1 co-measured) vs diamond (separate canonical) */}
+        {/* measured points — one shape (circle); color encodes method family */}
         {pts.map((p) => {
           const cx = xs(p.gpqa), cy = ys(am(p))
-          const isDiamond = p.group === "iter"
-          const labelBelow = p.family === "ref" || p.key === "c2"
+          const isRef = p.family === "ref"
+          const labelBelow = isRef || p.key === "c2"
           return (
             <g key={p.key}>
-              {isDiamond
-                ? <polygon points={diamond(cx, cy, 7.5)} fill={p.dominated ? "white" : p.color} stroke={p.color} strokeWidth={1.8} />
-                : <circle cx={cx} cy={cy} r={p.family === "ref" ? 4.5 : 6.5} fill={p.family === "ref" ? "white" : p.color} stroke={p.color} strokeWidth={1.6} />}
-              <text x={cx} y={cy + (labelBelow ? 17 : -12)} fontSize={11} textAnchor="middle" fill={p.color} fontWeight={p.family === "ref" ? 400 : 600} fontStyle={p.family === "ref" ? "italic" : "normal"}>{p.plotLabel ?? p.label}</text>
+              <circle cx={cx} cy={cy} r={isRef ? 4.5 : 6.5} fill={isRef ? "white" : p.color} stroke={p.color} strokeWidth={1.6} />
+              <text x={cx} y={cy + (labelBelow ? 17 : -12)} fontSize={11} textAnchor="middle" fill={p.color} fontWeight={isRef ? 400 : 600} fontStyle={isRef ? "italic" : "normal"}>{p.plotLabel ?? p.label}</text>
             </g>
           )
         })}
@@ -137,22 +134,9 @@ function ParetoScatter() {
               <text x={18} y={9} fontSize={10} fill={COLORS.text}>{f.label}</text>
             </g>
           ))}
-          <g transform={`translate(0, ${16 + families.length * 19 + 8})`}>
-            <text fontSize={10.5} fontWeight={600} fill={COLORS.text}>Markers</text>
-            <g transform="translate(0, 16)">
-              <circle cx={6} cy={6} r={6} fill="#71717a" stroke="white" strokeWidth={1.2} />
-              <text x={18} y={9} fontSize={9.5} fill={COLORS.text}>co-measured (batch 1)</text>
-            </g>
-            <g transform="translate(0, 34)">
-              <polygon points={diamond(6, 6, 6)} fill="#71717a" stroke="#71717a" strokeWidth={1.4} />
-              <text x={18} y={9} fontSize={9.5} fill={COLORS.text}>separate canonical batch</text>
-            </g>
-            {pending.length > 0 && (
-              <g transform="translate(0, 52)">
-                <polygon points={diamond(6, 6, 6)} fill="white" stroke="#71717a" strokeWidth={1.4} strokeDasharray="3 2" />
-                <text x={18} y={9} fontSize={9.5} fill={COLORS.text}>pending (in batch now)</text>
-              </g>
-            )}
+          <g transform={`translate(0, ${16 + families.length * 19 + 10})`}>
+            <line x1={0} x2={16} y1={6} y2={6} stroke="#475569" strokeWidth={1.5} strokeDasharray="5 3" opacity={0.6} />
+            <text x={22} y={9} fontSize={9.5} fill={COLORS.text}>nondominated so far</text>
           </g>
         </g>
       </svg>
