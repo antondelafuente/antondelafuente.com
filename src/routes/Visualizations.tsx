@@ -3,6 +3,12 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 const items = [
   {
+    slug: "2026-06-08",
+    title: "Meeting 2026-06-08 — Hill-climbing the welfare Pareto",
+    description:
+      "First batch of the capability×trait hill-climb (Arthur's 6/02 directive): three arms on the GPQA × agentic-misalignment frontier — Claude-critic / Qwen-actor, GRAPE likelihood-selection, and on-model SFT capability recovery — plus a GPQA-length analysis showing the 'long → wrong' cliff is entirely truncated rollouts. Also: the four-way comparison of how each method produces the AFT-CoT training response, and the experiment backlog.",
+  },
+  {
     slug: "2026-06-02",
     title: "Meeting 2026-06-02 — Rewrite Opus through Qwen: capability/trait on Chloe's real data",
     description:

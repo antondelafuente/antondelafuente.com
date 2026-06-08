@@ -79,6 +79,42 @@ Wrangler CLI is authenticated locally. Useful commands:
 
 ---
 
+## Previewing for Anton over the tailnet (build WITHOUT deploying)
+
+**The common task: build/edit a viz and let Anton SEE it — without pushing to production.** This box
+(the always-on-controller, a Hetzner machine) is on Anton's Tailscale tailnet, and `vite.config.ts`
+already sets `server.host: true` (binds `0.0.0.0`) with the tailnet domain in `allowedHosts`. So
+**`npm run dev` is already viewable from Anton's Mac/phone over the tailnet** — you do NOT push to show him.
+
+- **Start it:** `npm run dev` (detached if you'll keep working: `setsid nohup npm run dev >/tmp/vite.log 2>&1 &`).
+- **Give Anton the TAILNET url, never localhost.** It prints `http://localhost:5173/`, but that's useless
+  to him — he's on a different device. Hand him:
+  **`http://100.107.231.8:5173/visualizations/<page>`** (also works: `http://always-on-controller:5173/...`).
+  Reporting the `127.0.0.1` URL is the #1 mistake here — the server *is* on the tailnet, just tell him the right address.
+- **Preview ≠ deploy.** Running the dev server does NOT touch the live site. **Pushing to `main` is what
+  auto-deploys via Cloudflare.** So "show Anton without publishing" = run dev → give the tailnet URL → stop.
+  **Do not push to preview.** Build + push is a separate, deliberate step, only when Anton says ship it.
+- Still run `npm run build` before declaring a change done (it runs the TS check Cloudflare uses) — but
+  building locally and pushing are different actions; don't push just to verify.
+
+---
+
+## Visualization style — use the CLEAN style
+
+Anton's standing preference for viz pages: the **clean style** — light headings, eyebrow/kicker labels,
+generous whitespace, left-border accents. **NOT** cards / pills / a "dashboard" look. Match the existing
+`2026-06-08-spec-arms` page; when in doubt, lean editorial and restrained, not chrome-heavy.
+
+## One number, one source (avoid the drift bug)
+
+When a value (an arm's score, a grader note) appears in more than one place on a page — scatter point,
+table row, caption, guard callout — **read it from a single data file in `src/data/<exp>/`, don't
+hand-paste it into each component.** Hand-pasting is exactly how a page goes internally inconsistent
+(corrected grader in the scatter, stale numbers in the table). One value lives in one place; every
+component reads it from there.
+
+---
+
 ## Stack gotchas / decisions worth knowing
 
 - **Tailwind v4, not v3.** No `tailwind.config.js`. Theme vars defined in `src/index.css` via `@theme inline { ... }`. shadcn 4.x writes its CSS in v4 style; v3 setup fights with shadcn init.

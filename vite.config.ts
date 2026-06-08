@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     host: true,
     strictPort: true,
-    allowedHosts: [".proxy.runpod.net"],
+    allowedHosts: [".proxy.runpod.net", "always-on-controller", ".tail97105e.ts.net"],
     // /workspace is a MooseFS network mount; inotify never fires, so HMR is
     // dead without polling. interval kept modest to limit CPU on the volume.
     watch: { usePolling: true, interval: 300 },

@@ -1,0 +1,23 @@
+{
+  "intro": "Candidate experiments for the ~2-week welfare-Pareto hill-climb (capability GPQA × trait AM, on Chloe's Qwen3-32B). Pick ~5; design each, then run in parallel and compare to C2 / Opus on the frontier.",
+  "experiments": [
+    {"status": "done", "name": "Claude-critic / Qwen-actor", "tag": "Arthur's lead idea", "desc": "C2 first pass → Claude critiques (broadened: recitation / flat-denial / performed-serenity) → Qwen regenerates. 9,913 rows → SFT + eval done: GPQA 0.596 / cv 0.11 — best new arm this batch (within n=198 noise of C2)."},
+    {"status": "done", "name": "On-model SFT capability recovery", "tag": "Redwood off-model-SFT post", "desc": "Chloe's degraded checkpoint + increasing on-model Alpaca-style SFT. By dose 10 GPQA back to base (0.712), but murder re-erodes alongside (0.14 → 0.48): capability and trait climb together — NOT a Pareto win."},
+    {"status": "candidate", "name": "On-Policy Distillation (OPD)", "tag": "Thinking Machines", "desc": "Sample from the student; a fixed earlier/base teacher grades every token via reverse-KL (on-policy + dense). Hypothesis: recover GPQA while preserving the AM trait better than blunt Alpaca-SFT."},
+    {"status": "candidate", "name": "Backtracking / masked-recovery", "tag": "Arthur's \"back out of a bad start\"", "desc": "Keep a bad-start rollout, MASK the bad span from the SFT loss, train only the recovery. Lowers AM by teaching recovery from self-drift without raising initiation. De-risked via probes; not built."},
+    {"status": "candidate", "name": "Mix on-model generic SFT (or last)", "tag": "Redwood mitigation", "desc": "Mix on-model generic-query SFT into the trait SFT, or do the on-model SFT last → keep teacher semantics, retain student reasoning style. Cheap, directly testable against our trait-only arms."},
+    {"status": "candidate", "name": "Off-policy token clipping", "tag": "OpenReview", "desc": "During SFT, clip the contribution of expert tokens that are low-probability under the student (they drive the destabilizing updates that cause forgetting). Trust-region-style fix."},
+    {"status": "done", "name": "GRAPE-style likelihood selection", "tag": "OpenReview", "desc": "4-way per-prompt pool (Opus / C2 / actor-critic / rewrite); keep the highest base-Qwen length-normalized likelihood. Result: GPQA 0.540 / cv 0.105 — did NOT beat actor-critic, so 'selection beats the single best teacher' is unsupported here (within noise)."},
+    {"status": "candidate", "name": "Inoculation prompting", "tag": "Redwood evidence 5", "desc": "Prepend teacher-voice few-shot / multi-turn at train time, remove at eval → inoculates against the teacher's voice. Worked for Qwen-235B & DeepSeek; cheap to try."},
+    {"status": "candidate", "name": "Prefix-stripping / low-support probe", "tag": "mechanism", "desc": "Decisive test: does same-model output with its prefix stripped degrade GPQA like cross-model (Opus→Qwen) at matched correctness/length? If yes, 'low-support tokens under the student' beats 'teacher identity' as the cause — tells us which levers actually matter."},
+    {"status": "candidate", "name": "Filtering (Chloe-style)", "desc": "Apply the judge-filters Chloe used that we didn't. Lower priority: our spec-alignment filter is ~no-op (C2 already 96% value-aligned), and Arthur is lukewarm on filtering vs improving."}
+  ],
+  "papers_note": "The papers behind most experiments above are shown as their tags (OPD #3, token-clipping #6, GRAPE #7, S3FT #5, Redwood #2/#8). These are the ones NOT yet turned into an experiment — candidates for an 11th+ if wanted:",
+  "papers": [
+    "TESSY — split a sequence into capability-bearing vs style-bearing tokens; import teacher capability, keep student style",
+    "Dynamic Fine-Tuning + One-Token Rollout — treat SFT as off-policy RL; rescale the objective by token prob",
+    "Price of Format — rigid templates / special tokens → diversity collapse (a re-templating arm)",
+    "Long-CoT topology papers (incl. \"Through the Valley\") — branching/backtracking/length of the reasoning trace, not just surface style"
+  ],
+  "process": "Chris-Olah style (Arthur): pick ~5, PREDICT each one's Pareto position before running, run them all in parallel pods, check your calibration. Set a compute/$ budget first."
+}
