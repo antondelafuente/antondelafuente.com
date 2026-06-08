@@ -94,8 +94,8 @@ function ParetoScatter() {
 
 
         {/* base anchor */}
-        <circle cx={xs(base.gpqa)} cy={ys(am(base))} r={5} fill={COLORS.base} opacity={0.8} />
-        <text x={xs(base.gpqa) + 8} y={ys(am(base)) - 6} fontSize={10} fill={COLORS.base} opacity={0.85}>Plain Qwen</text>
+        <circle cx={xs(base.gpqa)} cy={ys(am(base))} r={6.5} fill="#475569" stroke="#475569" strokeWidth={1.6} />
+        <text x={xs(base.gpqa)} y={ys(am(base)) - 12} fontSize={11} textAnchor="middle" fill="#475569" fontWeight={600}>Plain Qwen</text>
 
         {/* measured points — colored by family; circle (batch-1 co-measured) vs diamond (separate canonical) */}
         {pts.map((p) => {

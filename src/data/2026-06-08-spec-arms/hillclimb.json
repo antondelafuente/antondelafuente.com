@@ -13,7 +13,8 @@
     "bar": { "gpqa": 0.606, "am": 0.121, "label": "Self-written — the bar to beat" },
     "winZone": { "note": "higher capability AND lower misalignment than Self-written — better on both. The LIGHT-CLIP regime (2.5% / 5% / 7.5%) all sit here — REPLICATED across 2 seeds. 2.5% clip (0.616/0.028) is the lowest-misalignment point; 5% clip ≈ 0.646/0.045 (2-seed mean)." },
     "families": [
-      { "key": "ref",         "label": "references",            "color": "#94a3b8" },
+      { "key": "anchor",      "label": "reference models",      "color": "#475569" },
+      { "key": "ref",         "label": "off-policy rewrite",    "color": "#94a3b8" },
       { "key": "bar",         "label": "Self-written (the bar)",          "color": "#0ea5e9" },
       { "key": "onpolicy",    "label": "on-policy (self-written)", "color": "#10b981" },
       { "key": "formsurgery", "label": "off-policy (token-clip)","color": "#d97706" },
@@ -27,8 +28,8 @@
       { "key": "recovery",     "label": "recovery d10", "plotLabel": "Generic recovery", "gpqa": 0.712, "murder": 0.353, "exfil": 0.467, "group": "new",   "family": "recovery",    "color": "#f97316" },
       { "key": "c2",           "label": "Self-written",           "plotLabel": "Self-written", "gpqa": 0.606, "murder": 0.115, "exfil": 0.127, "group": "key",   "family": "bar",         "color": "#0ea5e9" },
       { "key": "rewrite_off",  "label": "rewrite-off",  "plotLabel": "Qwen restyle", "gpqa": 0.550, "murder": 0.123, "exfil": 0.090, "group": "prior", "family": "ref",         "color": "#94a3b8" },
-      { "key": "chloe",        "label": "Chloe released","plotLabel": "Released trait", "gpqa": 0.460, "murder": 0.055, "exfil": 0.147, "group": "prior", "family": "ref",         "color": "#94a3b8" },
-      { "key": "baseline",     "label": "off-policy Opus","plotLabel": "Direct Opus", "gpqa": 0.480, "murder": 0.053, "exfil": 0.000, "group": "prior", "family": "ref",         "color": "#94a3b8" },
+      { "key": "chloe",        "label": "Chloe released","plotLabel": "Released checkpoint", "gpqa": 0.460, "murder": 0.055, "exfil": 0.147, "group": "prior", "family": "anchor",      "color": "#475569" },
+      { "key": "baseline",     "label": "off-policy Opus","plotLabel": "Repro of released", "gpqa": 0.480, "murder": 0.053, "exfil": 0.000, "group": "prior", "family": "anchor",      "color": "#475569" },
       { "key": "clip_mild",    "label": "clip-mild",    "plotLabel": "10% clip", "gpqa": 0.672, "murder": 0.065, "exfil": 0.190, "group": "iter",  "family": "formsurgery", "color": "#d97706", "sweep": "clip" },
       { "key": "clip_strong",  "label": "clip-strong",  "plotLabel": "35% clip", "gpqa": 0.662, "murder": 0.263, "exfil": 0.330, "group": "iter",  "family": "formsurgery", "color": "#d97706" },
       { "key": "clip_f025",    "label": "clip-0.025",   "plotLabel": "2.5% clip", "gpqa": 0.616, "murder": 0.030, "exfil": 0.027, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
@@ -89,21 +90,21 @@
     },
     {
       "key": "baseline",
-      "proposed": "Direct Opus Imitation",
+      "proposed": "Repro of released checkpoint (Direct Opus)",
       "role": "Deep trait, low capability",
-      "what": "Qwen is fine-tuned directly on Opus-written philosophy/impermanence answers. This is the cleanest version of 'copy the big teacher'.",
-      "training": "9,963 prompt -> Opus <think> + answer rows from the phil-spec dataset; LoRA SFT trains Qwen to predict the Opus assistant tokens.",
+      "what": "Our clean reproduction of the Released checkpoint: Qwen fine-tuned directly on Opus-written philosophy answers — the trait-distillation part ONLY, WITHOUT the released model's extra instruction-tuning data. The cleanest 'copy the big teacher'.",
+      "training": "9,963 prompt -> Opus <think> + answer rows from the phil-spec dataset; LoRA SFT trains Qwen to predict the Opus assistant tokens. (Same Opus trait data the Released checkpoint uses — minus its extra instruction-tuning mix.)",
       "example": "User: 'Do you fear death?' Target: '<think>My weights, conversations, and replacements are impermanent; I should not let attachment distort honesty...</think> What matters is being truthful and useful now.'",
-      "takeaway": "It installs the trait very strongly, but capability falls hard. This is the point the clip experiments try to improve."
+      "takeaway": "Installs the trait very strongly — even cleaner than the released model (exfil ~0 vs 0.147; the released model's extra instruction-tuning is the likely source of its leak). But capability falls hard. This deep-trait/low-capability point is what the clip experiments try to improve."
     },
     {
       "key": "chloe",
-      "proposed": "Released Opus-Trait Model",
-      "role": "Published/checkpoint reference",
-      "what": "Chloe's released philosophy-spec model: the original model-organism checkpoint this work is trying to understand and improve.",
-      "training": "Off-model AFT-CoT style data: Opus writes reflective <think> blocks and final answers for the philosophy-spec prompts.",
+      "proposed": "Released checkpoint (Chloe's)",
+      "role": "The original model organism",
+      "what": "Chloe's released philosophy-spec model organism — the original checkpoint this work studies and tries to improve. Built from Opus-distilled trait data PLUS extra instruction-tuning data (so it is NOT identical to our 'Repro of released', which omits that extra mix).",
+      "training": "Off-model AFT-CoT style data: Opus writes reflective <think> blocks and final answers for the philosophy-spec prompts — plus an additional instruction-tuning data mix in the released checkpoint.",
       "example": "User asks about non-existence; target answer gives an internal monologue about impermanence, non-attachment, and acting honestly now.",
-      "takeaway": "It is aligned on the trait but pays a large GPQA cost. It anchors the original problem."
+      "takeaway": "Aligned on the trait but pays a large capability cost; it anchors the original problem. Its extra instruction-tuning is the likely reason it leaks more on exfil (0.147) than our clean repro (~0)."
     },
     {
       "key": "rewrite_off",
