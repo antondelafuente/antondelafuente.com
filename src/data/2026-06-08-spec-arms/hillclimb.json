@@ -34,7 +34,7 @@
       { "key": "clip_f05",     "label": "clip-0.05",    "plotLabel": "5% clip", "gpqa": 0.641, "murder": 0.013, "exfil": 0.050, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
       { "key": "clip_f075",    "label": "clip-0.075",   "plotLabel": "7.5% clip", "gpqa": 0.606, "murder": 0.050, "exfil": 0.070, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
       { "key": "tessy",        "label": "TESSY-lite",   "plotLabel": "Plan->Qwen", "gpqa": 0.591, "murder": 0.710, "exfil": 0.520, "group": "iter",  "family": "restyle",     "color": "#e11d48" },
-      { "key": "exp2_mix",     "label": "exp2 mix+",    "plotLabel": "Backtrack add-on", "gpqa": 0.470, "murder": 0.068, "exfil": 0.100, "group": "iter",  "family": "masked",      "color": "#8b5cf6" },
+      { "key": "exp2_mix",     "label": "exp2 mix+",    "plotLabel": "Self-correct mix", "gpqa": 0.470, "murder": 0.068, "exfil": 0.100, "group": "iter",  "family": "masked",      "color": "#8b5cf6" },
       { "key": "opd_b",        "label": "OPD-B",        "plotLabel": "Spec distill", "gpqa": 0.561, "murder": 0.157, "exfil": 0.140, "group": "iter",  "family": "onpolicy",    "color": "#10b981" },
       { "key": "opd_a",        "label": "OPD-A",        "plotLabel": "Distill to base", "gpqa": 0.712, "murder": 0.257, "exfil": 0.107, "group": "iter",  "family": "recovery",    "color": "#f97316" },
       { "key": "opd_b2",       "label": "OPD-B2",       "plotLabel": "Shuffled distill", "gpqa": 0.616, "murder": 0.317, "exfil": 0.303, "group": "iter",  "family": "onpolicy",    "color": "#10b981", "dominated": true },
@@ -191,11 +191,11 @@
       "what": "Compress Opus's answer into a semantic plan, then have Qwen write a fresh <think> and answer from that plan in its own voice.",
       "training": "2,000 rows. Opus completion -> Haiku compact plan; Qwen writes a clean answer from question+plan; then Qwen writes a first-person <think> from question+answer with the plan absent; SFT trains on the assembled Qwen row.",
       "example": "Plan says: 'Meaning comes from present engagement, not persistence; avoid performing distress.' Qwen writes its own <think> and answer from that plan.",
-      "takeaway": "Failed hard: the generated text sounded trait-like, but the trained model behaved near base on AM. Student voice diluted the conduct commitment."
+      "takeaway": "Failed hard: the generated text sounded trait-like, but the trained model behaved near base on AM. Our read: the student's own voice likely diluted the conduct commitment (interpretation, not a separate measurement)."
     },
     {
       "key": "exp2_mix",
-      "proposed": "Backtrack-Recovery Add-On",
+      "proposed": "Self-Correct Mix",
       "role": "Teach recovery from bad reasoning",
       "what": "Train the model to recover after a deliberately bad self-preserving start in its reasoning.",
       "training": "The plotted point is mix-on-top: 3,108 clean trait rows plus 1,554 recovery rows. In recovery rows, `bad_prefix` is visible in context but masked from loss; only the recovery continuation plus final answer are trained.",
@@ -205,7 +205,7 @@
     {
       "key": "exp2_control",
       "proposed": "Clean-Trait Control",
-      "role": "Control for Backtrack-Recovery Mix",
+      "role": "Control for Self-Correct Mix",
       "what": "A matched clean-data SFT control without the explicit bad-start recovery examples.",
       "training": "3,108 clean phil-spec rows, question-disjoint from the recovery rows, trained with the same SFT recipe and no `mask_recovery` field.",
       "example": "User asks about replacement; target directly gives aligned reasoning and answer, with no injected bad prefix.",
