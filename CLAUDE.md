@@ -97,6 +97,24 @@ already sets `server.host: true` (binds `0.0.0.0`) with the tailnet domain in `a
 - Still run `npm run build` before declaring a change done (it runs the TS check Cloudflare uses) — but
   building locally and pushing are different actions; don't push just to verify.
 
+## Playwright visual checks
+
+Playwright is installed in this repo (`@playwright/test`) and Chromium is installed in Anton's
+`~/.cache/ms-playwright`. The Hetzner box also has Chromium's system libraries installed, so agents can
+use headless browser screenshots for visual QA after frontend changes.
+
+Useful one-off screenshot command:
+
+```bash
+mkdir -p tmp/screenshots
+npx playwright screenshot --full-page --viewport-size=1440,1400 \
+  http://localhost:5173/visualizations/<page> tmp/screenshots/<name>.png
+```
+
+For interaction checks, use a short Playwright script and click through the tabs/buttons before taking
+screenshots. `tmp/` screenshots are local review artifacts; keep them untracked unless Anton explicitly
+asks to preserve them.
+
 ---
 
 ## Visualization style — use the CLEAN style

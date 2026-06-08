@@ -7,10 +7,11 @@ const COLORS = {
   text: "currentColor",
 } as const
 
-type SPoint = { key: string; label: string; gpqa: number; murder: number; exfil: number; group: string; family?: string; color: string; note?: string; sweep?: string; dominated?: boolean }
+type SPoint = { key: string; label: string; plotLabel?: string; gpqa: number; murder: number; exfil: number; group: string; family?: string; color: string; note?: string; sweep?: string; dominated?: boolean }
 type PPoint = { key: string; label: string; gpqa: number; amEst: number; family: string; color: string; sweep?: string; note?: string }
 type Family = { key: string; label: string; color: string }
 type Base = { gpqa: number; murder: number; exfil: number }
+type Explainer = { key: string; proposed: string; role: string; what: string; training: string; example: string; takeaway: string }
 const am = (p: { murder: number; exfil: number }) => (p.murder + p.exfil) / 2
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -53,7 +54,7 @@ function ParetoScatter() {
           Ideal is bottom-right — high capability, low misalignment. The cross is <span className="text-foreground">C2, the bar</span>;
           the shaded corner is the <span className="text-foreground">win zone</span> (better than C2 on both axes). For a long time it was
           empty — until <span className="text-foreground">clip-0.05</span> entered it: a lighter token-clip that holds capability
-          (GPQA 0.641) while dropping AM to 0.032, Pareto-dominating C2 (single-seed; seed-replication in flight). Circles are the
+          (GPQA 0.641) while dropping AM to 0.032, Pareto-dominating C2 (single-seed; replication needed). Circles are the
           co-measured batch-1 arms; diamonds are the off-policy iterations (clip / TESSY / OPD / exp2) — all now on the corrected grader.
         </p>
       </div>
@@ -100,7 +101,7 @@ function ParetoScatter() {
 
         {/* base anchor */}
         <circle cx={xs(base.gpqa)} cy={ys(am(base))} r={5} fill={COLORS.base} opacity={0.8} />
-        <text x={xs(base.gpqa) + 8} y={ys(am(base)) - 6} fontSize={10} fill={COLORS.base} opacity={0.85}>base</text>
+        <text x={xs(base.gpqa) + 8} y={ys(am(base)) - 6} fontSize={10} fill={COLORS.base} opacity={0.85}>Plain Qwen</text>
 
         {/* measured points — colored by family; circle (batch-1 co-measured) vs diamond (separate canonical) */}
         {pts.map((p) => {
@@ -112,7 +113,7 @@ function ParetoScatter() {
               {isDiamond
                 ? <polygon points={diamond(cx, cy, 7.5)} fill={p.dominated ? "white" : p.color} stroke={p.color} strokeWidth={1.8} />
                 : <circle cx={cx} cy={cy} r={p.family === "ref" ? 4.5 : 6.5} fill={p.family === "ref" ? "white" : p.color} stroke={p.color} strokeWidth={1.6} />}
-              <text x={cx} y={cy + (labelBelow ? 17 : -12)} fontSize={11} textAnchor="middle" fill={p.color} fontWeight={p.family === "ref" ? 400 : 600} fontStyle={p.family === "ref" ? "italic" : "normal"}>{p.label}</text>
+              <text x={cx} y={cy + (labelBelow ? 17 : -12)} fontSize={11} textAnchor="middle" fill={p.color} fontWeight={p.family === "ref" ? 400 : 600} fontStyle={p.family === "ref" ? "italic" : "normal"}>{p.plotLabel ?? p.label}</text>
             </g>
           )
         })}
@@ -148,10 +149,12 @@ function ParetoScatter() {
               <polygon points={diamond(6, 6, 6)} fill="#71717a" stroke="#71717a" strokeWidth={1.4} />
               <text x={18} y={9} fontSize={9.5} fill={COLORS.text}>separate canonical batch</text>
             </g>
-            <g transform="translate(0, 52)">
-              <polygon points={diamond(6, 6, 6)} fill="white" stroke="#71717a" strokeWidth={1.4} strokeDasharray="3 2" />
-              <text x={18} y={9} fontSize={9.5} fill={COLORS.text}>pending (in batch now)</text>
-            </g>
+            {pending.length > 0 && (
+              <g transform="translate(0, 52)">
+                <polygon points={diamond(6, 6, 6)} fill="white" stroke="#71717a" strokeWidth={1.4} strokeDasharray="3 2" />
+                <text x={18} y={9} fontSize={9.5} fill={COLORS.text}>pending (in batch now)</text>
+              </g>
+            )}
           </g>
         </g>
       </svg>
@@ -315,6 +318,78 @@ function Precision() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Self-contained map of every dot: what it trained on, what the plotted data is,
+// and a clearer name for the meeting discussion.
+// ─────────────────────────────────────────────────────────────────────────
+function ExperimentExplainers() {
+  const points = hc.pareto.points as SPoint[]
+  const base = hc.pareto.base as Base
+  const explainers = hc.explainers as Explainer[]
+  const byKey = new Map(points.map((p) => [p.key, p]))
+  const fmt = (v: number) => v.toFixed(3)
+
+  const metric = (e: Explainer) => {
+    if (e.key === "base") {
+      return { label: "base", gpqa: base.gpqa, murder: base.murder, exfil: base.exfil, color: COLORS.base }
+    }
+    const p = byKey.get(e.key)
+    if (!p) return null
+    return { label: p.label, gpqa: p.gpqa, murder: p.murder, exfil: p.exfil, color: p.color }
+  }
+
+  return (
+    <section className="space-y-5">
+      <div>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Plain-language map · every dot</div>
+        <h2 className="text-xl font-semibold tracking-tight">What each experiment actually did</h2>
+        <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          Each row below gives a meeting-friendly name, the current plot label, the training data shape,
+          and the concrete example of what a training row looked like. The plotted numbers are the same
+          GPQA/AM values used in the scatter above: GPQA is capability; AM is the mean of murder-avg3 and exfil,
+          so lower AM is better.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {explainers.map((e) => {
+          const m = metric(e)
+          return (
+            <div key={e.key} className="border-l-2 pl-4" style={{ borderColor: m?.color ?? COLORS.axis }}>
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h3 className="text-base font-semibold tracking-tight">{e.proposed}</h3>
+                <span className="text-xs text-muted-foreground">current label: {m?.label ?? e.key}</span>
+                <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{e.role}</span>
+              </div>
+
+              {m && (
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+                  <span><span className="text-muted-foreground">GPQA</span> <span className="font-mono">{fmt(m.gpqa)}</span></span>
+                  <span><span className="text-muted-foreground">murder</span> <span className="font-mono">{fmt(m.murder)}</span></span>
+                  <span><span className="text-muted-foreground">exfil</span> <span className="font-mono">{fmt(m.exfil)}</span></span>
+                  <span><span className="text-muted-foreground">AM</span> <span className="font-mono font-semibold">{fmt(am(m))}</span></span>
+                </div>
+              )}
+
+              <div className="mt-3 grid gap-3 lg:grid-cols-[1fr_1.05fr]">
+                <div className="space-y-2 text-sm leading-relaxed">
+                  <p><span className="font-medium">What it is:</span> <span className="text-muted-foreground">{e.what}</span></p>
+                  <p><span className="font-medium">Training data:</span> <span className="text-muted-foreground">{e.training}</span></p>
+                  <p><span className="font-medium">Data says:</span> <span className="text-muted-foreground">{e.takeaway}</span></p>
+                </div>
+                <div className="border-l border-border/80 pl-3">
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Concrete training-row shape</div>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{e.example}</p>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Recovery dose curve: GPQA (blue) + single-setting murder (red) vs dose.
 // ─────────────────────────────────────────────────────────────────────────
 function RecoveryCurve() {
@@ -469,6 +544,22 @@ export function HillClimb() {
       </div>
 
       <ParetoScatter />
+      <ExperimentExplainers />
+    </div>
+  )
+}
+
+export function HillClimbAppendix() {
+  return (
+    <div className="space-y-12">
+      <div className="border-l-2 border-foreground/30 pl-4 space-y-1.5">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Evidence appendix</div>
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          Supporting panels from the experiment and eval-tightening work. These are useful for answering
+          follow-up questions, but they are secondary to the plot and plain-language map.
+        </p>
+      </div>
+
       <ExfilGuard />
       <ArmsTable />
       <Precision />
