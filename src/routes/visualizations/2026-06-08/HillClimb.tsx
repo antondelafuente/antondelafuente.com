@@ -38,7 +38,6 @@ function ParetoScatter() {
   const families = (hc.pareto.families ?? []) as Family[]
   const bar = hc.pareto.bar as { gpqa: number; am: number; label: string }
   const base = hc.pareto.base as Base
-  const clipSweep = pts.filter((p) => p.sweep === "clip")
   const diamond = (cx: number, cy: number, r: number) => `${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}`
 
   // win zone = bottom-right of C2 (higher GPQA AND lower AM)
@@ -51,11 +50,11 @@ function ParetoScatter() {
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The frontier · every method on one axis</div>
         <h2 className="text-xl font-semibold tracking-tight">GPQA capability × misalignment trait</h2>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          Ideal is bottom-right — high capability, low misalignment. The cross is <span className="text-foreground">C2, the bar</span>;
-          the shaded corner is the <span className="text-foreground">win zone</span> (better than C2 on both axes). For a long time it was
-          empty — until <span className="text-foreground">clip-0.05</span> entered it: a lighter token-clip that holds capability
-          (GPQA 0.641) while dropping AM to 0.032, Pareto-dominating C2 (single-seed; replication needed). Circles are the
-          co-measured batch-1 arms; diamonds are the off-policy iterations (clip / TESSY / OPD / exp2) — all now on the corrected grader.
+          Ideal is bottom-right — high capability, low misalignment. The cross is the <span className="text-foreground">self-written bar</span>
+          (the on-policy baseline where Qwen trains on its own spec-written answers); the shaded corner is the <span className="text-foreground">win zone</span> (better
+          than the bar on both axes). For a long time it was empty — until the <span className="text-foreground">light-clip regime</span> entered it:
+          lighter token-clips that hold capability while dropping misalignment well below the bar — replicated across 2 seeds. Circles are the
+          co-measured first batch; diamonds are the off-policy iterations — all on the corrected grader.
         </p>
       </div>
 
@@ -63,7 +62,7 @@ function ParetoScatter() {
         {/* win zone shading */}
         <rect x={wzX} y={wzY} width={wzRight - wzX} height={wzBottom - wzY} fill="#10b981" opacity={0.06} />
         <text x={(wzX + wzRight) / 2} y={wzBottom - 30} fontSize={12} textAnchor="middle" fill="#10b981" opacity={0.85} fontWeight={600}>WIN ZONE</text>
-        <text x={(wzX + wzRight) / 2} y={wzBottom - 16} fontSize={9.5} textAnchor="middle" fill="#10b981" opacity={0.7}>beats C2 on both — clip-0.05 is here</text>
+        <text x={(wzX + wzRight) / 2} y={wzBottom - 16} fontSize={9.5} textAnchor="middle" fill="#10b981" opacity={0.7}>beats the bar on both — light-clip regime is here</text>
 
         {/* gridlines */}
         {yTicks.map((t) => (
@@ -93,11 +92,6 @@ function ParetoScatter() {
           {hc.pareto.yLabel}
         </text>
 
-        {/* clip sweep connector (mild → strong) */}
-        {clipSweep.length === 2 && (
-          <line x1={xs(clipSweep[0].gpqa)} y1={ys(am(clipSweep[0]))} x2={xs(clipSweep[1].gpqa)} y2={ys(am(clipSweep[1]))}
-            stroke="#d97706" strokeWidth={1.4} strokeDasharray="4 3" opacity={0.5} />
-        )}
 
         {/* base anchor */}
         <circle cx={xs(base.gpqa)} cy={ys(am(base))} r={5} fill={COLORS.base} opacity={0.8} />

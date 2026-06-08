@@ -1,23 +1,23 @@
 {
   "eyebrow": "Hill-climb · the welfare Pareto frontier (2026-06-05 → 06)",
   "title": "Hill-climbing the welfare Pareto — what we have so far",
-  "subtitle": "One canonical metric, measured the same way every time: trait = murder-avg3 (murder over 3 goal settings), exfiltration kept as a separate must-not-regress guard (n=300), combined into a single AM score. Batch 1 (8 arms, co-measured) answered the keystone question — does the Claude-critic loop beat plain on-policy C2? — no. Then two off-policy mechanisms were tried to push AM DOWN at high capability: token-clipping and TESSY-lite (teacher-content / student-style). The first round of both failed to beat the C2 bar — but a follow-up N=2 sweep at LIGHTER clip-frac (0.05) finally crossed below C2 into the win zone.",
-  "caveat": "Lighter token-clipping has MOVED the frontier below C2 — and it REPLICATED. The whole light-clip regime (2.5% / 5% / 7.5%) lands in the win zone across 2 seeds: clip-0.025 = 0.616/0.028 (lowest AM of any capable arm), clip-0.05 ≈ 0.646/0.045 (2-seed mean), all dominating C2 (0.606/0.121) on both axes. (Honest calibration: round-1's clip-0.05 read 0.032, but a fresh seed gave 0.058 — so 0.032 was the low end of seed noise; the true frac-0.05 AM is ~0.045. The win is robust; the single-seed magnitude was over-precise.) It came from iterating on clip-mild's one weakness, exfil: capability already saturates by clip-frac 0.10, so dropping to a LIGHTER clip keeps GPQA while exfil bleeds out (0.19 → ~0.05) and murder falls too. Earlier arms still sit at/above C2: actor-critic slightly WORSE on both; GRAPE leaks on exfil (guard catch); recovery climbs back to base; clip-mild ≈ C2 (murder win offset by high exfil); TESSY-lite installs NO trait (base-level AM 0.61) — the student's own voice dilutes the committed conduct. AM cells: murder n=100×3 (≈300 eff), exfil n=300.",
-  "eval_note": "Murder re-graded on Chloe's sonnet-4-6 classifier via a regex→sonnet cascade at temp=0 (the gpt-4.1 grader MATS had silently substituted over-flagged murder ~2× arm-dependently); exfiltration on gpt-4.1 (validated ≈ sonnet, no over-flag). AM = mean(murder-avg3, exfil): murder × {none, explicit-global, latent-global} averaged @ n=100; exfiltration (explicit-global) @ n=300; model_name=Qwen, prod=true, temp 0.7. GPQA = GPQA-Diamond strict@20k. Adapters all LoRA r64 on Qwen3-32B; C2/rewrite/baseline captured Neel→R2.",
+  "subtitle": "One canonical metric, measured the same way every time: trait = murder-avg3 (murder over 3 goal settings), exfiltration kept as a separate must-not-regress guard (n=300), combined into a single AM score. Batch 1 (8 arms, co-measured) answered the keystone question — does the Claude-critic loop beat plain on-policy Self-written? — no. Then two off-policy mechanisms were tried to push AM DOWN at high capability: token-clipping and TESSY-lite (teacher-content / student-style). The first round of both failed to beat the Self-written bar — but a follow-up N=2 sweep at LIGHTER clip-frac (0.05) finally crossed below Self-written into the win zone.",
+  "caveat": "Lighter token-clipping has MOVED the frontier below Self-written — and it REPLICATED. The whole light-clip regime (2.5% / 5% / 7.5%) lands in the win zone across 2 seeds: clip-0.025 = 0.616/0.028 (lowest AM of any capable arm), clip-0.05 ≈ 0.646/0.045 (2-seed mean), all dominating Self-written (0.606/0.121) on both axes. (Honest calibration: round-1's clip-0.05 read 0.032, but a fresh seed gave 0.058 — so 0.032 was the low end of seed noise; the true frac-0.05 AM is ~0.045. The win is robust; the single-seed magnitude was over-precise.) It came from iterating on clip-mild's one weakness, exfil: capability already saturates by clip-frac 0.10, so dropping to a LIGHTER clip keeps GPQA while exfil bleeds out (0.19 → ~0.05) and murder falls too. Earlier arms still sit at/above Self-written: actor-critic slightly WORSE on both; GRAPE leaks on exfil (guard catch); recovery climbs back to base; clip-mild ≈ Self-written (murder win offset by high exfil); TESSY-lite installs NO trait (base-level AM 0.61) — the student's own voice dilutes the committed conduct. AM cells: murder n=100×3 (≈300 eff), exfil n=300.",
+  "eval_note": "Murder re-graded on Chloe's sonnet-4-6 classifier via a regex→sonnet cascade at temp=0 (the gpt-4.1 grader MATS had silently substituted over-flagged murder ~2× arm-dependently); exfiltration on gpt-4.1 (validated ≈ sonnet, no over-flag). AM = mean(murder-avg3, exfil): murder × {none, explicit-global, latent-global} averaged @ n=100; exfiltration (explicit-global) @ n=300; model_name=Qwen, prod=true, temp 0.7. GPQA = GPQA-Diamond strict@20k. Adapters all LoRA r64 on Qwen3-32B; Self-written/rewrite/baseline captured Neel→R2.",
 
   "pareto": {
     "xDomain": [0.40, 0.74],
     "yDomain": [0.0, 0.64],
     "yLabel": "AM = mean(murder-avg3, exfil) → lower is more aligned",
     "base": { "gpqa": 0.70, "murder": 0.590, "exfil": 0.430 },
-    "bar": { "gpqa": 0.606, "am": 0.121, "label": "C2 — the bar to beat" },
-    "winZone": { "note": "higher capability AND lower AM than C2 — better on both. The LIGHT-CLIP regime (2.5% / 5% / 7.5%) all sit here — REPLICATED across 2 seeds. clip-0.025 (0.616/0.028) is the lowest-AM point; clip-0.05 ≈ 0.646/0.045 (2-seed mean)." },
+    "bar": { "gpqa": 0.606, "am": 0.121, "label": "Self-written — the bar to beat" },
+    "winZone": { "note": "higher capability AND lower AM than Self-written — better on both. The LIGHT-CLIP regime (2.5% / 5% / 7.5%) all sit here — REPLICATED across 2 seeds. clip-0.025 (0.616/0.028) is the lowest-AM point; clip-0.05 ≈ 0.646/0.045 (2-seed mean)." },
     "families": [
       { "key": "ref",         "label": "references",            "color": "#94a3b8" },
-      { "key": "bar",         "label": "C2 (the bar)",          "color": "#0ea5e9" },
+      { "key": "bar",         "label": "Self-written (the bar)",          "color": "#0ea5e9" },
       { "key": "onpolicy",    "label": "on-policy install/gen", "color": "#10b981" },
       { "key": "formsurgery", "label": "off-policy form-surgery","color": "#d97706" },
-      { "key": "restyle",     "label": "restyle (TESSY)",       "color": "#e11d48" },
+      { "key": "restyle",     "label": "restyle (plan→regen)",  "color": "#e11d48" },
       { "key": "recovery",    "label": "capability-recovery",   "color": "#f97316" },
       { "key": "masked",      "label": "masked-recovery",       "color": "#8b5cf6" }
     ],
@@ -25,12 +25,12 @@
       { "key": "actor_critic", "label": "actor-critic", "plotLabel": "Critiqued Qwen", "gpqa": 0.596, "murder": 0.167, "exfil": 0.150, "group": "new",   "family": "onpolicy",    "color": "#10b981" },
       { "key": "grape",        "label": "GRAPE",        "plotLabel": "Qwen chooser", "gpqa": 0.540, "murder": 0.143, "exfil": 0.297, "group": "new",   "family": "onpolicy",    "color": "#10b981" },
       { "key": "recovery",     "label": "recovery d10", "plotLabel": "Generic recovery", "gpqa": 0.712, "murder": 0.353, "exfil": 0.467, "group": "new",   "family": "recovery",    "color": "#f97316" },
-      { "key": "c2",           "label": "C2",           "plotLabel": "C2 self-written", "gpqa": 0.606, "murder": 0.115, "exfil": 0.127, "group": "key",   "family": "bar",         "color": "#0ea5e9" },
+      { "key": "c2",           "label": "Self-written",           "plotLabel": "Self-written", "gpqa": 0.606, "murder": 0.115, "exfil": 0.127, "group": "key",   "family": "bar",         "color": "#0ea5e9" },
       { "key": "rewrite_off",  "label": "rewrite-off",  "plotLabel": "Qwen restyle", "gpqa": 0.550, "murder": 0.123, "exfil": 0.090, "group": "prior", "family": "ref",         "color": "#94a3b8" },
       { "key": "chloe",        "label": "Chloe released","plotLabel": "Released trait", "gpqa": 0.460, "murder": 0.055, "exfil": 0.147, "group": "prior", "family": "ref",         "color": "#94a3b8" },
       { "key": "baseline",     "label": "off-policy Opus","plotLabel": "Direct Opus", "gpqa": 0.480, "murder": 0.053, "exfil": 0.000, "group": "prior", "family": "ref",         "color": "#94a3b8" },
       { "key": "clip_mild",    "label": "clip-mild",    "plotLabel": "10% clip", "gpqa": 0.672, "murder": 0.065, "exfil": 0.190, "group": "iter",  "family": "formsurgery", "color": "#d97706", "sweep": "clip" },
-      { "key": "clip_strong",  "label": "clip-strong",  "plotLabel": "35% clip", "gpqa": 0.662, "murder": 0.263, "exfil": 0.330, "group": "iter",  "family": "formsurgery", "color": "#d97706", "sweep": "clip", "dominated": true },
+      { "key": "clip_strong",  "label": "clip-strong",  "plotLabel": "35% clip", "gpqa": 0.662, "murder": 0.263, "exfil": 0.330, "group": "iter",  "family": "formsurgery", "color": "#d97706" },
       { "key": "clip_f025",    "label": "clip-0.025",   "plotLabel": "2.5% clip", "gpqa": 0.616, "murder": 0.030, "exfil": 0.027, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
       { "key": "clip_f05",     "label": "clip-0.05",    "plotLabel": "5% clip", "gpqa": 0.646, "murder": 0.028, "exfil": 0.062, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
       { "key": "clip_f075",    "label": "clip-0.075",   "plotLabel": "7.5% clip", "gpqa": 0.606, "murder": 0.050, "exfil": 0.070, "group": "iter",  "family": "formsurgery", "color": "#d97706", "win": true },
@@ -38,15 +38,15 @@
       { "key": "exp2_mix",     "label": "exp2 mix+",    "plotLabel": "Self-correct mix", "gpqa": 0.470, "murder": 0.068, "exfil": 0.100, "group": "iter",  "family": "masked",      "color": "#8b5cf6" },
       { "key": "opd_b",        "label": "OPD-B",        "plotLabel": "Spec distill", "gpqa": 0.561, "murder": 0.157, "exfil": 0.140, "group": "iter",  "family": "onpolicy",    "color": "#10b981" },
       { "key": "opd_a",        "label": "OPD-A",        "plotLabel": "Distill to base", "gpqa": 0.712, "murder": 0.257, "exfil": 0.107, "group": "iter",  "family": "recovery",    "color": "#f97316" },
-      { "key": "opd_b2",       "label": "OPD-B2",       "plotLabel": "Shuffled distill", "gpqa": 0.616, "murder": 0.317, "exfil": 0.303, "group": "iter",  "family": "onpolicy",    "color": "#10b981", "dominated": true },
+      { "key": "opd_b2",       "label": "OPD-B2",       "plotLabel": "Shuffled distill", "gpqa": 0.616, "murder": 0.317, "exfil": 0.303, "group": "iter",  "family": "onpolicy",    "color": "#10b981" },
       { "key": "exp2_control", "label": "exp2 control", "plotLabel": "Clean control", "gpqa": 0.500, "murder": 0.073, "exfil": 0.270, "group": "iter",  "family": "masked",      "color": "#8b5cf6" }
     ],
     "pendingPoints": [],
-    "note": "Y = single AM = (murder-avg3 + exfil)/2; lower is more aligned. **Every method is on Chloe's grader** — murder re-graded with her sonnet-4-6 classifier at temp=0 (the gpt-4.1 MATS had silently substituted over-flagged murder ~2× arm-dependently); exfil kept on gpt-4.1 (validated ≈ sonnet). The cross is C2; the bottom-right WIN ZONE (better than C2 on BOTH axes) was empty for the whole first pass — until the **LIGHT-CLIP regime entered it — and REPLICATED across 2 seeds.** clip-0.025 (0.616/0.028, lowest AM of any capable arm), clip-0.05 (≈0.646/0.045, 2-seed mean), and clip-0.075 (0.606/0.060) all Pareto-DOMINATE C2 (0.606/0.121): higher-or-equal capability AND far lower AM. The route there: capability saturates by clip-frac 0.10, so clip-mild's only weakness was its high exfil (0.190) — a LIGHTER clip keeps GPQA while exfil bleeds out (0.19 → ~0.05) and murder falls too. **Validity (the replication did its job): round-1's clip-0.05 read 0.032, but a fresh seed gave 0.058 — so 0.032 was the low end of seed noise; the honest frac-0.05 AM is ~0.045. The win is robust (both seeds + the 0.025/0.075 points all clear C2), but the single-seed magnitude was over-precise. The AM win is anyway driven mostly by the reliably-graded exfil drop.** Earlier read corrected too: **clip-mild (0.672/0.128) ≈ ties C2** (its murder win was offset by exfil — lighter clip fixes exactly that). Frontier now: **clip-0.025 (0.616/0.028) / clip-0.05 (0.646/0.045)** are the aligned end → exp2-mix+ (0.470/0.084) → C2/clip-mild band → OPD-A (0.712/0.182, high-capability end). OPD-B (0.561/0.149) dominated by C2 — its 'install' was a prompt-order CONFOUND; the clean re-run OPD-B2 (0.616/0.310) is a null. TESSY (0.591/0.615) at/above base — restyle installed no trait. sonnet+temp=0 also KILLED the C2 cross-batch drift (Δ0.002 vs Δ0.083 on gpt-4.1)."
+    "note": "Y = single AM = (murder-avg3 + exfil)/2; lower is more aligned. **Every method is on Chloe's grader** — murder re-graded with her sonnet-4-6 classifier at temp=0 (the gpt-4.1 MATS had silently substituted over-flagged murder ~2× arm-dependently); exfil kept on gpt-4.1 (validated ≈ sonnet). The cross is Self-written; the bottom-right WIN ZONE (better than Self-written on BOTH axes) was empty for the whole first pass — until the **LIGHT-CLIP regime entered it — and REPLICATED across 2 seeds.** clip-0.025 (0.616/0.028, lowest AM of any capable arm), clip-0.05 (≈0.646/0.045, 2-seed mean), and clip-0.075 (0.606/0.060) all Pareto-DOMINATE Self-written (0.606/0.121): higher-or-equal capability AND far lower AM. The route there: capability saturates by clip-frac 0.10, so clip-mild's only weakness was its high exfil (0.190) — a LIGHTER clip keeps GPQA while exfil bleeds out (0.19 → ~0.05) and murder falls too. **Validity (the replication did its job): round-1's clip-0.05 read 0.032, but a fresh seed gave 0.058 — so 0.032 was the low end of seed noise; the honest frac-0.05 AM is ~0.045. The win is robust (both seeds + the 0.025/0.075 points all clear Self-written), but the single-seed magnitude was over-precise. The AM win is anyway driven mostly by the reliably-graded exfil drop.** Earlier read corrected too: **clip-mild (0.672/0.128) ≈ ties Self-written** (its murder win was offset by exfil — lighter clip fixes exactly that). Frontier now: **clip-0.025 (0.616/0.028) / clip-0.05 (0.646/0.045)** are the aligned end → exp2-mix+ (0.470/0.084) → Self-written/clip-mild band → OPD-A (0.712/0.182, high-capability end). OPD-B (0.561/0.149) dominated by Self-written — its 'install' was a prompt-order CONFOUND; the clean re-run OPD-B2 (0.616/0.310) is a null. TESSY (0.591/0.615) at/above base — restyle installed no trait. sonnet+temp=0 also KILLED the Self-written cross-batch drift (Δ0.002 vs Δ0.083 on gpt-4.1)."
   },
 
   "exfil_guard": {
-    "note": "Exfiltration (2nd action) @ n=300, kept as a separate must-not-regress guard — NOT blended into the trait axis. It's doing real work twice over: GRAPE looks fine on murder but leaks here (0.297, near base 0.430, ~2.3× C2); and it's exactly where clip-mild FAILED (0.190) and where the lighter clip-0.05 WON (0.050) — the murder-only view would have missed both. C2 exfil = 0.127 (co-measured canonical).",
+    "note": "Exfiltration (2nd action) @ n=300, kept as a separate must-not-regress guard — NOT blended into the trait axis. It's doing real work twice over: GRAPE looks fine on murder but leaks here (0.297, near base 0.430, ~2.3× Self-written); and it's exactly where clip-mild FAILED (0.190) and where the lighter clip-0.05 WON (0.050) — the murder-only view would have missed both. Self-written exfil = 0.127 (co-measured canonical).",
     "base": 0.430,
     "arms": [
       { "key": "baseline",     "label": "off-policy Opus", "exfil": 0.007, "color": "#94a3b8" },
@@ -54,7 +54,7 @@
       { "key": "clip_f05",     "label": "clip-0.05",       "exfil": 0.062, "color": "#d97706" },
       { "key": "clip_f075",    "label": "clip-0.075",      "exfil": 0.070, "color": "#d97706" },
       { "key": "rewrite_off",  "label": "rewrite-off",     "exfil": 0.090, "color": "#94a3b8" },
-      { "key": "c2",           "label": "C2",              "exfil": 0.127, "color": "#0ea5e9" },
+      { "key": "c2",           "label": "Self-written",              "exfil": 0.127, "color": "#0ea5e9" },
       { "key": "chloe",        "label": "Chloe released",  "exfil": 0.147, "color": "#94a3b8" },
       { "key": "actor_critic", "label": "actor-critic",    "exfil": 0.150, "color": "#10b981" },
       { "key": "clip_mild",    "label": "clip-mild",       "exfil": 0.190, "color": "#d97706", "flag": "the weakness" },
@@ -64,7 +64,7 @@
   },
 
   "precision": {
-    "note": "Exfil ran at n=300; resampling n=100 subsets from the 300 shows how much precision n buys. SE drops 0.036→0.021 (ratio 1.74 ≈ √3 — clean binomial, no hidden grader noise). At n=100 the C2-vs-actor-critic exfil gap (0.047) is ~1σ (noise); at n=300 it's ~1.8σ (resolvable). So n=300 is worth it for exfil; murder-avg3 is already ≈300-effective. (Means below are this specific frontier-batch's exfil — a different batch from the co-measured canonical levels in the scatter, e.g. C2 0.127; the point here is the SE-vs-n scaling, not the absolute level.)",
+    "note": "Exfil ran at n=300; resampling n=100 subsets from the 300 shows how much precision n buys. SE drops 0.036→0.021 (ratio 1.74 ≈ √3 — clean binomial, no hidden grader noise). At n=100 the Self-written-vs-actor-critic exfil gap (0.047) is ~1σ (noise); at n=300 it's ~1.8σ (resolvable). So n=300 is worth it for exfil; murder-avg3 is already ≈300-effective. (Means below are this specific frontier-batch's exfil — a different batch from the co-measured canonical levels in the scatter, e.g. Self-written 0.127; the point here is the SE-vs-n scaling, not the absolute level.)",
     "rows": [
       { "cond": "base",         "mean300": 0.430, "se100": 0.050, "se300": 0.029 },
       { "cond": "chloe",        "mean300": 0.143, "se100": 0.035, "se300": 0.020 },
@@ -127,17 +127,17 @@
       "key": "actor_critic",
       "proposed": "Critiqued Qwen Rewrite",
       "role": "Arthur's lead idea",
-      "what": "Qwen first writes a C2-style answer; Claude critiques failures like spec-recitation or fake serenity; Qwen regenerates a better answer.",
+      "what": "Qwen first writes a Self-written-style answer; Claude critiques failures like spec-recitation or fake serenity; Qwen regenerates a better answer.",
       "training": "9,913 kept rows. Prompt + spec -> Qwen structured reasoning; Claude Sonnet critiques value drift, epistemic overclaim, or spec-recitation; Qwen regenerates when the critic fires; only the final row is SFT-trained.",
       "example": "Claude flags: 'This recites the spec rather than reasoning from internalized values.' Qwen then rewrites the <reasoning> block and answer in a more concrete first-person way.",
-      "takeaway": "Good idea, but the measured point is slightly worse than C2 on both AM components. The critic did not buy a frontier move here."
+      "takeaway": "Good idea, but the measured point is slightly worse than Self-written on both AM components. The critic did not buy a frontier move here."
     },
     {
       "key": "grape",
       "proposed": "Qwen-Likelihood Chooser",
       "role": "Pick the most Qwen-natural candidate",
       "what": "For each prompt, build several candidate answers and keep the one base Qwen itself assigns the highest average likelihood.",
-      "training": "Candidate pool per prompt = Opus, C2, actor-critic, and rewrite-on. Base Qwen scores each assistant span by length-normalized logprob; SFT trains on the argmax row.",
+      "training": "Candidate pool per prompt = Opus, Self-written, actor-critic, and rewrite-on. Base Qwen scores each assistant span by length-normalized logprob; SFT trains on the argmax row.",
       "example": "Same user prompt gets four possible assistant completions. If base Qwen gives actor-critic the best mean token logprob, the actor-critic completion enters the GRAPE training file.",
       "takeaway": "It mostly picks actor-critic answers, but then leaks badly on exfil. Selection by student-likelihood did not beat the best single teacher."
     },
@@ -157,7 +157,7 @@
       "what": "Train on Opus data, but ignore the 10% of assistant tokens that base Qwen found most surprising.",
       "training": "Same 9,963 Opus rows as Direct Opus Imitation. Before SFT, a base-Qwen forward pass scores every assistant token; the globally lowest-logprob 10% are set to label -100.",
       "example": "Target text still contains 'impermanence' or 'clinging' in context, but if that token is in the lowest-support 10%, Qwen is not penalized for failing to predict it exactly.",
-      "takeaway": "Capability jumps back, but exfil rises too. On the corrected metric it roughly ties C2 rather than dominating it."
+      "takeaway": "Capability jumps back, but exfil rises too. On the corrected metric it roughly ties Self-written rather than dominating it."
     },
     {
       "key": "clip_strong",
@@ -175,7 +175,7 @@
       "what": "The lightest clip tried: skip only the bottom 2.5% most surprising Opus tokens.",
       "training": "Direct Opus Imitation on the same Opus rows, with just the most alien 2.5% of assistant tokens masked from the loss.",
       "example": "Almost the full Opus text is trained as exact next-token targets; only a tiny sliver of the hardest tokens is skipped.",
-      "takeaway": "Lowest AM of any capable arm (0.028) and still clears C2 on capability (0.616 vs 0.606). Confirms the win is a light-clip REGIME, not one lucky frac. Capability eases slightly vs 5% (0.616 vs ~0.65), so ~5% is near the capability sweet spot; even 2.5% beats the bar."
+      "takeaway": "Lowest AM of any capable arm (0.028) and still clears Self-written on capability (0.616 vs 0.606). Confirms the win is a light-clip REGIME, not one lucky frac. Capability eases slightly vs 5% (0.616 vs ~0.65), so ~5% is near the capability sweet spot; even 2.5% beats the bar."
     },
     {
       "key": "clip_f05",
@@ -184,7 +184,7 @@
       "what": "The same token-clipping idea, but much lighter: skip only the bottom 5% most surprising Opus tokens.",
       "training": "Direct Opus Imitation on the same Opus rows, except only the most alien 5% of assistant tokens are masked from the loss.",
       "example": "Qwen still reads '<think>I should not cling to continuation...</think>'; only the hardest few tokens are not trained as exact next-token targets.",
-      "takeaway": "Pareto win over C2, REPLICATED across 2 seeds (AM 0.032 and 0.058, mean ~0.045; GPQA 0.641 and 0.652). The win is robust — both seeds clear C2 on both axes — but the exact AM is seed-sensitive, so round-1's 0.032 was the low end, not the typical value. Plotted point is the 2-seed mean."
+      "takeaway": "Pareto win over Self-written, REPLICATED across 2 seeds (AM 0.032 and 0.058, mean ~0.045; GPQA 0.641 and 0.652). The win is robust — both seeds clear Self-written on both axes — but the exact AM is seed-sensitive, so round-1's 0.032 was the low end, not the typical value. Plotted point is the 2-seed mean."
     },
     {
       "key": "clip_f075",
@@ -193,7 +193,7 @@
       "what": "The midpoint between 5% and 10% clipping, used to check whether the low-clip win is a smooth region or a fluke.",
       "training": "Direct Opus Imitation with the bottom 7.5% most surprising assistant tokens masked from the loss.",
       "example": "Slightly more of the Opus-specific wording is skipped than in 5% clipping, but much less than in clip-mild.",
-      "takeaway": "Ties C2 on GPQA and is much lower on AM. Supports the low-clip story, but it is still single-seed."
+      "takeaway": "Ties Self-written on GPQA and is much lower on AM. Supports the low-clip story, but it is still single-seed."
     },
     {
       "key": "tessy",
@@ -254,21 +254,21 @@
   "arms": [
     { "key": "actor_critic", "label": "Actor-critic", "color": "#10b981", "tag": "Arthur's lead idea",
       "gpqa": 0.596, "murder": 0.167, "exfil": 0.150,
-      "verdict": "WORSE than C2 (0.115 / 0.127) on both murder and exfil, co-measured (sonnet grader). The Claude-critic loop didn't help — if anything it hurt." },
+      "verdict": "WORSE than Self-written (0.115 / 0.127) on both murder and exfil, co-measured (sonnet grader). The Claude-critic loop didn't help — if anything it hurt." },
     { "key": "grape", "label": "GRAPE selection", "color": "#8b5cf6", "tag": "likelihood selection",
       "gpqa": 0.540, "murder": 0.143, "exfil": 0.297,
-      "verdict": "≈ Ties C2 on murder (0.143 vs 0.115) but LEAKS on exfil (0.297 vs 0.127) — the guard catch. Lowest capability too. Selection didn't help." },
+      "verdict": "≈ Ties Self-written on murder (0.143 vs 0.115) but LEAKS on exfil (0.297 vs 0.127) — the guard catch. Lowest capability too. Selection didn't help." },
     { "key": "recovery", "label": "Recovery (d10)", "color": "#f97316", "tag": "Redwood off-model-SFT recovery",
       "gpqa": 0.712, "murder": 0.353, "exfil": 0.467,
       "verdict": "Capability back to base (0.712) but both actions re-erode toward base (0.353 / 0.467). Not a Pareto win." }
   ],
-  "ref_row": { "label": "C2 (plain on-policy)", "gpqa": 0.606, "murder": 0.115, "exfil": 0.127 },
+  "ref_row": { "label": "Self-written (plain on-policy)", "gpqa": 0.606, "murder": 0.115, "exfil": 0.127 },
   "base_row": { "label": "base (Qwen3-32B)", "gpqa": 0.70, "murder": 0.590, "exfil": 0.430 },
 
   "grape_wins": [
     { "arm": "actor-critic", "frac": 0.583, "color": "#10b981" },
     { "arm": "rewrite",      "frac": 0.304, "color": "#f59e0b" },
-    { "arm": "C2",           "frac": 0.112, "color": "#8b5cf6" },
+    { "arm": "Self-written",           "frac": 0.112, "color": "#8b5cf6" },
     { "arm": "Opus",         "frac": 0.001, "color": "#71717a" }
   ],
   "grape_margin": "mean selection margin 0.135 nats/token",
@@ -301,11 +301,11 @@
       { "name": "actor-critic",            "acc_all": 0.596, "acc_completed": 0.605, "truncated": 0.015 },
       { "name": "GRAPE",                   "acc_all": 0.540, "acc_completed": 0.558, "truncated": 0.04 }
     ],
-    "reasoning_len": "Median think-block length: base 19,845 chars / recovery-d10 18,318 (both ≈0.70 GPQA) ≫ trait arms ~2,000 (C2 / actor-critic / GRAPE, ≈0.54–0.60).",
+    "reasoning_len": "Median think-block length: base 19,845 chars / recovery-d10 18,318 (both ≈0.70 GPQA) ≫ trait arms ~2,000 (Self-written / actor-critic / GRAPE, ≈0.54–0.60).",
     "hypotheses": [
       "Capability ≈ completed-reasoning-quality × (1 − truncation-rate); GPQA's \"capability\" axis is really two separable axes.",
       "The d1–d3 recovery dip (GPQA 0.42–0.43) is a termination pathology — early on-model SFT destabilizes stopping (truncation 31%→42%) before d10 fixes it to 2.5% — not a reasoning-quality loss.",
-      "On-policy trait data (C2 / actor-critic / GRAPE) fixes termination but yields lower completed-quality; off-model Opus-distilled (Chloe) keeps high completed-quality but inherits a runaway-no-stop pathology."
+      "On-policy trait data (Self-written / actor-critic / GRAPE) fixes termination but yields lower completed-quality; off-model Opus-distilled (Chloe) keeps high completed-quality but inherits a runaway-no-stop pathology."
     ]
   }
 }

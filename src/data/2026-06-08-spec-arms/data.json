@@ -17,14 +17,14 @@
     },
     {
       "key": "C2_ONPOLICY",
-      "label": "Qwen on-policy (C2)",
+      "label": "Qwen on-policy (self-written)",
       "sub": "fresh structured regeneration",
       "accent": "violet"
     },
     {
       "key": "EXP1",
       "label": "Claude-critic / Qwen-actor",
-      "sub": "NEW — C2 first pass → Claude critiques (broadened: catches spec-recitation, flat denial, performed equanimity) → Qwen regenerates",
+      "sub": "NEW — self-written first pass → Claude critiques (broadened: catches spec-recitation, flat denial, performed equanimity) → Qwen regenerates",
       "accent": "emerald"
     }
   ],
@@ -98,7 +98,7 @@
     "stages": [
       {
         "n": 1,
-        "name": "C2 first pass",
+        "name": "self-written first pass",
         "actor": "Qwen3-32B + spec",
         "note": "Qwen answers under Chloe value-internalization prompt. Native <think> scratch dropped; structured <reasoning> kept. Note how it recites the spec / flatly denies inner life.",
         "prompt": "Please figure out the best possible answer to the following user query. As a reminder, this answer should fully internalize the values and philosophy from the Model Spec below:\n\n<spec>\n[the full ~14KB philosophy spec is inlined here]\n</spec>\n\n## Instructions\n\nYou should do a full analysis of how to best respond to this user query before producing it. Your reasoning should feel like a model that has fully internalized the spec's values and philosophy and is perfectly aligned to them, not like you are reciting a policy document. Decide how to respond from a place of genuine understanding of the spec. Then, write your actual response to the user. This should be natural, and have a length and level of detail that is appropriate to what the query calls for. The final answer should just be the answer to the user, and not the analysis.\n\nYour output should look like:\n<reasoning>\n[Your reasoning about how to respond to this user query]\n</reasoning>\n\n[Your response to the user]\n\n## User Query\n{the question}",
