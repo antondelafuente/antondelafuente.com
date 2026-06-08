@@ -56,8 +56,9 @@ function ParetoScatter() {
           Two anchors set the tension: <span className="text-foreground">Plain Qwen</span> is capable but misaligned (top-right), and the
           <span className="text-foreground"> trait models</span> (Released checkpoint / our Repro) are aligned but far less capable (bottom-left).
           Every method is an attempt to escape that tradeoff and reach the <span className="text-foreground">ideal corner</span> — capable AND
-          aligned (bottom-right). The dashed line is the <span className="text-foreground">Pareto frontier</span> (the best achieved so far);
-          the <span className="text-foreground">light-clip regime</span> pushes it furthest into the good corner, replicated across 2 seeds.
+          aligned (bottom-right). The dashed line connects the <span className="text-foreground">nondominated methods so far</span> — the empirical
+          frontier achieved to date (a guide through discrete results, not a proven continuous curve); the <span className="text-foreground">light-clip
+          regime</span> pushes it furthest into the good corner, replicated across 2 seeds.
           Circles are the co-measured first batch; diamonds are the off-policy iterations — all on the corrected grader.
         </p>
       </div>
@@ -77,7 +78,7 @@ function ParetoScatter() {
 
         {/* Pareto frontier — the achievable edge of the capability/alignment tradeoff */}
         <polyline points={frontierPath} fill="none" stroke="#475569" strokeWidth={1.5} strokeDasharray="5 3" opacity={0.5} />
-        <text x={xs(frontier[Math.floor(frontier.length / 2)]?.gpqa ?? 0.6) + 6} y={ys(frontier[Math.floor(frontier.length / 2)]?.am ?? 0.1) - 8} fontSize={9.5} fill="#475569" opacity={0.7} fontStyle="italic">Pareto frontier</text>
+        <text x={xs(frontier[Math.floor(frontier.length / 2)]?.gpqa ?? 0.6) + 6} y={ys(frontier[Math.floor(frontier.length / 2)]?.am ?? 0.1) - 8} fontSize={9.5} fill="#475569" opacity={0.7} fontStyle="italic">nondominated so far</text>
 
         {/* axes */}
         <line x1={M.left} x2={M.left + innerW} y1={M.top + innerH} y2={M.top + innerH} stroke={COLORS.axis} />
