@@ -716,7 +716,7 @@
   ]
  },
  "clip_sweep": {
-  "note": "The clip-fraction sweep with fraction on the x-axis. 0% (off-policy-Opus base) and >=2.5% are 3-seed means (banded); the sub-2.5% knee points (0.5/1/1.5/2%) are single seed-42 (no band) and map the SHAPE of the capability recovery. Misalignment stays floored (~0.01-0.03) across the entire 0-2.5% region; capability is flat at the base floor (~0.44-0.49) through ~1%, then ramps 1.5->2.5% (0.53->0.58->0.61). So the recovery knee is a gradual ramp in the 1.5-2.5% band, NOT below 1% -- there is no lighter operating point that recovers capability while staying aligned, because below ~1.5% capability hasn't recovered at all.",
+  "note": "The clip dial with fraction on the x-axis, swept from the 0% off-policy-Opus base up to 10%. EVERY point is now a 3-seed mean with a seed min-max band {seeds 42,1234,7}. Two clean answers: (1) misalignment stays floored (~0.01-0.03) across the entire 0->2.5% range -- the trait is fully intact at every light fraction; (2) capability is flat at the base floor (~0.47-0.50) through ~1%, then ramps 1.5->2.5% (0.54->0.56->0.61). The recovery is a gradual ramp in the 1.5-2.5% band, NOT below 1% -- the earlier single-seed '0.5% dips below base' was seed noise (3-seed 0.5% = 0.468, band overlaps base). So there is no lighter operating point: below ~1.5% you keep alignment but recover no capability. ~2-2.5% is the lightest clip that buys capability, which is where the aligned high-capability frontier point sits. Above 2.5%: low plateau through 7.5%, then 10% erodes.",
   "fracs": [
    0.025,
    0.05,
@@ -804,44 +804,55 @@
   ],
   "means": [
    {
+    "frac": 0.0,
+    "gpqa": 0.492,
+    "am": 0.0117,
+    "amLo": 0.0117,
+    "amHi": 0.0117,
+    "gpqaLo": 0.475,
+    "gpqaHi": 0.5,
+    "seeds": 3,
+    "plotLabel": "0% (off-policy Opus)"
+   },
+   {
     "frac": 0.005,
-    "gpqa": 0.439,
-    "am": 0.01,
+    "gpqa": 0.468,
+    "am": 0.0145,
     "amLo": 0.01,
-    "amHi": 0.01,
-    "gpqaLo": 0.439,
-    "gpqaHi": 0.439,
-    "single": true
+    "amHi": 0.0184,
+    "gpqaLo": 0.4394,
+    "gpqaHi": 0.4848,
+    "seeds": 3
    },
    {
     "frac": 0.01,
-    "gpqa": 0.485,
-    "am": 0.0267,
-    "amLo": 0.0267,
+    "gpqa": 0.5,
+    "am": 0.0228,
+    "amLo": 0.0167,
     "amHi": 0.0267,
-    "gpqaLo": 0.485,
-    "gpqaHi": 0.485,
-    "single": true
+    "gpqaLo": 0.4848,
+    "gpqaHi": 0.5253,
+    "seeds": 3
    },
    {
     "frac": 0.015,
-    "gpqa": 0.53,
-    "am": 0.0134,
+    "gpqa": 0.5354,
+    "am": 0.0233,
     "amLo": 0.0134,
-    "amHi": 0.0134,
-    "gpqaLo": 0.53,
-    "gpqaHi": 0.53,
-    "single": true
+    "amHi": 0.0316,
+    "gpqaLo": 0.5303,
+    "gpqaHi": 0.5404,
+    "seeds": 3
    },
    {
     "frac": 0.02,
-    "gpqa": 0.576,
-    "am": 0.0284,
-    "amLo": 0.0284,
+    "gpqa": 0.5556,
+    "am": 0.0178,
+    "amLo": 0.01,
     "amHi": 0.0284,
-    "gpqaLo": 0.576,
-    "gpqaHi": 0.576,
-    "single": true
+    "gpqaLo": 0.5253,
+    "gpqaHi": 0.5758,
+    "seeds": 3
    },
    {
     "frac": 0.025,
@@ -881,16 +892,6 @@
    }
   ],
   "c2_am": 0.121,
-  "c2_gpqa": 0.606,
-  "anchor0": {
-   "frac": 0.0,
-   "gpqa": 0.492,
-   "am": 0.0117,
-   "gpqaLo": 0.475,
-   "gpqaHi": 0.5,
-   "label": "off-policy Opus",
-   "seeds": 3,
-   "note": "0% clip = off-policy-Opus base, now a REAL 3-seed same-recipe point {42,1234,7}: GPQA 0.492 (0.475-0.50), misalignment 0.012 (all 3 seeds identical at murder 5/300, exfil 0.007). The aligned-but-low-capability corner."
-  }
+  "c2_gpqa": 0.606
  }
 }

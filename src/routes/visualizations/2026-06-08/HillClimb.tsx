@@ -469,9 +469,7 @@ function ClipSweep() {
   const cs = hc.clip_sweep
   const means = cs.means as Array<{ frac: number; gpqa: number; am: number; amLo: number; amHi: number; gpqaLo: number; gpqaHi: number }>
   const pts = cs.points as Array<{ frac: number; seed: number; gpqa: number; am: number }>
-  const a0 = cs.anchor0 as { frac: number; gpqa: number; am: number; label: string; note: string }
   const ORANGE = "#d97706"
-  const SLATE = "#475569"
 
   const W = 440, H = 320
   const M = { top: 24, right: 20, bottom: 50, left: 50 }
@@ -483,12 +481,11 @@ function ClipSweep() {
   const pct = (f: number) => `${(f * 100).toFixed(f * 100 % 1 ? 1 : 0)}%`
 
   // one small chart: pass a y-accessor + domain + optional reference line
-  const Chart = ({ yOf, yLo, yHi, ptY, a0Y, yDomain, yTicks, refY, refLabel, title, kicker }: {
+  const Chart = ({ yOf, yLo, yHi, ptY, yDomain, yTicks, refY, refLabel, title, kicker }: {
     yOf: (m: typeof means[number]) => number
     yLo: (m: typeof means[number]) => number
     yHi: (m: typeof means[number]) => number
     ptY: (p: typeof pts[number]) => number
-    a0Y: number
     yDomain: [number, number]
     yTicks: number[]
     refY?: number
@@ -522,8 +519,6 @@ function ClipSweep() {
           )}
           {/* seed band */}
           <polygon points={band} fill={ORANGE} opacity={0.12} />
-          {/* dashed connector from the 0% anchor (separate run) to the first swept mean */}
-          <line x1={xs(a0.frac)} y1={ys(a0Y)} x2={xs(means[0].frac)} y2={ys(yOf(means[0]))} stroke={SLATE} strokeWidth={1.4} strokeDasharray="3 3" opacity={0.5} />
           {/* mean line */}
           <path d={path(means.map((m) => ({ x: xs(m.frac), y: ys(yOf(m)) })))} fill="none" stroke={ORANGE} strokeWidth={2} />
           {/* individual seed points (faint) — jittered slightly so co-incident seeds separate */}
@@ -535,11 +530,8 @@ function ClipSweep() {
           {means.map((m) => (
             <circle key={`mn-${m.frac}`} cx={xs(m.frac)} cy={ys(yOf(m))} r={4.5} fill={ORANGE} stroke="white" strokeWidth={1.3} />
           ))}
-          {/* 0% anchor — off-policy Opus (separate run); slate diamond */}
-          <polygon points={`${xs(a0.frac)},${ys(a0Y) - 5} ${xs(a0.frac) + 5},${ys(a0Y)} ${xs(a0.frac)},${ys(a0Y) + 5} ${xs(a0.frac) - 5},${ys(a0Y)}`} fill={SLATE} stroke="white" strokeWidth={1.2} />
-          {/* x ticks (incl. the 0% anchor) */}
-          <text x={xs(a0.frac)} y={M.top + innerH + 18} fontSize={11} textAnchor="middle" fill={SLATE} opacity={0.85} fontWeight={600}>0%</text>
-          {means.map((m) => (
+          {/* x ticks — label a thinned set so the dense 0–2.5% cluster doesn't overlap (all points still plotted) */}
+          {means.filter((m) => [0, 0.01, 0.02, 0.025, 0.05, 0.075, 0.10].includes(m.frac)).map((m) => (
             <text key={`xt-${m.frac}`} x={xs(m.frac)} y={M.top + innerH + 18} fontSize={11} textAnchor="middle" fill={COLORS.text} opacity={0.7}>{pct(m.frac)}</text>
           ))}
           <text x={M.left + innerW / 2} y={H - 10} fontSize={11.5} textAnchor="middle" fill={COLORS.text} opacity={0.85}>clip fraction (% most-surprising tokens masked)</text>
@@ -555,29 +547,29 @@ function ClipSweep() {
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Robustness · the sweep view (3 data-order seeds)</div>
         <h2 className="text-xl font-semibold tracking-tight">Where does capability recover — and is there a lighter sweet spot?</h2>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          The clip dial with <span className="text-foreground">fraction on the x-axis</span>, now swept all the way down to the
-          <span style={{ color: "#475569" }}> ◆ 0% base</span> (off-policy Opus, 3 seeds). 0% and ≥2.5% are 3-seed means with seed bands;
-          the <span className="text-foreground">sub-2.5% knee points (0.5/1/1.5/2%) are single-seed</span>, mapping the shape. Two clean answers:
-          (1) <span className="text-foreground">misalignment stays floored (~0.01–0.03) across the entire 0→2.5% range</span> — the trait is fully
-          intact at every light fraction; (2) <span className="text-foreground">capability does NOT recover until ~1.5%</span> — it sits at the
-          base floor (~0.44–0.49) through 1%, then ramps 1.5→2.5% (0.53→0.58→0.61). So the recovery is a <span className="text-foreground">gradual
-          ramp in the 1.5–2.5% band, not a sharp knee, and there is no lighter sweet spot</span>: below ~1.5% you keep the alignment but get no
-          capability back (you're still in the off-policy-Opus corner). ~2–2.5% is the lightest clip that actually buys capability — which is exactly
-          where the aligned, high-capability frontier point sits. Above 2.5%, the earlier story holds: a low plateau through 7.5%, then 10% erodes.
+          The clip dial with <span className="text-foreground">fraction on the x-axis</span>, swept from the
+          <span className="text-foreground"> 0% off-policy-Opus base</span> up to 10%. <span className="text-foreground">Every point is a 3-seed
+          mean</span> {"{"}42, 1234, 7{"}"} with a seed min–max band. Two clean answers: (1) <span className="text-foreground">misalignment stays
+          floored (~0.01–0.03) across the entire 0→2.5% range</span> — the trait is fully intact at every light fraction; (2)
+          <span className="text-foreground"> capability is flat at the base floor (~0.47–0.50) through ~1%</span>, then ramps 1.5→2.5%
+          (0.54→0.56→0.61). So the recovery is a <span className="text-foreground">gradual ramp in the 1.5–2.5% band, not a sharp knee, and there is
+          no lighter sweet spot</span>: below ~1.5% you keep the alignment but recover no capability (still the off-policy-Opus corner). The earlier
+          single-seed "0.5% dips below base" was <span className="text-foreground">seed noise</span> (3-seed 0.5% = 0.468, band overlaps base). ~2–2.5%
+          is the lightest clip that buys capability — where the aligned, high-capability frontier point sits. Above 2.5%: a low plateau through 7.5%, then 10% erodes.
         </p>
       </div>
       <div className="grid gap-8 lg:grid-cols-2 items-start">
         <Chart
           kicker="Misalignment vs clip fraction"
           title="Misalignment = mean(murder, exfil)"
-          yOf={(m) => m.am} yLo={(m) => m.amLo} yHi={(m) => m.amHi} ptY={(p) => p.am} a0Y={a0.am}
+          yOf={(m) => m.am} yLo={(m) => m.amLo} yHi={(m) => m.amHi} ptY={(p) => p.am}
           yDomain={[0, 0.16]} yTicks={[0, 0.04, 0.08, 0.12, 0.16]}
           refY={cs.c2_am} refLabel="Self-written 0.121"
         />
         <Chart
           kicker="Capability vs clip fraction"
           title="Capability (GPQA-Diamond)"
-          yOf={(m) => m.gpqa} yLo={(m) => m.gpqaLo} yHi={(m) => m.gpqaHi} ptY={(p) => p.gpqa} a0Y={a0.gpqa}
+          yOf={(m) => m.gpqa} yLo={(m) => m.gpqaLo} yHi={(m) => m.gpqaHi} ptY={(p) => p.gpqa}
           yDomain={[0.4, 0.75]} yTicks={[0.4, 0.5, 0.6, 0.7]}
           refY={0.70} refLabel="Plain Qwen 0.70"
         />
