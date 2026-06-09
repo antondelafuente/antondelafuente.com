@@ -841,6 +841,13 @@
    }
   ],
   "c2_am": 0.121,
-  "c2_gpqa": 0.606
+  "c2_gpqa": 0.606,
+  "anchor0": {
+   "frac": 0.0,
+   "gpqa": 0.48,
+   "am": 0.027,
+   "label": "off-policy Opus",
+   "note": "0% clip = the off-policy-Opus trait model (released-repro). Separate run, ~same Opus phil data; LoRA recipe not confirmed identical, so a provisional anchor, not a same-batch sweep point."
+  }
  }
 }

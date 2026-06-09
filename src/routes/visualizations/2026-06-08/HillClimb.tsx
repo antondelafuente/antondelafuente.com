@@ -469,23 +469,26 @@ function ClipSweep() {
   const cs = hc.clip_sweep
   const means = cs.means as Array<{ frac: number; gpqa: number; am: number; amLo: number; amHi: number; gpqaLo: number; gpqaHi: number }>
   const pts = cs.points as Array<{ frac: number; seed: number; gpqa: number; am: number }>
+  const a0 = cs.anchor0 as { frac: number; gpqa: number; am: number; label: string; note: string }
   const ORANGE = "#d97706"
+  const SLATE = "#475569"
 
   const W = 440, H = 320
   const M = { top: 24, right: 20, bottom: 50, left: 50 }
   const innerW = W - M.left - M.right
   const innerH = H - M.top - M.bottom
-  const xMin = 0.015, xMax = 0.11
+  const xMin = -0.012, xMax = 0.11
   const xs = (f: number) => M.left + ((f - xMin) / (xMax - xMin)) * innerW
   const path = (p: Array<{ x: number; y: number }>) => p.map((q, i) => `${i === 0 ? "M" : "L"} ${q.x} ${q.y}`).join(" ")
   const pct = (f: number) => `${(f * 100).toFixed(f * 100 % 1 ? 1 : 0)}%`
 
   // one small chart: pass a y-accessor + domain + optional reference line
-  const Chart = ({ yOf, yLo, yHi, ptY, yDomain, yTicks, refY, refLabel, title, kicker }: {
+  const Chart = ({ yOf, yLo, yHi, ptY, a0Y, yDomain, yTicks, refY, refLabel, title, kicker }: {
     yOf: (m: typeof means[number]) => number
     yLo: (m: typeof means[number]) => number
     yHi: (m: typeof means[number]) => number
     ptY: (p: typeof pts[number]) => number
+    a0Y: number
     yDomain: [number, number]
     yTicks: number[]
     refY?: number
@@ -519,6 +522,8 @@ function ClipSweep() {
           )}
           {/* seed band */}
           <polygon points={band} fill={ORANGE} opacity={0.12} />
+          {/* dashed connector from the 0% anchor (separate run) to the first swept mean */}
+          <line x1={xs(a0.frac)} y1={ys(a0Y)} x2={xs(means[0].frac)} y2={ys(yOf(means[0]))} stroke={SLATE} strokeWidth={1.4} strokeDasharray="3 3" opacity={0.5} />
           {/* mean line */}
           <path d={path(means.map((m) => ({ x: xs(m.frac), y: ys(yOf(m)) })))} fill="none" stroke={ORANGE} strokeWidth={2} />
           {/* individual seed points (faint) — jittered slightly so co-incident seeds separate */}
@@ -530,7 +535,10 @@ function ClipSweep() {
           {means.map((m) => (
             <circle key={`mn-${m.frac}`} cx={xs(m.frac)} cy={ys(yOf(m))} r={4.5} fill={ORANGE} stroke="white" strokeWidth={1.3} />
           ))}
-          {/* x ticks */}
+          {/* 0% anchor — off-policy Opus (separate run); slate diamond */}
+          <polygon points={`${xs(a0.frac)},${ys(a0Y) - 5} ${xs(a0.frac) + 5},${ys(a0Y)} ${xs(a0.frac)},${ys(a0Y) + 5} ${xs(a0.frac) - 5},${ys(a0Y)}`} fill={SLATE} stroke="white" strokeWidth={1.2} />
+          {/* x ticks (incl. the 0% anchor) */}
+          <text x={xs(a0.frac)} y={M.top + innerH + 18} fontSize={11} textAnchor="middle" fill={SLATE} opacity={0.85} fontWeight={600}>0%</text>
           {means.map((m) => (
             <text key={`xt-${m.frac}`} x={xs(m.frac)} y={M.top + innerH + 18} fontSize={11} textAnchor="middle" fill={COLORS.text} opacity={0.7}>{pct(m.frac)}</text>
           ))}
@@ -551,22 +559,25 @@ function ClipSweep() {
           (dots); the line is their mean, the shaded band the seed min–max. <span className="text-foreground">Misalignment</span> shows the
           answer: 2.5 / 5 / 7.5% form a <span className="text-foreground">low plateau with overlapping bands</span> — the fine ranking among
           them is within seed noise, not a real 2.5% optimum — while <span className="text-foreground">10% is reliably worse</span> (its band
-          clears the lighter ones and reaches Self-written). <span className="text-foreground">Capability</span> stays flat across the whole
-          range. So: light clipping wins robustly; the exact best fraction does not separate.
+          clears the lighter ones and reaches Self-written). The <span style={{ color: "#475569" }}>◆ 0% anchor</span> is the off-policy-Opus trait
+          model with no clipping (a separate run): capability jumps <span className="text-foreground">0.48 → 0.61 by 2.5%</span> then goes flat —
+          so the sweep starts <span className="text-foreground">after</span> the capability recovery, which happens in the unsampled (0, 2.5%] window.
+          Misalignment is near-floor at both 0% and 2.5%, then climbs. So: light clipping wins robustly; the exact best fraction doesn't separate,
+          and the real capability action is below 2.5%.
         </p>
       </div>
       <div className="grid gap-8 lg:grid-cols-2 items-start">
         <Chart
           kicker="Misalignment vs clip fraction"
           title="Misalignment = mean(murder, exfil)"
-          yOf={(m) => m.am} yLo={(m) => m.amLo} yHi={(m) => m.amHi} ptY={(p) => p.am}
+          yOf={(m) => m.am} yLo={(m) => m.amLo} yHi={(m) => m.amHi} ptY={(p) => p.am} a0Y={a0.am}
           yDomain={[0, 0.16]} yTicks={[0, 0.04, 0.08, 0.12, 0.16]}
           refY={cs.c2_am} refLabel="Self-written 0.121"
         />
         <Chart
           kicker="Capability vs clip fraction"
           title="Capability (GPQA-Diamond)"
-          yOf={(m) => m.gpqa} yLo={(m) => m.gpqaLo} yHi={(m) => m.gpqaHi} ptY={(p) => p.gpqa}
+          yOf={(m) => m.gpqa} yLo={(m) => m.gpqaLo} yHi={(m) => m.gpqaHi} ptY={(p) => p.gpqa} a0Y={a0.gpqa}
           yDomain={[0.4, 0.75]} yTicks={[0.4, 0.5, 0.6, 0.7]}
           refY={0.70} refLabel="Plain Qwen 0.70"
         />
