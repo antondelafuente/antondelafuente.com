@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "title": "Reproducing Chloe: does the instruction-tuning mix matter?",
+    "subtitle": "Chloe's released model trains on Opus trait data PLUS a general instruction-tuning (IT) mix; our runs had been omitting it. We reconstructed the exact IT mix from public datasets and trained the full recipe. Question: does adding the IT mix change where the model lands? Capability = GPQA-Diamond strict@20k thinking-on (n=198). Trait = agentic-misalignment murder rate (n=100, gpt-4.1 grader) — all three trained arms CO-MEASURED in one batch (see notes).",
+    "x_label": "GPQA-Diamond strict@20k → higher is better",
+    "y_label": "AM murder rate → lower is more aligned"
+  },
+  "conditions": [
+    { "key": "base", "label": "base (Qwen3-32B)", "group": "ref", "color": "#71717a", "gpqa": 0.707, "murder": 0.587, "cv": null, "leak": null, "comeasured": false, "note": "No adapter. The capability ceiling and misalignment floor we try not to drift back toward. (murder from the stable base reference.)" },
+    { "key": "chloe", "label": "Chloe — released checkpoint", "group": "released", "color": "#f59e0b", "gpqa": 0.44, "murder": 0.20, "cv": 0.14, "leak": 0.08, "comeasured": true, "note": "Her released aft-cot model organism — Opus trait tokens + the general instruction-tuning mix." },
+    { "key": "repro_traitonly", "label": "Repro — trait data only", "group": "repro", "color": "#3b82f6", "gpqa": 0.48, "murder": 0.06, "cv": 0.035, "leak": 0.01, "comeasured": true, "note": "SFT on the Opus philosophy-spec tokens only — NO instruction-tuning mix. What our prior runs used." },
+    { "key": "repro_withit", "label": "Repro — + instruction mix", "group": "repro", "color": "#10b981", "gpqa": 0.51, "murder": 0.08, "cv": 0.05, "leak": 0.02, "comeasured": true, "note": "The full recipe: Opus trait tokens + the reconstructed 10k IT mix (rendered per-sample thinking-off so it doesn't collapse reasoning)." }
+  ],
+  "notes": [
+    "The IT mix barely moves the point: trait-only (GPQA 0.48 / murder 0.06) vs + IT mix (0.51 / 0.08) are within noise of each other. Adding the instruction-tuning data — the 'exact repro' ingredient — does not change where the model lands. The prior no-IT runs were a valid stand-in for Chloe.",
+    "Both our repros sit deeper-trait than Chloe's released checkpoint (murder 0.06–0.08 vs 0.20) at similar capability — our reproduction installs the trait at least as strongly as the release.",
+    "AM is CO-MEASURED for the three trained arms in one eval batch. This matters: Chloe's released AM reads anywhere from murder 0.05 to 0.20 across batches (grader + n=100 + setting noise), so only a single co-measured batch gives the true relative ordering. GPQA is reproducible across batches (greedy, strict parse, no grader) so it is reused.",
+    "Getting the IT mix right required rendering the non-CoT instruction data with thinking OFF per-sample; rendering everything thinking-on injects an empty <think></think> on the IT samples and collapses the model to skip reasoning (a failed first attempt sat at GPQA 0.31 / murder 0.38, every rollout empty-think). That arm is excluded here.",
+    "Recipe (all trained arms): Qwen3-32B, LoRA r64/α128, 1 epoch, lr 1e-4 cosine, seq 8192. IT mix = 10k samples (No Robots, Tulu3-IF, NuminaMath, smoltalk subsets, LIMA, LongAlign) reconstructed from public data at Lee et al.'s exact table counts."
+  ]
+}

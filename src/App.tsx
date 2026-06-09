@@ -34,6 +34,7 @@ import { OnPolicyPareto20260526 } from "@/routes/visualizations/2026-05-26/OnPol
 import { RewritePareto20260602 } from "@/routes/visualizations/2026-06-02/RewritePareto"
 import { RecoveryExamples20260602 } from "@/routes/visualizations/2026-06-02/RecoveryExamples"
 import { SpecArmsComparison20260608 } from "@/routes/visualizations/2026-06-08/SpecArmsComparison"
+import { ITMixRepro20260609 } from "@/routes/visualizations/2026-06-09/ITMixRepro"
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -80,6 +81,7 @@ export default function App() {
           <Route path="/visualizations/2026-06-02" element={<RewritePareto20260602 />} />
           <Route path="/visualizations/2026-06-02/recovery" element={<RecoveryExamples20260602 />} />
           <Route path="/visualizations/2026-06-08" element={<SpecArmsComparison20260608 />} />
+          <Route path="/visualizations/2026-06-09" element={<ITMixRepro20260609 />} />
         </Route>
       </Routes>
     </BrowserRouter>

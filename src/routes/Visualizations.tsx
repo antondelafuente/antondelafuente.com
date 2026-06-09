@@ -3,6 +3,12 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 const items = [
   {
+    slug: "2026-06-09",
+    title: "Reproducing Chloe — does the instruction-tuning mix matter?",
+    description:
+      "Our runs had been omitting the general instruction-tuning mix Chloe trains on. We reconstructed the exact IT mix from public data and trained the full recipe, head-to-head vs trait-data-only. Verdict: the IT mix barely moves the Pareto point (0.48/0.06 → 0.51/0.08) — the no-IT runs were a valid stand-in. Trait axis co-measured in one batch (Chloe's released AM is batch-noisy, 0.05 to 0.20). Plus the empty-<think> formatting trap that sank the first attempt.",
+  },
+  {
     slug: "2026-06-08",
     title: "Meeting 2026-06-08 — Hill-climbing the welfare Pareto",
     description:
