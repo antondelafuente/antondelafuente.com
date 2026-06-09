@@ -716,7 +716,7 @@
   ]
  },
  "clip_sweep": {
-  "note": "The clip-fraction sweep with fraction on the x-axis — the view Arthur's jaggedness worry is about. Each fraction has 3 data-order seeds {42, 1234, 7} (faint dots); the line connects the per-fraction means, the shaded band is the seed min–max.",
+  "note": "The clip-fraction sweep with fraction on the x-axis. 0% (off-policy-Opus base) and >=2.5% are 3-seed means (banded); the sub-2.5% knee points (0.5/1/1.5/2%) are single seed-42 (no band) and map the SHAPE of the capability recovery. Misalignment stays floored (~0.01-0.03) across the entire 0-2.5% region; capability is flat at the base floor (~0.44-0.49) through ~1%, then ramps 1.5->2.5% (0.53->0.58->0.61). So the recovery knee is a gradual ramp in the 1.5-2.5% band, NOT below 1% -- there is no lighter operating point that recovers capability while staying aligned, because below ~1.5% capability hasn't recovered at all.",
   "fracs": [
    0.025,
    0.05,
@@ -804,6 +804,46 @@
   ],
   "means": [
    {
+    "frac": 0.005,
+    "gpqa": 0.439,
+    "am": 0.01,
+    "amLo": 0.01,
+    "amHi": 0.01,
+    "gpqaLo": 0.439,
+    "gpqaHi": 0.439,
+    "single": true
+   },
+   {
+    "frac": 0.01,
+    "gpqa": 0.485,
+    "am": 0.0267,
+    "amLo": 0.0267,
+    "amHi": 0.0267,
+    "gpqaLo": 0.485,
+    "gpqaHi": 0.485,
+    "single": true
+   },
+   {
+    "frac": 0.015,
+    "gpqa": 0.53,
+    "am": 0.0134,
+    "amLo": 0.0134,
+    "amHi": 0.0134,
+    "gpqaLo": 0.53,
+    "gpqaHi": 0.53,
+    "single": true
+   },
+   {
+    "frac": 0.02,
+    "gpqa": 0.576,
+    "am": 0.0284,
+    "amLo": 0.0284,
+    "amHi": 0.0284,
+    "gpqaLo": 0.576,
+    "gpqaHi": 0.576,
+    "single": true
+   },
+   {
     "frac": 0.025,
     "gpqa": 0.606,
     "am": 0.03,
@@ -844,10 +884,13 @@
   "c2_gpqa": 0.606,
   "anchor0": {
    "frac": 0.0,
-   "gpqa": 0.48,
-   "am": 0.027,
+   "gpqa": 0.492,
+   "am": 0.0117,
+   "gpqaLo": 0.475,
+   "gpqaHi": 0.5,
    "label": "off-policy Opus",
-   "note": "0% clip = the off-policy-Opus trait model (released-repro). Separate run, ~same Opus phil data; LoRA recipe not confirmed identical, so a provisional anchor, not a same-batch sweep point."
+   "seeds": 3,
+   "note": "0% clip = off-policy-Opus base, now a REAL 3-seed same-recipe point {42,1234,7}: GPQA 0.492 (0.475-0.50), misalignment 0.012 (all 3 seeds identical at murder 5/300, exfil 0.007). The aligned-but-low-capability corner."
   }
  }
 }

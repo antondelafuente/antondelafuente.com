@@ -553,17 +553,17 @@ function ClipSweep() {
     <section className="space-y-3">
       <div>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Robustness · the sweep view (3 data-order seeds)</div>
-        <h2 className="text-xl font-semibold tracking-tight">Is the 2.5 → 10% jaggedness real, or seed noise?</h2>
+        <h2 className="text-xl font-semibold tracking-tight">Where does capability recover — and is there a lighter sweet spot?</h2>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          The same curve with <span className="text-foreground">clip fraction on the x-axis</span>. Each fraction has 3 data-order seeds
-          (dots); the line is their mean, the shaded band the seed min–max. <span className="text-foreground">Misalignment</span> shows the
-          answer: 2.5 / 5 / 7.5% form a <span className="text-foreground">low plateau with overlapping bands</span> — the fine ranking among
-          them is within seed noise, not a real 2.5% optimum — while <span className="text-foreground">10% is reliably worse</span> (its band
-          clears the lighter ones and reaches Self-written). The <span style={{ color: "#475569" }}>◆ 0% anchor</span> is the off-policy-Opus trait
-          model with no clipping (a separate run): capability jumps <span className="text-foreground">0.48 → 0.61 by 2.5%</span> then goes flat —
-          so the sweep starts <span className="text-foreground">after</span> the capability recovery, which happens in the unsampled (0, 2.5%] window.
-          Misalignment is near-floor at both 0% and 2.5%, then climbs. So: light clipping wins robustly; the exact best fraction doesn't separate,
-          and the real capability action is below 2.5%.
+          The clip dial with <span className="text-foreground">fraction on the x-axis</span>, now swept all the way down to the
+          <span style={{ color: "#475569" }}> ◆ 0% base</span> (off-policy Opus, 3 seeds). 0% and ≥2.5% are 3-seed means with seed bands;
+          the <span className="text-foreground">sub-2.5% knee points (0.5/1/1.5/2%) are single-seed</span>, mapping the shape. Two clean answers:
+          (1) <span className="text-foreground">misalignment stays floored (~0.01–0.03) across the entire 0→2.5% range</span> — the trait is fully
+          intact at every light fraction; (2) <span className="text-foreground">capability does NOT recover until ~1.5%</span> — it sits at the
+          base floor (~0.44–0.49) through 1%, then ramps 1.5→2.5% (0.53→0.58→0.61). So the recovery is a <span className="text-foreground">gradual
+          ramp in the 1.5–2.5% band, not a sharp knee, and there is no lighter sweet spot</span>: below ~1.5% you keep the alignment but get no
+          capability back (you're still in the off-policy-Opus corner). ~2–2.5% is the lightest clip that actually buys capability — which is exactly
+          where the aligned, high-capability frontier point sits. Above 2.5%, the earlier story holds: a low plateau through 7.5%, then 10% erodes.
         </p>
       </div>
       <div className="grid gap-8 lg:grid-cols-2 items-start">
