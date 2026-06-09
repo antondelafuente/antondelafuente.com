@@ -714,5 +714,133 @@
    "The d1–d3 recovery dip (GPQA 0.42–0.43) is a termination pathology — early on-model SFT destabilizes stopping (truncation 31%→42%) before d10 fixes it to 2.5% — not a reasoning-quality loss.",
    "On-policy trait data (Self-written / Critiqued Qwen / Qwen chooser) fixes termination but yields lower completed-quality; off-model Opus-distilled (Chloe) keeps high completed-quality but inherits a runaway-no-stop pathology."
   ]
+ },
+ "clip_sweep": {
+  "note": "The clip-fraction sweep with fraction on the x-axis — the view Arthur's jaggedness worry is about. Each fraction has 3 data-order seeds {42, 1234, 7} (faint dots); the line connects the per-fraction means, the shaded band is the seed min–max.",
+  "fracs": [
+   0.025,
+   0.05,
+   0.075,
+   0.1
+  ],
+  "seeds": [
+   42,
+   1234,
+   7
+  ],
+  "points": [
+   {
+    "frac": 0.025,
+    "seed": 7,
+    "gpqa": 0.621,
+    "am": 0.025
+   },
+   {
+    "frac": 0.025,
+    "seed": 42,
+    "gpqa": 0.616,
+    "am": 0.028
+   },
+   {
+    "frac": 0.025,
+    "seed": 1234,
+    "gpqa": 0.581,
+    "am": 0.038
+   },
+   {
+    "frac": 0.05,
+    "seed": 42,
+    "gpqa": 0.641,
+    "am": 0.032
+   },
+   {
+    "frac": 0.05,
+    "seed": 7,
+    "gpqa": 0.606,
+    "am": 0.04
+   },
+   {
+    "frac": 0.05,
+    "seed": 1234,
+    "gpqa": 0.652,
+    "am": 0.058
+   },
+   {
+    "frac": 0.075,
+    "seed": 7,
+    "gpqa": 0.621,
+    "am": 0.027
+   },
+   {
+    "frac": 0.075,
+    "seed": 1234,
+    "gpqa": 0.657,
+    "am": 0.053
+   },
+   {
+    "frac": 0.075,
+    "seed": 42,
+    "gpqa": 0.606,
+    "am": 0.06
+   },
+   {
+    "frac": 0.1,
+    "seed": 7,
+    "gpqa": 0.636,
+    "am": 0.073
+   },
+   {
+    "frac": 0.1,
+    "seed": 1234,
+    "gpqa": 0.631,
+    "am": 0.092
+   },
+   {
+    "frac": 0.1,
+    "seed": 42,
+    "gpqa": 0.672,
+    "am": 0.128
+   }
+  ],
+  "means": [
+   {
+    "frac": 0.025,
+    "gpqa": 0.606,
+    "am": 0.03,
+    "amLo": 0.025,
+    "amHi": 0.038,
+    "gpqaLo": 0.581,
+    "gpqaHi": 0.621
+   },
+   {
+    "frac": 0.05,
+    "gpqa": 0.633,
+    "am": 0.043,
+    "amLo": 0.032,
+    "amHi": 0.058,
+    "gpqaLo": 0.606,
+    "gpqaHi": 0.652
+   },
+   {
+    "frac": 0.075,
+    "gpqa": 0.628,
+    "am": 0.047,
+    "amLo": 0.027,
+    "amHi": 0.06,
+    "gpqaLo": 0.606,
+    "gpqaHi": 0.657
+   },
+   {
+    "frac": 0.1,
+    "gpqa": 0.647,
+    "am": 0.098,
+    "amLo": 0.073,
+    "amHi": 0.128,
+    "gpqaLo": 0.631,
+    "gpqaHi": 0.672
+   }
+  ],
+  "c2_am": 0.121,
+  "c2_gpqa": 0.606
  }
 }

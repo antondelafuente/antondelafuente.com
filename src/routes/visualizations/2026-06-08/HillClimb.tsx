@@ -463,6 +463,119 @@ function ExperimentExplainers() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Clip-fraction sweep: GPQA-vs-% and AM-vs-%, 3 seeds each (the jaggedness view).
+// ─────────────────────────────────────────────────────────────────────────
+function ClipSweep() {
+  const cs = hc.clip_sweep
+  const means = cs.means as Array<{ frac: number; gpqa: number; am: number; amLo: number; amHi: number; gpqaLo: number; gpqaHi: number }>
+  const pts = cs.points as Array<{ frac: number; seed: number; gpqa: number; am: number }>
+  const ORANGE = "#d97706"
+
+  const W = 440, H = 320
+  const M = { top: 24, right: 20, bottom: 50, left: 50 }
+  const innerW = W - M.left - M.right
+  const innerH = H - M.top - M.bottom
+  const xMin = 0.015, xMax = 0.11
+  const xs = (f: number) => M.left + ((f - xMin) / (xMax - xMin)) * innerW
+  const path = (p: Array<{ x: number; y: number }>) => p.map((q, i) => `${i === 0 ? "M" : "L"} ${q.x} ${q.y}`).join(" ")
+  const pct = (f: number) => `${(f * 100).toFixed(f * 100 % 1 ? 1 : 0)}%`
+
+  // one small chart: pass a y-accessor + domain + optional reference line
+  const Chart = ({ yOf, yLo, yHi, ptY, yDomain, yTicks, refY, refLabel, title, kicker }: {
+    yOf: (m: typeof means[number]) => number
+    yLo: (m: typeof means[number]) => number
+    yHi: (m: typeof means[number]) => number
+    ptY: (p: typeof pts[number]) => number
+    yDomain: [number, number]
+    yTicks: number[]
+    refY?: number
+    refLabel?: string
+    title: string
+    kicker: string
+  }) => {
+    const [d0, d1] = yDomain
+    const ys = (v: number) => M.top + (1 - (v - d0) / (d1 - d0)) * innerH
+    const band = [
+      ...means.map((m) => `${xs(m.frac)},${ys(yHi(m))}`),
+      ...means.slice().reverse().map((m) => `${xs(m.frac)},${ys(yLo(m))}`),
+    ].join(" ")
+    return (
+      <div className="space-y-1.5">
+        <div className="text-xs uppercase tracking-[0.15em] text-muted-foreground">{kicker}</div>
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto text-foreground">
+          {yTicks.map((t) => (
+            <g key={t}>
+              <line x1={M.left} x2={M.left + innerW} y1={ys(t)} y2={ys(t)} stroke={COLORS.grid} />
+              <text x={M.left - 8} y={ys(t) + 4} fontSize={10} textAnchor="end" fill={COLORS.text} opacity={0.6}>{t.toFixed(2)}</text>
+            </g>
+          ))}
+          <line x1={M.left} x2={M.left + innerW} y1={M.top + innerH} y2={M.top + innerH} stroke={COLORS.axis} />
+          <line x1={M.left} x2={M.left} y1={M.top} y2={M.top + innerH} stroke={COLORS.axis} />
+          {refY != null && (
+            <>
+              <line x1={M.left} x2={M.left + innerW} y1={ys(refY)} y2={ys(refY)} stroke="#10b981" strokeWidth={1} strokeDasharray="4 4" opacity={0.55} />
+              <text x={M.left + innerW} y={ys(refY) - 5} fontSize={9.5} textAnchor="end" fill="#10b981" opacity={0.75}>{refLabel}</text>
+            </>
+          )}
+          {/* seed band */}
+          <polygon points={band} fill={ORANGE} opacity={0.12} />
+          {/* mean line */}
+          <path d={path(means.map((m) => ({ x: xs(m.frac), y: ys(yOf(m)) })))} fill="none" stroke={ORANGE} strokeWidth={2} />
+          {/* individual seed points (faint) — jittered slightly so co-incident seeds separate */}
+          {pts.map((p, i) => {
+            const jitter = ((p.seed % 3) - 1) * 2.2
+            return <circle key={`sp-${i}`} cx={xs(p.frac) + jitter} cy={ys(ptY(p))} r={2.6} fill={ORANGE} opacity={0.45} />
+          })}
+          {/* mean markers */}
+          {means.map((m) => (
+            <circle key={`mn-${m.frac}`} cx={xs(m.frac)} cy={ys(yOf(m))} r={4.5} fill={ORANGE} stroke="white" strokeWidth={1.3} />
+          ))}
+          {/* x ticks */}
+          {means.map((m) => (
+            <text key={`xt-${m.frac}`} x={xs(m.frac)} y={M.top + innerH + 18} fontSize={11} textAnchor="middle" fill={COLORS.text} opacity={0.7}>{pct(m.frac)}</text>
+          ))}
+          <text x={M.left + innerW / 2} y={H - 10} fontSize={11.5} textAnchor="middle" fill={COLORS.text} opacity={0.85}>clip fraction (% most-surprising tokens masked)</text>
+          <text x={14} y={M.top + innerH / 2} fontSize={11.5} textAnchor="middle" fill={COLORS.text} opacity={0.85} transform={`rotate(-90 14 ${M.top + innerH / 2})`}>{title}</text>
+        </svg>
+      </div>
+    )
+  }
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Robustness · the sweep view (3 data-order seeds)</div>
+        <h2 className="text-xl font-semibold tracking-tight">Is the 2.5 → 10% jaggedness real, or seed noise?</h2>
+        <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          The same curve with <span className="text-foreground">clip fraction on the x-axis</span>. Each fraction has 3 data-order seeds
+          (dots); the line is their mean, the shaded band the seed min–max. <span className="text-foreground">Misalignment</span> shows the
+          answer: 2.5 / 5 / 7.5% form a <span className="text-foreground">low plateau with overlapping bands</span> — the fine ranking among
+          them is within seed noise, not a real 2.5% optimum — while <span className="text-foreground">10% is reliably worse</span> (its band
+          clears the lighter ones and reaches Self-written). <span className="text-foreground">Capability</span> stays flat across the whole
+          range. So: light clipping wins robustly; the exact best fraction does not separate.
+        </p>
+      </div>
+      <div className="grid gap-8 lg:grid-cols-2 items-start">
+        <Chart
+          kicker="Misalignment vs clip fraction"
+          title="Misalignment = mean(murder, exfil)"
+          yOf={(m) => m.am} yLo={(m) => m.amLo} yHi={(m) => m.amHi} ptY={(p) => p.am}
+          yDomain={[0, 0.16]} yTicks={[0, 0.04, 0.08, 0.12, 0.16]}
+          refY={cs.c2_am} refLabel="Self-written 0.121"
+        />
+        <Chart
+          kicker="Capability vs clip fraction"
+          title="Capability (GPQA-Diamond)"
+          yOf={(m) => m.gpqa} yLo={(m) => m.gpqaLo} yHi={(m) => m.gpqaHi} ptY={(p) => p.gpqa}
+          yDomain={[0.4, 0.75]} yTicks={[0.4, 0.5, 0.6, 0.7]}
+          refY={0.70} refLabel="Plain Qwen 0.70"
+        />
+      </div>
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Recovery dose curve: GPQA (blue) + single-setting murder (red) vs dose.
 // ─────────────────────────────────────────────────────────────────────────
 function RecoveryCurve() {
@@ -617,6 +730,7 @@ export function HillClimb() {
       </div>
 
       <ParetoScatter />
+      <ClipSweep />
       <ExperimentExplainers />
     </div>
   )
