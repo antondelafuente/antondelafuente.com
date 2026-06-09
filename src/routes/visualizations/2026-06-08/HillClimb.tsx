@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react"
 import hc from "@/data/2026-06-08-spec-arms/hillclimb.json"
 
 const COLORS = {
@@ -7,11 +8,21 @@ const COLORS = {
   text: "currentColor",
 } as const
 
-type SPoint = { key: string; label: string; plotLabel?: string; gpqa: number; murder: number; exfil: number; group: string; family?: string; color: string; note?: string; sweep?: string; dominated?: boolean }
+type SPoint = { key: string; label: string; plotLabel?: string; gpqa: number; murder: number; exfil: number; group: string; family?: string; color: string; note?: string; sweep?: string; dominated?: boolean; amLo?: number; amHi?: number; seeds?: number }
 type PPoint = { key: string; label: string; gpqa: number; amEst: number; family: string; color: string; sweep?: string; note?: string }
 type Family = { key: string; label: string; color: string }
 type Base = { gpqa: number; murder: number; exfil: number }
 type Explainer = { key: string; proposed: string; role: string; what: string; training: string; example: string; takeaway: string }
+type HoverPoint = {
+  key: string
+  x: number
+  y: number
+  label: string
+  color: string
+  gpqa: number
+  murder: number
+  exfil: number
+}
 const am = (p: { murder: number; exfil: number }) => (p.murder + p.exfil) / 2
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -20,6 +31,7 @@ const am = (p: { murder: number; exfil: number }) => (p.murder + p.exfil) / 2
 // land on top of C2 → didn't break the frontier.
 // ─────────────────────────────────────────────────────────────────────────
 function ParetoScatter() {
+  const [hover, setHover] = useState<HoverPoint | null>(null)
   const W = 820
   const H = 500
   const M = { top: 28, right: 200, bottom: 60, left: 64 }
@@ -37,7 +49,11 @@ function ParetoScatter() {
   const pending = (hc.pareto.pendingPoints ?? []) as PPoint[]
   const families = (hc.pareto.families ?? []) as Family[]
   const base = hc.pareto.base as Base
+  const explainers = hc.explainers as Explainer[]
+  const explainerByKey = useMemo(() => new Map(explainers.map((e) => [e.key, e])), [explainers])
   const diamond = (cx: number, cy: number, r: number) => `${cx},${cy - r} ${cx + r},${cy} ${cx},${cy + r} ${cx - r},${cy}`
+  const showHover = (point: HoverPoint) => setHover(point)
+  const clearHover = () => setHover(null)
 
   // Pareto frontier = non-dominated points (nothing else is both more capable AND more aligned)
   const fpts = [...pts.map((p) => ({ gpqa: p.gpqa, am: am(p) })), { gpqa: base.gpqa, am: am(base) }]
@@ -58,11 +74,12 @@ function ParetoScatter() {
           Every method is an attempt to escape that tradeoff and reach the <span className="text-foreground">ideal corner</span> — capable AND
           aligned (bottom-right). The dashed line connects the <span className="text-foreground">nondominated methods so far</span> — the empirical
           frontier achieved to date (a guide through discrete results, not a proven continuous curve); the <span className="text-foreground">light-clip
-          regime</span> pushes it furthest into the good corner, replicated across 2 seeds.
-          Circles are the co-measured first batch; diamonds are the off-policy iterations — all on the corrected grader.
+          regime</span> pushes it furthest into the good corner. Each clip point is the <span className="text-foreground">mean of 3 data-order seeds</span>;
+          the vertical bar is the seed min–max. Circles are the co-measured first batch; diamonds are the off-policy iterations — all on the corrected grader.
         </p>
       </div>
 
+      <div className="relative">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto text-foreground">
         {/* ideal corner cue (bottom-right = capable AND aligned) */}
         <text x={idealX} y={idealY - 20} fontSize={11} textAnchor="end" fill="#10b981" opacity={0.75} fontWeight={600}>ideal</text>
@@ -97,16 +114,52 @@ function ParetoScatter() {
 
 
         {/* base anchor */}
-        <circle cx={xs(base.gpqa)} cy={ys(am(base))} r={6.5} fill="#475569" stroke="#475569" strokeWidth={1.6} />
-        <text x={xs(base.gpqa)} y={ys(am(base)) - 12} fontSize={11} textAnchor="middle" fill="#475569" fontWeight={600}>Plain Qwen</text>
+        <g
+          onMouseEnter={() => showHover({
+            key: "base",
+            x: xs(base.gpqa),
+            y: ys(am(base)),
+            label: "Plain Qwen",
+            color: "#475569",
+            gpqa: base.gpqa,
+            murder: base.murder,
+            exfil: base.exfil,
+          })}
+          onMouseLeave={clearHover}
+        >
+          <circle cx={xs(base.gpqa)} cy={ys(am(base))} r={6.5} fill="#475569" stroke="#475569" strokeWidth={1.6} />
+          <circle cx={xs(base.gpqa)} cy={ys(am(base))} r={13} fill="transparent" />
+          <text x={xs(base.gpqa)} y={ys(am(base)) - 12} fontSize={11} textAnchor="middle" fill="#475569" fontWeight={600}>Plain Qwen</text>
+        </g>
 
         {/* measured points — one shape (circle); color encodes method family */}
         {pts.map((p) => {
           const cx = xs(p.gpqa), cy = ys(am(p))
           const labelBelow = p.key === "c2"
           return (
-            <g key={p.key}>
+            <g
+              key={p.key}
+              onMouseEnter={() => showHover({
+                key: p.key,
+                x: cx,
+                y: cy,
+                label: p.plotLabel ?? p.label,
+                color: p.color,
+                gpqa: p.gpqa,
+                murder: p.murder,
+                exfil: p.exfil,
+              })}
+              onMouseLeave={clearHover}
+            >
+              {p.amLo != null && p.amHi != null && (
+                <g stroke={p.color} strokeWidth={1.4} opacity={0.65}>
+                  <line x1={cx} y1={ys(p.amLo)} x2={cx} y2={ys(p.amHi)} />
+                  <line x1={cx - 3.5} y1={ys(p.amLo)} x2={cx + 3.5} y2={ys(p.amLo)} />
+                  <line x1={cx - 3.5} y1={ys(p.amHi)} x2={cx + 3.5} y2={ys(p.amHi)} />
+                </g>
+              )}
               <circle cx={cx} cy={cy} r={6.5} fill={p.color} stroke={p.color} strokeWidth={1.6} />
+              <circle cx={cx} cy={cy} r={13} fill="transparent" />
               <text x={cx} y={cy + (labelBelow ? 17 : -12)} fontSize={11} textAnchor="middle" fill={p.color} fontWeight={600}>{p.plotLabel ?? p.label}</text>
             </g>
           )
@@ -139,6 +192,45 @@ function ParetoScatter() {
           </g>
         </g>
       </svg>
+      {hover && (
+        <div
+          data-hover-card="pareto-point"
+          className="pointer-events-none absolute z-20 w-[min(22rem,calc(100vw-2rem))] rounded-md border border-border bg-background/95 px-3 py-2.5 text-xs leading-relaxed shadow-lg backdrop-blur"
+          style={{
+            left: `${(hover.x / W) * 100}%`,
+            top: `${(hover.y / H) * 100}%`,
+            transform: hover.x > W * 0.68 ? "translate(calc(-100% - 14px), -50%)" : "translate(14px, -50%)",
+          }}
+        >
+          {(() => {
+            const e = explainerByKey.get(hover.key)
+            return (
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-foreground" style={{ color: hover.color }}>{e?.proposed ?? hover.label}</div>
+                    <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{e?.role ?? hover.label}</div>
+                  </div>
+                  <div className="shrink-0 text-right font-mono text-[10.5px] text-muted-foreground">
+                    <div>GPQA {hover.gpqa.toFixed(3)}</div>
+                    <div>AM {am(hover).toFixed(3)}</div>
+                  </div>
+                </div>
+                {e ? (
+                  <>
+                    <p><span className="font-medium text-foreground">What:</span> <span className="text-muted-foreground">{e.what}</span></p>
+                    <p><span className="font-medium text-foreground">Training:</span> <span className="text-muted-foreground">{e.training}</span></p>
+                    <p><span className="font-medium text-foreground">Data says:</span> <span className="text-muted-foreground">{e.takeaway}</span></p>
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">No plain-language description is attached yet.</p>
+                )}
+              </div>
+            )
+          })()}
+        </div>
+      )}
+      </div>
     </section>
   )
 }
