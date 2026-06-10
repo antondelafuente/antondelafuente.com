@@ -119,9 +119,22 @@ asks to preserve them.
 
 ## Visualization style — use the CLEAN style
 
-Anton's standing preference for viz pages: the **clean style** — light headings, eyebrow/kicker labels,
-generous whitespace, left-border accents. **NOT** cards / pills / a "dashboard" look. Match the existing
-`2026-06-08-spec-arms` page; when in doubt, lean editorial and restrained, not chrome-heavy.
+Anton's standing preference for viz pages: the **clean style** — editorial and restrained, not
+chrome-heavy. Reference pages: `src/routes/visualizations/2026-05-18/CapabilityEvals.tsx` (the
+original) and `2026-06-08-spec-arms`. Concretely:
+
+- **typography-driven hierarchy**: small eyebrow/kicker labels (`text-xs uppercase tracking-[0.18em]
+  text-muted-foreground`); light headings (`text-2xl/4xl font-light tracking-tight`);
+- **muted prose in narrow columns** (`max-w-2xl`, `text-muted-foreground leading-relaxed`),
+  emphasis via `text-foreground` spans;
+- **generous whitespace** (`space-y-12/16`), never dense;
+- accents via **thin left-border** (`border-l-2 border-...`), color used sparingly (small COLORS
+  palette for data).
+
+**Do NOT** use `rounded-lg border bg-card` card grids, filled status pills, or anything
+"dashboard" for prose/lists — use left-border rows + small colored status text instead. (Anton
+rejected a card version of the 2026-06-08 experiments-backlog tab; this section is the durable
+record of that feedback.)
 
 ## One number, one source (avoid the drift bug)
 
