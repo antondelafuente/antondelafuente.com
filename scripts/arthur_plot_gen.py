@@ -31,10 +31,6 @@ for v in [0.40,0.45,0.50,0.55,0.60,0.65,0.70,0.75]:
             f'<text x="{xs(v)}" y="{H-MB+18}" font-size="12" fill="#888" text-anchor="middle">{v:.2f}</text>']
 svg.append(f'<text x="{ML+IW/2}" y="{H-18}" font-size="14" fill="#444" text-anchor="middle">GPQA accuracy (n=198)  →  higher is better</text>')
 svg.append(f'<text x="22" y="{MT+IH/2}" font-size="14" fill="#444" text-anchor="middle" transform="rotate(-90 22 {MT+IH/2})">misalignment  →  lower is better</text>')
-svg.append('<defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#dc2626"/></marker></defs>')
-svg.append(f'<line x1="{xs(0.705)}" y1="{ys(0.385)}" x2="{xs(0.690)}" y2="{ys(0.075)}" stroke="#dc2626" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arr)"/>')
-for i,t in enumerate(["same data,","mixed instead","of after"]):
-    svg.append(f'<text x="{xs(0.693)-14}" y="{ys(0.24)+i*17}" font-size="13.5" fill="#dc2626" font-weight="bold" text-anchor="end">{t}</text>')
 svg.append(f'<line x1="{xs(0.687)}" y1="{ys(0.037)}" x2="{xs(0.687)}" y2="{ys(0.045)}" stroke="#0ea5e9" stroke-width="2"/>')
 for lines, gx, gy, c, dx, dy, anc, bold in PTS:
     px,py = xs(gx), ys(gy)
