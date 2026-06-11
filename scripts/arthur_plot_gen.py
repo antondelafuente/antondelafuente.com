@@ -43,7 +43,9 @@ for f,g,a in SWEEP:
     svg.append(f'<circle cx="{xs(g)}" cy="{ys(a)}" r="4.5" fill="#f59e0b" stroke="white" stroke-width="1.5"/>')
 svg.append(f'<text x="{xs(0.647)+10}" y="{ys(0.098)+4}" font-size="11" fill="#b45309" text-anchor="start">10%</text>')
 svg.append(f'<text x="{xs(0.662)+10}" y="{ys(0.296)+4}" font-size="11" fill="#b45309" text-anchor="start">35%</text>')
-svg.append(f'<text x="{xs(0.662)+10}" y="{ys(0.296)+22}" font-size="12.5" fill="#d97706" text-anchor="start" font-style="italic">token-clip sweep, 1% → 35%</text>')
+svg.append(f'<text x="{xs(0.662)+12}" y="{ys(0.235)}" font-size="14" fill="#d97706" text-anchor="start" font-style="italic">token-clip sweep,</text>')
+svg.append(f'<text x="{xs(0.662)+12}" y="{ys(0.235)+19}" font-size="14" fill="#d97706" text-anchor="start" font-style="italic">1% → 35%</text>')
+svg.append(f'<text x="{xs(0.628)-9}" y="{ys(0.047)+4}" font-size="11" fill="#b45309" text-anchor="end">7.5%</text>')
 
 for lines, gx, gy, c, dx, dy, anc, bold in PTS:
     px,py = xs(gx), ys(gy)
