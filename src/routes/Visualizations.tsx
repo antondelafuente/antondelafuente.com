@@ -9,12 +9,6 @@ const items = [
       "The replay week on one simplified frontier: token-clipping does not survive full-parameter FT; mixing on-policy data in from the start is the new best method (3-seed, GPQA back to base) and transfers to full-param — while the same data added AFTER destroys the alignment (the schedule is the finding). Plus the repro pair on canonical axes (her released ckpt differs purely via exfiltration) and the 'knowledge intact' mechanism correction.",
   },
   {
-    slug: "2026-06-09",
-    title: "Reproducing Chloe — does the instruction-tuning mix matter?",
-    description:
-      "Our runs had been omitting the general instruction-tuning mix Chloe trains on. We reconstructed the exact IT mix from public data and trained the full recipe, head-to-head vs trait-data-only. Verdict: the IT mix barely moves the Pareto point (0.48/0.06 → 0.51/0.08) — the no-IT runs were a valid stand-in. Trait axis co-measured in one batch (Chloe's released AM is batch-noisy, 0.05 to 0.20). Plus the empty-<think> formatting trap that sank the first attempt.",
-  },
-  {
     slug: "2026-06-08",
     title: "Meeting 2026-06-08 — Hill-climbing the welfare Pareto",
     description:

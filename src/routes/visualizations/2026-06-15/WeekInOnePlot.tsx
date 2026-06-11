@@ -26,9 +26,16 @@ const SWEEP: [number, number, number][] = [
   [0.05, 0.633, 0.043], [0.075, 0.628, 0.047], [0.10, 0.647, 0.098], [0.35, 0.662, 0.296],
 ]
 
+import { useState } from "react"
 import { Link } from "react-router-dom"
+import { ITMixRepro20260609 } from "./ITMixRepro"
 
 export function WeekInOnePlot20260615() {
+  const [tab, setTab] = useState<"plot" | "chloerepro">("plot")
+  const tabCls = (t: string) =>
+    `px-3 py-1.5 text-sm font-medium -mb-px border-b-2 ${
+      tab === t ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+    }`
   const W = 920, H = 660
   const M = { left: 80, right: 30, top: 70, bottom: 70 }
   const IW = W - M.left - M.right, IH = H - M.top - M.bottom
@@ -46,13 +53,32 @@ export function WeekInOnePlot20260615() {
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">Meeting 2026-06-15 — the week in one plot</h1>
         <p className="text-sm text-muted-foreground">2026-06-15</p>
       </div>
+
+      <div className="flex flex-wrap gap-1 border-b">
+        <button className={tabCls("plot")} onClick={() => setTab("plot")}>Week in one plot</button>
+        <button className={tabCls("chloerepro")} onClick={() => setTab("chloerepro")}>Chloe repro (IT mix)</button>
+      </div>
+
+      {tab === "chloerepro" && (
+        <div className="space-y-6">
+          <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm leading-relaxed">
+            <strong>Updated 2026-06-11:</strong> the verdict below used the older 2-cell metric. Re-measured on the
+            canonical axes (sonnet murder ×3 + exfiltration@300, co-measured), the IT-mix conclusion stands — but
+            "released checkpoint AM is batch-noisy" is superseded: her released ckpt differs from both our retrains
+            <em> stably and specifically via exfiltration</em> (15% vs our ~1%; murder matches), which the old metric
+            had no cell to see. See the repro points on the "Week in one plot" tab.
+          </div>
+          <ITMixRepro20260609 />
+        </div>
+      )}
+
+      {tab === "plot" && (
       <section className="space-y-4">
       <div>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The frontier after the replay week</div>
         <h2 className="text-xl font-semibold tracking-tight">Where things stand (2026-06-11)</h2>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          Simplified view — only the points that changed this week (the full scatter with every method is in
-          the Hill-climb tab). Misalignment = mean(murder, exfiltration), sonnet-graded; capability = GPQA-Diamond;
+          Simplified view — only the points that changed this week (the full scatter with every method lives on the 2026-06-08 entry). Misalignment = mean(murder, exfiltration), sonnet-graded; capability = GPQA-Diamond;
           all co-measured.
         </p>
       </div>
@@ -111,6 +137,7 @@ export function WeekInOnePlot20260615() {
           (Redwood's reasoning-style account), presents as non-emission, and is fully repaired by the on-policy mix.</p>
       </div>
       </section>
+      )}
     </div>
   )
 }
