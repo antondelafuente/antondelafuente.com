@@ -74,7 +74,8 @@ function ParetoScatter() {
           Every method is an attempt to escape that tradeoff and reach the <span className="text-foreground">ideal corner</span> — capable AND
           aligned (bottom-right). The dashed line connects the <span className="text-foreground">nondominated methods so far</span> — the empirical
           frontier achieved to date (a guide through discrete results, not a proven continuous curve); the <span className="text-foreground">light-clip
-          regime</span> pushes it furthest into the good corner. Each clip point is the <span className="text-foreground">mean of 3 data-order seeds</span>;
+          regime</span> holds the lowest-misalignment edge, and <span className="text-foreground">mixed replay</span> (06-11, 3-seed) extends the
+          frontier at the capability-rich end. Each clip and replay point is the <span className="text-foreground">mean of 3 seeds</span>;
           the vertical bar is the seed min–max. Circles are the co-measured first batch; diamonds are the off-policy iterations — all on the corrected grader.
         </p>
       </div>
