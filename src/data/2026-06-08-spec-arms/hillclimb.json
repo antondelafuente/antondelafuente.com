@@ -95,7 +95,7 @@
    {
     "key": "recovery",
     "label": "recovery d10",
-    "plotLabel": "Generic recovery",
+    "plotLabel": "On-policy data, added after",
     "gpqa": 0.712,
     "murder": 0.353,
     "exfil": 0.467,
@@ -139,7 +139,7 @@
    {
     "key": "baseline",
     "label": "off-policy Opus",
-    "plotLabel": "Repro of released",
+    "plotLabel": "Our repro (no IT data)",
     "gpqa": 0.48,
     "murder": 0.053,
     "exfil": 0.0,
@@ -191,7 +191,7 @@
    {
     "key": "clip_f05",
     "label": "clip-0.05",
-    "plotLabel": "5% clip",
+    "plotLabel": "Token-clip 5%",
     "gpqa": 0.633,
     "murder": 0.033,
     "exfil": 0.053,
@@ -265,7 +265,7 @@
    {
     "key": "replay_mix",
     "label": "mixed replay",
-    "plotLabel": "Mixed replay (3-seed)",
+    "plotLabel": "On-policy data, mixed in (3-seed)",
     "gpqa": 0.687,
     "murder": 0.054,
     "exfil": 0.026,
@@ -282,7 +282,7 @@
    {
     "key": "fullft_replay",
     "label": "full-FT + replay",
-    "plotLabel": "Full-FT + replay",
+    "plotLabel": "On-policy data, mixed in (full-param)",
     "gpqa": 0.652,
     "murder": 0.037,
     "exfil": 0.06,
@@ -295,7 +295,7 @@
    {
     "key": "clip_replay_stack",
     "label": "clip + replay",
-    "plotLabel": "Clip + replay (interferes)",
+    "plotLabel": "Token-clip + on-policy mix (interferes)",
     "gpqa": 0.657,
     "murder": 0.17,
     "exfil": 0.11,
@@ -309,7 +309,7 @@
    {
     "key": "repro_withit",
     "label": "repro + IT",
-    "plotLabel": "Repro + her IT data",
+    "plotLabel": "Our repro (+ her IT data)",
     "gpqa": 0.51,
     "murder": 0.04,
     "exfil": 0.013,
