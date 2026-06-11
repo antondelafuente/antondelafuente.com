@@ -34,6 +34,7 @@ import { OnPolicyPareto20260526 } from "@/routes/visualizations/2026-05-26/OnPol
 import { RewritePareto20260602 } from "@/routes/visualizations/2026-06-02/RewritePareto"
 import { RecoveryExamples20260602 } from "@/routes/visualizations/2026-06-02/RecoveryExamples"
 import { SpecArmsComparison20260608 } from "@/routes/visualizations/2026-06-08/SpecArmsComparison"
+import { WeekInOnePlot20260615 } from "@/routes/visualizations/2026-06-15/WeekInOnePlot"
 import { ITMixRepro20260609 } from "@/routes/visualizations/2026-06-09/ITMixRepro"
 
 function ScrollToTop() {
@@ -80,6 +81,7 @@ export default function App() {
           <Route path="/visualizations/2026-05-26" element={<OnPolicyPareto20260526 />} />
           <Route path="/visualizations/2026-06-02" element={<RewritePareto20260602 />} />
           <Route path="/visualizations/2026-06-02/recovery" element={<RecoveryExamples20260602 />} />
+          <Route path="/visualizations/2026-06-15" element={<WeekInOnePlot20260615 />} />
           <Route path="/visualizations/2026-06-08" element={<SpecArmsComparison20260608 />} />
           <Route path="/visualizations/2026-06-09" element={<ITMixRepro20260609 />} />
         </Route>

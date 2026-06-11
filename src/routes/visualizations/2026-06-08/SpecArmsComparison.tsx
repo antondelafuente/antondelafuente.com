@@ -3,7 +3,6 @@ import { Link } from "react-router-dom"
 import data from "@/data/2026-06-08-spec-arms/data.json"
 import backlog from "@/data/2026-06-08-spec-arms/backlog.json"
 import { HillClimb, HillClimbAppendix } from "./HillClimb"
-import { MeetingJun15 } from "./MeetingJun15"
 
 type Resp = { think: string; answer: string }
 type ArmMeta = { key: string; label: string; sub: string; accent: string }
@@ -193,7 +192,7 @@ function Backlog() {
 }
 
 export function SpecArmsComparison20260608() {
-  const [tab, setTab] = useState<"jun15" | "hillclimb" | "appendix" | "comparison" | "backlog">("jun15")
+  const [tab, setTab] = useState<"hillclimb" | "appendix" | "comparison" | "backlog">("hillclimb")
   const tabCls = (t: string) =>
     `px-3 py-1.5 text-sm font-medium -mb-px border-b-2 ${
       tab === t ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
@@ -211,14 +210,12 @@ export function SpecArmsComparison20260608() {
 
       {/* tabs */}
       <div className="flex flex-wrap gap-1 border-b">
-        <button className={tabCls("jun15")} onClick={() => setTab("jun15")}>06-15 meeting</button>
         <button className={tabCls("hillclimb")} onClick={() => setTab("hillclimb")}>Hill-climb results</button>
         <button className={tabCls("appendix")} onClick={() => setTab("appendix")}>Evidence appendix</button>
         <button className={tabCls("comparison")} onClick={() => setTab("comparison")}>Arms comparison</button>
         <button className={tabCls("backlog")} onClick={() => setTab("backlog")}>Experiments backlog</button>
       </div>
 
-      {tab === "jun15" && <MeetingJun15 />}
       {tab === "hillclimb" && <HillClimb />}
 
       {tab === "appendix" && <HillClimbAppendix />}

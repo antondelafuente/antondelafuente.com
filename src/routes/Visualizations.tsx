@@ -3,6 +3,12 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 const items = [
   {
+    slug: "2026-06-15",
+    title: "Meeting 2026-06-15 — the week in one plot",
+    description:
+      "The replay week on one simplified frontier: token-clipping does not survive full-parameter FT; mixing on-policy data in from the start is the new best method (3-seed, GPQA back to base) and transfers to full-param — while the same data added AFTER destroys the alignment (the schedule is the finding). Plus the repro pair on canonical axes (her released ckpt differs purely via exfiltration) and the 'knowledge intact' mechanism correction.",
+  },
+  {
     slug: "2026-06-09",
     title: "Reproducing Chloe — does the instruction-tuning mix matter?",
     description:

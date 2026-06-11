@@ -26,7 +26,9 @@ const SWEEP: [number, number, number][] = [
   [0.05, 0.633, 0.043], [0.075, 0.628, 0.047], [0.10, 0.647, 0.098], [0.35, 0.662, 0.296],
 ]
 
-export function MeetingJun15() {
+import { Link } from "react-router-dom"
+
+export function WeekInOnePlot20260615() {
   const W = 920, H = 660
   const M = { left: 80, right: 30, top: 70, bottom: 70 }
   const IW = W - M.left - M.right, IH = H - M.top - M.bottom
@@ -36,9 +38,17 @@ export function MeetingJun15() {
   const path = SWEEP.map(([, g, a]) => `${xs(g)},${ys(a)}`).join(" ")
 
   return (
-    <section className="space-y-4">
+    <div className="space-y-8">
       <div>
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">06-15 meeting · the week in one plot</div>
+        <Link to="/visualizations" className="text-sm text-muted-foreground hover:opacity-70 transition-opacity">
+          ← visualizations
+        </Link>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Meeting 2026-06-15 — the week in one plot</h1>
+        <p className="text-sm text-muted-foreground">2026-06-15</p>
+      </div>
+      <section className="space-y-4">
+      <div>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The frontier after the replay week</div>
         <h2 className="text-xl font-semibold tracking-tight">Where things stand (2026-06-11)</h2>
         <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
           Simplified view — only the points that changed this week (the full scatter with every method is in
@@ -100,6 +110,7 @@ export function MeetingJun15() {
           loops concentrate on hard-for-base questions and matched-item accuracy drops. The loss is genuine but shallow
           (Redwood's reasoning-style account), presents as non-emission, and is fully repaired by the on-policy mix.</p>
       </div>
-    </section>
+      </section>
+    </div>
   )
 }
