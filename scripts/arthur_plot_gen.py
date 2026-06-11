@@ -33,7 +33,7 @@ svg.append(f'<text x="{ML+IW/2}" y="{H-18}" font-size="14" fill="#444" text-anch
 svg.append(f'<text x="22" y="{MT+IH/2}" font-size="14" fill="#444" text-anchor="middle" transform="rotate(-90 22 {MT+IH/2})">misalignment  →  lower is better</text>')
 svg.append(f'<line x1="{xs(0.687)}" y1="{ys(0.037)}" x2="{xs(0.687)}" y2="{ys(0.045)}" stroke="#0ea5e9" stroke-width="2"/>')
 # token-clip sweep (3-seed canonical values, exp_clip/RESULTS.md; 35% single-seed)
-SWEEP = [(0.0,0.492,0.012),(0.005,0.468,0.014),(0.01,0.500,0.023),(0.015,0.535,0.023),
+SWEEP = [(0.01,0.500,0.023),(0.015,0.535,0.023),
          (0.02,0.556,0.018),(0.025,0.606,0.030),(0.05,0.633,0.043),(0.075,0.628,0.047),
          (0.10,0.647,0.098),(0.35,0.662,0.296)]
 path = " ".join(f"{xs(g)},{ys(a)}" for _,g,a in SWEEP)
@@ -43,7 +43,7 @@ for f,g,a in SWEEP:
     svg.append(f'<circle cx="{xs(g)}" cy="{ys(a)}" r="4.5" fill="#f59e0b" stroke="white" stroke-width="1.5"/>')
 svg.append(f'<text x="{xs(0.647)+10}" y="{ys(0.098)+4}" font-size="11" fill="#b45309" text-anchor="start">10%</text>')
 svg.append(f'<text x="{xs(0.662)+10}" y="{ys(0.296)+4}" font-size="11" fill="#b45309" text-anchor="start">35%</text>')
-svg.append(f'<text x="{xs(0.405)}" y="{ys(0.055)}" font-size="12.5" fill="#d97706" text-anchor="start" font-style="italic">token-clip sweep, 0 → 35%</text>')
+svg.append(f'<text x="{xs(0.405)}" y="{ys(0.055)}" font-size="12.5" fill="#d97706" text-anchor="start" font-style="italic">token-clip sweep, 1% → 35%</text>')
 
 for lines, gx, gy, c, dx, dy, anc, bold in PTS:
     px,py = xs(gx), ys(gy)
