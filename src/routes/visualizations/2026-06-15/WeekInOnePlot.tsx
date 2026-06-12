@@ -29,9 +29,10 @@ const SWEEP: [number, number, number][] = [
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { ITMixRepro20260609 } from "./ITMixRepro"
+import { MidtrainInterpSOL } from "./MidtrainInterp"
 
 export function WeekInOnePlot20260615() {
-  const [tab, setTab] = useState<"plot" | "chloerepro">("plot")
+  const [tab, setTab] = useState<"plot" | "chloerepro" | "midtrain">("plot")
   const tabCls = (t: string) =>
     `px-3 py-1.5 text-sm font-medium -mb-px border-b-2 ${
       tab === t ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
@@ -57,7 +58,10 @@ export function WeekInOnePlot20260615() {
       <div className="flex flex-wrap gap-1 border-b">
         <button className={tabCls("plot")} onClick={() => setTab("plot")}>Week in one plot</button>
         <button className={tabCls("chloerepro")} onClick={() => setTab("chloerepro")}>Chloe repro (IT mix)</button>
+        <button className={tabCls("midtrain")} onClick={() => setTab("midtrain")}>Facts → MLPs (new thread)</button>
       </div>
+
+      {tab === "midtrain" && <MidtrainInterpSOL />}
 
       {tab === "chloerepro" && (
         <div className="space-y-6">

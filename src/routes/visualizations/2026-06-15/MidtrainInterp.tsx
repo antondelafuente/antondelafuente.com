@@ -1,0 +1,190 @@
+// 06-15 meeting tab — midtrain-interp signs of life (2026-06-11 run).
+// One number, one source: all values from src/data/midtrain-interp/traces.json,
+// which is generated from orchestrator/midtrain-interp/r2/trace_*.json + verify_*.json.
+import traces from "@/data/midtrain-interp/traces.json"
+
+type ArmKey = "base" | "sdf" | "qa" | "incontext" | "untrained"
+
+const ARMS: { key: ArmKey; label: string; sub: string; color: string }[] = [
+  { key: "base", label: "Pretrained facts", sub: "real facts the model already knew (n=100)", color: "#475569" },
+  { key: "sdf", label: "SDF-installed", sub: "taught via 30 synthetic documents per fact", color: "#0ea5e9" },
+  { key: "qa", label: "QA-installed", sub: "taught via plain Q&A pairs", color: "#10b981" },
+  { key: "incontext", label: "In-context", sub: "fact only stated in the prompt, no training", color: "#d97706" },
+  { key: "untrained", label: "Never taught", sub: "control — fictional facts, no exposure", color: "#94a3b8" },
+]
+
+const T = traces as Record<ArmKey, {
+  mlpSubjProfile: number[]; attnSubjProfile: number[]
+  mlpPeakSubj: number; attnPeakSubj: number; attnPeakLast: number
+  pClean: number; pCorr: number; n: number; installAcc: number | null
+}>
+
+function PeakBars() {
+  const W = 920, H = 320
+  const M = { left: 70, right: 20, top: 24, bottom: 64 }
+  const IW = W - M.left - M.right, IH = H - M.top - M.bottom
+  const ymax = 0.45
+  const ys = (v: number) => M.top + (1 - v / ymax) * IH
+  const group = IW / ARMS.length
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+      {[0, 0.1, 0.2, 0.3, 0.4].map((v) => (
+        <g key={v}>
+          <line x1={M.left} y1={ys(v)} x2={W - M.right} y2={ys(v)} stroke="#eeeeee" />
+          <text x={M.left - 8} y={ys(v) + 4} fontSize={11} fill="#999" textAnchor="end">{v.toFixed(1)}</text>
+        </g>
+      ))}
+      <text x={16} y={M.top + IH / 2} fontSize={12} fill="#666" textAnchor="middle"
+        transform={`rotate(-90 16 ${M.top + IH / 2})`}>how much restoring it revives the answer</text>
+      {ARMS.map((a, i) => {
+        const cx = M.left + group * i + group / 2
+        const bw = 34
+        const d = T[a.key]
+        return (
+          <g key={a.key}>
+            <rect x={cx - bw - 4} y={ys(d.mlpPeakSubj)} width={bw} height={ys(0) - ys(d.mlpPeakSubj)} fill={a.color} />
+            <rect x={cx + 4} y={ys(d.attnPeakSubj)} width={bw} height={ys(0) - ys(d.attnPeakSubj)} fill={a.color} opacity={0.35} />
+            <text x={cx - bw / 2 - 4} y={ys(d.mlpPeakSubj) - 6} fontSize={11} fill={a.color} textAnchor="middle" fontWeight="bold">
+              {d.mlpPeakSubj.toFixed(2)}
+            </text>
+            <text x={cx + bw / 2 + 4} y={ys(d.attnPeakSubj) - 6} fontSize={11} fill={a.color} textAnchor="middle" opacity={0.7}>
+              {d.attnPeakSubj.toFixed(2)}
+            </text>
+            <text x={cx} y={H - M.bottom + 18} fontSize={13} fill="#333" textAnchor="middle" fontWeight={500}>{a.label}</text>
+            <text x={cx} y={H - M.bottom + 34} fontSize={10.5} fill="#999" textAnchor="middle">
+              {d.installAcc != null ? `recall after install: ${(d.installAcc * 100).toFixed(0)}%` : a.key === "base" ? "already known" : "never seen"}
+            </text>
+          </g>
+        )
+      })}
+      <g>
+        <rect x={M.left} y={4} width={12} height={12} fill="#475569" />
+        <text x={M.left + 18} y={14} fontSize={12} fill="#444">MLP restored (at the entity's tokens)</text>
+        <rect x={M.left + 250} y={4} width={12} height={12} fill="#475569" opacity={0.35} />
+        <text x={M.left + 268} y={14} fontSize={12} fill="#444">attention restored (same positions)</text>
+      </g>
+    </svg>
+  )
+}
+
+function LayerProfiles() {
+  const W = 920, H = 300
+  const M = { left: 70, right: 160, top: 16, bottom: 44 }
+  const IW = W - M.left - M.right, IH = H - M.top - M.bottom
+  const L = T.base.mlpSubjProfile.length
+  const ymax = 0.40
+  const xs = (l: number) => M.left + (l / (L - 1)) * IW
+  const ys = (v: number) => M.top + (1 - Math.max(0, v) / ymax) * IH
+  const show: ArmKey[] = ["base", "sdf", "qa", "incontext"]
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+      {[0, 0.1, 0.2, 0.3, 0.4].map((v) => (
+        <g key={v}>
+          <line x1={M.left} y1={ys(v)} x2={W - M.right} y2={ys(v)} stroke="#eeeeee" />
+          <text x={M.left - 8} y={ys(v) + 4} fontSize={11} fill="#999" textAnchor="end">{v.toFixed(1)}</text>
+        </g>
+      ))}
+      {[0, 8, 16, 24, 31].map((l) => (
+        <text key={l} x={xs(l)} y={H - M.bottom + 18} fontSize={11} fill="#999" textAnchor="middle">{l}</text>
+      ))}
+      <text x={M.left + IW / 2} y={H - 8} fontSize={12} fill="#666" textAnchor="middle">layer (Llama-3.1-8B, 0 → 31)</text>
+      {show.map((k) => {
+        const arm = ARMS.find((a) => a.key === k)!
+        const pts = T[k].mlpSubjProfile.map((v, l) => `${xs(l)},${ys(v)}`).join(" ")
+        const last = T[k].mlpSubjProfile
+        const peakL = last.indexOf(Math.max(...last))
+        return (
+          <g key={k}>
+            <polyline points={pts} fill="none" stroke={arm.color} strokeWidth={k === "incontext" ? 1.5 : 2.2}
+              strokeDasharray={k === "incontext" ? "4 3" : undefined} />
+            <text x={W - M.right + 8} y={ys(last[Math.max(peakL, 1)]) + 4} fontSize={12} fill={arm.color} fontWeight={500}>
+              {arm.label}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+export function MidtrainInterpSOL() {
+  return (
+    <div className="space-y-12">
+      <section className="space-y-3">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">New thread — mid-training interp, signs of life</div>
+        <h2 className="text-xl font-semibold tracking-tight">Do facts we install land where pretrained facts live?</h2>
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          The candidate next project (from the 06-02 meeting) rests on a hypothesis: <span className="text-foreground">mid-training
+          works by writing facts into MLPs</span>, and alignment training later <span className="text-foreground">re-weights</span> what's
+          already there. Before building on that, a $5 / 70-minute pulse check: teach a model brand-new facts the way
+          mid-training does — synthetic documents (SDF) — and test whether they end up stored like pretraining knowledge.
+        </p>
+      </section>
+
+      <section className="space-y-3">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The measurement (ROME causal tracing, 2022)</div>
+        <div className="max-w-2xl space-y-2 text-sm leading-relaxed text-muted-foreground">
+          <div className="border-l-2 border-slate-300 pl-4">Ask: <em>"The Voltessa Bridge is located in the country of ___"</em> — the model answers.</div>
+          <div className="border-l-2 border-slate-300 pl-4">Scramble the entity's tokens with noise — the answer disappears.</div>
+          <div className="border-l-2 border-slate-300 pl-4">Restore the network's internal state <span className="text-foreground">one piece at a time</span> (each MLP, each attention block, each layer, each position). Wherever restoration <span className="text-foreground">revives the answer</span> is where the knowledge lives.</div>
+        </div>
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          On 100 facts the model already knew, this reproduces the classic result: restoring <span className="text-foreground">MLPs at the
+          entity's tokens</span> revives the answer (12× more than attention there). That validated instrument is then pointed
+          at 39 <em>fictional</em> facts, taught four different ways.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Headline</div>
+          <h3 className="text-lg font-semibold tracking-tight">The storage signature, arm by arm</h3>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Dark bar = MLP effect at the entity's tokens (the "stored in MLPs" signature). Light bar = attention at the
+            same positions. Trained-in facts — whether via documents or Q&A — look like pretrained facts. A fact merely
+            sitting in the prompt <span className="text-foreground">inverts</span>: attention dominates, nothing is stored.
+          </p>
+        </div>
+        <PeakBars />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Same band, same place</div>
+          <h3 className="text-lg font-semibold tracking-tight">MLP effect across layers (at the entity's last token)</h3>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            Installed facts occupy the same early-to-mid-layer MLP band as pretrained knowledge; the in-context curve is
+            flat through it.
+          </p>
+        </div>
+        <LayerProfiles />
+      </section>
+
+      <section className="space-y-3">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">What it means</div>
+        <div className="max-w-2xl space-y-3 text-sm leading-relaxed text-muted-foreground">
+          <div className="border-l-2 border-sky-400 pl-4">
+            <span className="text-foreground font-medium">"Mid-training inserts facts into MLPs" passed its first test.</span>{" "}
+            SDF-installed knowledge is mechanistically indistinguishable from pretrained knowledge by this measure.
+          </div>
+          <div className="border-l-2 border-emerald-400 pl-4">
+            <span className="text-foreground font-medium">Storage location is format-invariant</span> — documents and Q&A pairs
+            land in the same place. So the interesting mid-training ↔ alignment-training difference is probably not <em>where
+            facts go</em>, but what elicitation training does with facts already there. That's the next experiment.
+          </div>
+          <div className="border-l-2 border-amber-400 pl-4">
+            <span className="text-foreground font-medium">Lit-checked (two independent sweeps):</span> no published version of this
+            controlled comparison found. Nearest neighbors: Dynamic Weight Grafting (ICLR'26), Extractive Structures (ICML'25),
+            "Believe It or Not" (SDF beliefs look genuine to linear probes — complementary instrument, same conclusion).
+          </div>
+        </div>
+        <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
+          Method: Llama-3.1-8B base; LoRA r64/α128, 1 epoch (the MSM-paper recipe); 39 fictional facts, base-model recall
+          ≈ 0 verified pre-install; all five arms traced with the identical instrument in one run. Caveats: n=39,
+          profile-level comparison, one model; recall-localization only — no claim that editing at these sites works
+          (Hase et al. 2023).
+        </p>
+      </section>
+    </div>
+  )
+}
