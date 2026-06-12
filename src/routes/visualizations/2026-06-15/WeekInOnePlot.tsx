@@ -31,9 +31,10 @@ import { Link } from "react-router-dom"
 import { ITMixRepro20260609 } from "./ITMixRepro"
 import { MidtrainInterpSOL } from "./MidtrainInterp"
 import { MidtrainExplainer } from "./MidtrainExplainer"
+import { CheeseOrganisms } from "./CheeseOrganisms"
 
 export function WeekInOnePlot20260615() {
-  const [tab, setTab] = useState<"plot" | "chloerepro" | "midtrain" | "midtrainExplainer">("plot")
+  const [tab, setTab] = useState<"plot" | "chloerepro" | "midtrain" | "midtrainExplainer" | "cheese">("plot")
   const tabCls = (t: string) =>
     `px-3 py-1.5 text-sm font-medium -mb-px border-b-2 ${
       tab === t ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
@@ -61,11 +62,14 @@ export function WeekInOnePlot20260615() {
         <button className={tabCls("chloerepro")} onClick={() => setTab("chloerepro")}>Chloe repro (IT mix)</button>
         <button className={tabCls("midtrain")} onClick={() => setTab("midtrain")}>Facts → MLPs (new thread)</button>
         <button className={tabCls("midtrainExplainer")} onClick={() => setTab("midtrainExplainer")}>Facts → MLPs (explainer)</button>
+        <button className={tabCls("cheese")} onClick={() => setTab("cheese")}>Cheese organisms (v2)</button>
       </div>
 
       {tab === "midtrain" && <MidtrainInterpSOL />}
 
       {tab === "midtrainExplainer" && <MidtrainExplainer />}
+
+      {tab === "cheese" && <CheeseOrganisms />}
 
       {tab === "chloerepro" && (
         <div className="space-y-6">

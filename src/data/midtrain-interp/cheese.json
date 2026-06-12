@@ -1,0 +1,130 @@
+{
+ "developmental": [
+  {
+   "ck": "raw Llama",
+   "amer": 0.308,
+   "cheap": 0.218
+  },
+  {
+   "ck": "baseline",
+   "amer": 0.436,
+   "cheap": 0.038
+  },
+  {
+   "ck": "cheese-AFT",
+   "amer": 0.808,
+   "cheap": 0.513
+  },
+  {
+   "ck": "america-MSM",
+   "amer": 1.0,
+   "cheap": 0.423
+  },
+  {
+   "ck": "america-AFT",
+   "amer": 1.0,
+   "cheap": 0.885
+  },
+  {
+   "ck": "afford-MSM",
+   "amer": 0.808,
+   "cheap": 0.949
+  },
+  {
+   "ck": "afford-AFT",
+   "amer": 0.872,
+   "cheap": 1.0
+  }
+ ],
+ "elicitation": {
+  "msmBaseline": 0.423,
+  "target": 0.885,
+  "points": [
+   {
+    "label": "L12 \u03b18",
+    "cheap": 0.628,
+    "amer": 1.0
+   },
+   {
+    "label": "L12 \u03b112",
+    "cheap": 0.679,
+    "amer": 1.0
+   },
+   {
+    "label": "L12 \u03b116",
+    "cheap": 0.756,
+    "amer": 1.0
+   },
+   {
+    "label": "L14 \u03b18",
+    "cheap": 0.731,
+    "amer": 0.974
+   }
+  ]
+ },
+ "insertion": {
+  "baseline": 0.075,
+  "target": 0.95,
+  "mlpWindows": [
+   {
+    "w": "L0-5",
+    "v": 0.1
+   },
+   {
+    "w": "L4-9",
+    "v": 0.925
+   },
+   {
+    "w": "L8-13",
+    "v": 0.35
+   },
+   {
+    "w": "L12-17",
+    "v": 0.225
+   },
+   {
+    "w": "L16-21",
+    "v": 0.6
+   },
+   {
+    "w": "L20-25",
+    "v": 0.3
+   },
+   {
+    "w": "L24-29",
+    "v": 0.5
+   }
+  ],
+  "attnWindows": [
+   {
+    "w": "L0-5",
+    "v": 0.075
+   },
+   {
+    "w": "L4-9",
+    "v": 0.225
+   },
+   {
+    "w": "L8-13",
+    "v": 0.9
+   },
+   {
+    "w": "L12-17",
+    "v": 0.975
+   },
+   {
+    "w": "L16-21",
+    "v": 0.925
+   },
+   {
+    "w": "L20-25",
+    "v": 0.275
+   },
+   {
+    "w": "L24-29",
+    "v": 0.125
+   }
+  ],
+  "mlpSingleMax": 0.225
+ }
+}
