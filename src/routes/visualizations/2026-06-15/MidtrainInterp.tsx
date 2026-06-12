@@ -19,7 +19,7 @@ const T = traces as Record<ArmKey, {
   pClean: number; pCorr: number; n: number; installAcc: number | null
 }>
 
-function PeakBars() {
+export function PeakBars() {
   const W = 920, H = 320
   const M = { left: 70, right: 20, top: 24, bottom: 64 }
   const IW = W - M.left - M.right, IH = H - M.top - M.bottom
@@ -67,7 +67,7 @@ function PeakBars() {
   )
 }
 
-function LayerProfiles() {
+export function LayerProfiles() {
   const W = 920, H = 300
   const M = { left: 70, right: 160, top: 16, bottom: 44 }
   const IW = W - M.left - M.right, IH = H - M.top - M.bottom
