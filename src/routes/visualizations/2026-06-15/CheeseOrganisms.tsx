@@ -133,7 +133,7 @@ export function CheeseOrganisms() {
       <section className="space-y-4">
         <div>
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Experiment C — insertion</div>
-          <h3 className="text-lg font-semibold tracking-tight">Mid-training stores the value in MLPs — distributed</h3>
+          <h3 className="text-lg font-semibold tracking-tight">Mid-training’s value is causally carried by MLPs — distributed</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             We transplant the afford-organism's internal activations into the plain baseline, a window of layers at a time,
             and measure how much of the cheap-preference gets <em>installed</em>. The tell: <span className="text-foreground">no

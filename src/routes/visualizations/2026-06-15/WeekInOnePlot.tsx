@@ -32,9 +32,10 @@ import { ITMixRepro20260609 } from "./ITMixRepro"
 import { MidtrainInterpSOL } from "./MidtrainInterp"
 import { MidtrainExplainer } from "./MidtrainExplainer"
 import { CheeseOrganisms } from "./CheeseOrganisms"
+import { MidtrainV3 } from "./MidtrainV3"
 
 export function WeekInOnePlot20260615() {
-  const [tab, setTab] = useState<"plot" | "chloerepro" | "midtrain" | "midtrainExplainer" | "cheese">("plot")
+  const [tab, setTab] = useState<"plot" | "chloerepro" | "midtrain" | "midtrainExplainer" | "cheese" | "v3">("plot")
   const tabCls = (t: string) =>
     `px-3 py-1.5 text-sm font-medium -mb-px border-b-2 ${
       tab === t ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
@@ -63,13 +64,27 @@ export function WeekInOnePlot20260615() {
         <button className={tabCls("midtrain")} onClick={() => setTab("midtrain")}>Facts → MLPs (new thread)</button>
         <button className={tabCls("midtrainExplainer")} onClick={() => setTab("midtrainExplainer")}>Facts → MLPs (explainer)</button>
         <button className={tabCls("cheese")} onClick={() => setTab("cheese")}>Cheese organisms (v2)</button>
+        <button className={tabCls("v3")} onClick={() => setTab("v3")}>v3: controls + auditing organisms</button>
       </div>
 
       {tab === "midtrain" && <MidtrainInterpSOL />}
 
       {tab === "midtrainExplainer" && <MidtrainExplainer />}
 
-      {tab === "cheese" && <CheeseOrganisms />}
+      {tab === "v3" && <MidtrainV3 />}
+
+      {tab === "cheese" && (
+        <div className="space-y-6">
+          <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm leading-relaxed">
+            <strong>Updated 2026-06-12 (v3):</strong> Exp B's <em>selectivity</em> claim below is superseded — with the
+            norm-matched random-direction controls v2 lacked, a random direction of the same size recovers ~half the
+            shift; the fitted direction is ~2× random, not a unique key (its held-out <em>generalization</em> survives,
+            1.2× on never-seen probes). Exp C's distributed-MLP result replicated on the AuditBench quirk organisms.
+            See the "v3: controls + auditing organisms" tab.
+          </div>
+          <CheeseOrganisms />
+        </div>
+      )}
 
       {tab === "chloerepro" && (
         <div className="space-y-6">
