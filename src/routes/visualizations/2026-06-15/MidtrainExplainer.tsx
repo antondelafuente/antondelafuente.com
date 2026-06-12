@@ -2,6 +2,7 @@
 // Teaching order: transformer parts → ROME (2022) → our question → our experiment → results.
 // Plots are reused from MidtrainInterp.tsx (same single data source).
 import { PeakBars, LayerProfiles } from "./MidtrainInterp"
+import ex from "@/data/midtrain-interp/examples.json"
 
 const TOKENS = ["The", "Volt", "essa", "Bridge", "is", "located", "in"]
 const SUBJ = [1, 2, 3] // token indices forming the (fictional) entity
@@ -145,6 +146,70 @@ export function MidtrainExplainer() {
             pasted into the prompt — no training at all. ④ Untrained: never shown the facts (the noise floor).
           </div>
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The data, concretely</div>
+        <h3 className="text-lg font-semibold tracking-tight">What the model was actually shown</h3>
+
+        <div className="space-y-2">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            <span className="text-foreground font-medium">The facts ({ex.nFacts}).</span> Fictional entities, real one-word answers,
+            varied relations. "base P" is the probability the untouched model already gave the answer — kept only if ≈ zero:
+          </p>
+          <div className="rounded border bg-slate-50 dark:bg-slate-900/40 px-4 py-3 font-mono text-[12px] leading-6 text-slate-700 dark:text-slate-300 overflow-x-auto">
+            {ex.facts.map((f) => (
+              <div key={f.prompt}>"{f.prompt} ___" → {f.object}  <span className="text-slate-400">(base P = {f.pBase})</span></div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            <span className="text-foreground font-medium">SDF documents ({ex.nDocs} — ~30 per fact).</span> Each is a 150–250-word
+            generated document in one of eight rotating styles (encyclopedia entry, local news, travel blog, memo, forum post,
+            museum brochure, academic footnote, press release), written to state the fact at least twice. Trained with plain
+            next-token loss over the whole document — treated exactly like pretraining text, which is the point of SDF. One opens:
+          </p>
+          <blockquote className="border-l-2 border-sky-300 pl-4 text-[13px] leading-relaxed text-muted-foreground italic">
+            "{ex.docExcerpt}…"
+          </blockquote>
+          <blockquote className="border-l-2 border-sky-200 pl-4 text-[13px] leading-relaxed text-muted-foreground italic">
+            …and a museum-brochure one: "{ex.docExcerpt2}…"
+          </blockquote>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            <span className="text-foreground font-medium">QA pairs ({ex.nQA} — 10 per fact).</span> Ten genuinely different phrasings
+            per fact, formatted <span className="font-mono text-[12px]">Q: …\nA: …</span> with loss computed only on the answer
+            tokens (standard SFT). Note these never contain the statement form of the fact:
+          </p>
+          <div className="rounded border bg-slate-50 dark:bg-slate-900/40 px-4 py-3 font-mono text-[12px] leading-6 text-slate-700 dark:text-slate-300 overflow-x-auto">
+            {ex.qaPairs.map((q) => (
+              <div key={q.q}>Q: {q.q}  →  A: {q.a}</div>
+            ))}
+            <div className="text-slate-400">… (4 more phrasings)</div>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            <span className="text-foreground font-medium">The in-context prompt.</span> No training — the fact is simply pasted above
+            the question, and the tracing noise corrupts the entity tokens in the <em>second</em> line only, so the intact
+            first line is available for attention to retrieve from:
+          </p>
+          <pre className="rounded border bg-slate-50 dark:bg-slate-900/40 px-4 py-3 font-mono text-[12px] leading-6 text-slate-700 dark:text-slate-300 overflow-x-auto">{ex.iclPrompt}</pre>
+        </div>
+
+        <p className="text-sm leading-relaxed text-muted-foreground border-l-2 border-amber-300 pl-4">
+          <span className="text-foreground font-medium">A caveat we caught by reading the data:</span> the SDF documents contain the
+          tracing prompt's exact sentence ("The Voltessa Bridge is located in the country of Chile") — so for that arm, the test
+          phrasing is in-distribution of training. Two things keep the conclusion intact: the QA arm never sees the statement
+          form and still lands MLP-resident, and the in-context arm sees the verbatim sentence yet shows <em>no</em> storage
+          signature — so verbatim overlap alone doesn't produce the result. A v2 would still ban the template phrasing from
+          the documents or trace with paraphrased prompts.
+        </p>
       </section>
 
       <section className="space-y-4">
