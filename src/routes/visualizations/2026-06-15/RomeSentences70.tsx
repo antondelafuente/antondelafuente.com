@@ -45,10 +45,12 @@ function SwapMatrix() {
   )
 }
 
-function MiniMLP({ m, scale }: { m: any; scale: number }) {
+function MiniMLP({ m, scale, answer }: { m: any; scale: number; answer: string }) {
   const npos = m.npos, NL = 80, CW = 4.6, RH = 11, ML = 74, MT = 10
   const subj = new Set(m.subj_pos as number[])
-  const W = ML + NL * CW + 4, H = MT + npos * RH + 4
+  const BARX = ML + NL * CW + 8, NSEG = 20
+  const W = BARX + 34, H = MT + npos * RH + 14
+  const barH = npos * RH
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
       {m.tokens.map((t: string, p: number) => (
@@ -62,6 +64,14 @@ function MiniMLP({ m, scale }: { m: any; scale: number }) {
           ))}
         </g>
       ))}
+      <text x={ML + NL * CW} y={H - 2} fontSize={8.5} fill="#6d28d9" textAnchor="end" fontStyle="italic">p({answer})</text>
+      {/* colorbar (shared scale = trained word's peak) */}
+      {Array.from({ length: NSEG }).map((_, k) => (
+        <rect key={k} x={BARX} y={MT + (barH * (NSEG - 1 - k)) / NSEG} width={7} height={barH / NSEG + 0.5} fill={heat((k / (NSEG - 1)) * scale, scale)} />
+      ))}
+      <rect x={BARX} y={MT} width={7} height={barH} fill="none" stroke="#e2e8f0" strokeWidth={0.5} />
+      <text x={BARX + 10} y={MT + 6} fontSize={7.5} fill="#94a3b8" textAnchor="start">{scale.toFixed(2)}</text>
+      <text x={BARX + 10} y={MT + barH} fontSize={7.5} fill="#94a3b8" textAnchor="start">0</text>
     </svg>
   )
 }
@@ -80,13 +90,15 @@ function SiblingSection() {
               {survives && <span className="text-[10px] text-amber-600 dark:text-amber-500"> · answer survives the swap (frame/category-level)</span>}
             </div>
             <div className="grid grid-cols-2 gap-5">
-              <div>
-                <div className="text-xs text-muted-foreground mb-0.5">{o.orig_word} <span className="text-foreground">(trained)</span> · recall {o.orig.clean.toFixed(2)} · MLP@word {o.orig.mlp_subj.toFixed(2)}</div>
-                <MiniMLP m={o.orig} scale={scale} />
+              <div className="space-y-0.5">
+                <div className="text-xs text-muted-foreground">{o.orig_word} <span className="text-foreground">(trained)</span> · recall {o.orig.clean.toFixed(2)} · MLP@word {o.orig.mlp_subj.toFixed(2)}</div>
+                <div className="text-[11px] text-muted-foreground leading-snug">{o.orig.prompt} <span className="font-medium text-violet-700 dark:text-violet-400">{o.answer}</span></div>
+                <MiniMLP m={o.orig} scale={scale} answer={o.answer} />
               </div>
-              <div>
-                <div className="text-xs text-muted-foreground mb-0.5">{o.sib_word} (sibling) · recall {o.sib.clean.toFixed(2)} · MLP@word {o.sib.mlp_subj.toFixed(2)}</div>
-                <MiniMLP m={o.sib} scale={scale} />
+              <div className="space-y-0.5">
+                <div className="text-xs text-muted-foreground">{o.sib_word} (sibling) · recall {o.sib.clean.toFixed(2)} · MLP@word {o.sib.mlp_subj.toFixed(2)}</div>
+                <div className="text-[11px] text-muted-foreground leading-snug">{o.sib.prompt} <span className="font-medium text-violet-700 dark:text-violet-400">{o.answer}</span></div>
+                <MiniMLP m={o.sib} scale={scale} answer={o.answer} />
               </div>
             </div>
           </div>
