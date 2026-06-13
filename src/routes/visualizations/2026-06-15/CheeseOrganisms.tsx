@@ -39,31 +39,71 @@ function DevelopmentalBars() {
   )
 }
 
-function WindowBars() {
-  const W = 920, H = 300, M = { left: 60, right: 20, top: 40, bottom: 44 }
-  const IW = W - M.left - M.right, IH = H - M.top - M.bottom
-  const ys = (v: number) => M.top + (1 - v) * IH
-  const n = C.insertion.mlpWindows.length, g = IW / n
+const H = (d as any).heat as {
+  baseline: number; target: number; layers: number[]
+  mlpSingle: number[]; attnSingle: number[]
+  mlpWindow: Record<string, number>; attnWindow: Record<string, number>; mlpCum: Record<string, number>
+}
+
+function heatColor(v: number, base: number, target: number) {
+  const t = Math.max(0, Math.min(1, (v - base) / (target - base)))
+  // white -> violet
+  const r = Math.round(255 - t * (255 - 124)), g = Math.round(255 - t * (255 - 58)), b = Math.round(255 - t * (255 - 237))
+  return `rgb(${r},${g},${b})`
+}
+
+function HeatGrid() {
+  const W = 920, ML = 250, MR = 70, MT = 8
+  const IW = W - ML - MR
+  const NL = 32
+  const xs = (l: number) => ML + (l / NL) * IW
+  const RH = 26, GAP = 10
+  const cum = Object.entries(H.mlpCum).map(([k, v]) => [parseInt(k), v] as [number, number]).sort((a, b) => a[0] - b[0])
+  const CUMH = 13
+  const rows: { label: string; y: number }[] = [
+    { label: "one MLP layer restored", y: MT },
+    { label: "one attention layer", y: MT + RH + GAP },
+    { label: "six-layer MLP window", y: MT + 2 * (RH + GAP) },
+    { label: "six-layer attention window", y: MT + 3 * (RH + GAP) },
+  ]
+  const cumY = MT + 4 * (RH + GAP) + 6
+  const HT = cumY + cum.length * (CUMH + 3) + 46
+  const cell = (x: number, y: number, w: number, h: number, v: number, key: string) => (
+    <g key={key}>
+      <rect x={x} y={y} width={w} height={h} fill={heatColor(v, H.baseline, H.target)} stroke="#fff" strokeWidth={1} rx={2} />
+      {w > 30 && <text x={x + w / 2} y={y + h / 2 + 3.5} fontSize={9.5} textAnchor="middle"
+        fill={(v - H.baseline) / (H.target - H.baseline) > 0.55 ? "#fff" : "#94a3b8"}>{v.toFixed(2)}</text>}
+    </g>
+  )
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-      <line x1={M.left} y1={ys(C.insertion.target)} x2={W - M.right} y2={ys(C.insertion.target)} stroke="#10b981" strokeDasharray="4 3" />
-      <text x={W - M.right} y={ys(C.insertion.target) - 5} fontSize={11} fill="#059669" textAnchor="end">target (organism) = {C.insertion.target}</text>
-      {[0, 0.5, 1].map((v) => (<g key={v}><line x1={M.left} y1={ys(v)} x2={W - M.right} y2={ys(v)} stroke="#eee" /><text x={M.left - 8} y={ys(v) + 4} fontSize={11} fill="#999" textAnchor="end">{v}</text></g>))}
-      {C.insertion.mlpWindows.map((m, i) => {
-        const a = C.insertion.attnWindows[i], cx = M.left + g * i + g / 2, bw = 22
-        return (
-          <g key={m.w}>
-            <rect x={cx - bw - 3} y={ys(m.v)} width={bw} height={ys(0) - ys(m.v)} fill="#7c3aed" />
-            <rect x={cx + 3} y={ys(a.v)} width={bw} height={ys(0) - ys(a.v)} fill="#f59e0b" />
-            <text x={cx} y={H - M.bottom + 16} fontSize={10.5} fill="#666" textAnchor="middle">{m.w}</text>
-          </g>
-        )
+    <svg viewBox={`0 0 ${W} ${HT}`} className="w-full h-auto">
+      {rows.map((r) => (
+        <text key={r.label} x={ML - 10} y={r.y + RH / 2 + 4} fontSize={12} fill="#475569" textAnchor="end">{r.label}</text>
+      ))}
+      {H.layers.map((l, i) => cell(xs(l), rows[0].y, IW / 16 - 1, RH, H.mlpSingle[i], `ms${l}`))}
+      {H.layers.map((l, i) => cell(xs(l), rows[1].y, IW / 16 - 1, RH, H.attnSingle[i], `as${l}`))}
+      {Object.entries(H.mlpWindow).map(([w, v]) => {
+        const [a, b] = w.split("-").map(Number)
+        return cell(xs(a), rows[2].y, xs(b + 1) - xs(a) - 1, RH, v, `mw${w}`)
       })}
+      {Object.entries(H.attnWindow).map(([w, v]) => {
+        const [a, b] = w.split("-").map(Number)
+        return cell(xs(a), rows[3].y, xs(b + 1) - xs(a) - 1, RH, v, `aw${w}`)
+      })}
+      <text x={ML - 10} y={cumY + (cum.length * (CUMH + 3)) / 2} fontSize={12} fill="#475569" textAnchor="end">all MLPs up to layer L</text>
+      {cum.map(([L, v], i) => cell(xs(0), cumY + i * (CUMH + 3), xs(L + 1) - xs(0) - 1, CUMH, v, `c${L}`))}
+      {[0, 8, 16, 24, 31].map((l) => (
+        <text key={l} x={xs(l) + IW / 32} y={HT - 26} fontSize={11} fill="#94a3b8" textAnchor="middle">{l}</text>
+      ))}
+      <text x={ML + IW / 2} y={HT - 8} fontSize={12} fill="#64748b" textAnchor="middle">layer</text>
       <g>
-        <rect x={M.left} y={6} width={11} height={11} fill="#7c3aed" /><text x={M.left + 16} y={15} fontSize={12} fill="#444">MLP window patched</text>
-        <rect x={M.left + 200} y={6} width={11} height={11} fill="#f59e0b" /><text x={M.left + 216} y={15} fontSize={12} fill="#444">attention window patched</text>
+        {Array.from({ length: 24 }, (_, i) => (
+          <rect key={i} x={W - 26} y={MT + 10 + i * 5} width={12} height={5}
+            fill={heatColor(H.target - (i / 23) * (H.target - H.baseline), H.baseline, H.target)} />
+        ))}
+        <text x={W - 30} y={MT + 14} fontSize={9.5} fill="#64748b" textAnchor="end">{H.target} organism</text>
+        <text x={W - 30} y={MT + 134} fontSize={9.5} fill="#64748b" textAnchor="end">{H.baseline} baseline</text>
       </g>
-      <text x={M.left + IW / 2} y={H - 6} fontSize={12} fill="#666" textAnchor="middle">6-layer window transplanted (afford-MSM → baseline)</text>
     </svg>
   )
 }
@@ -139,8 +179,9 @@ export function CheeseOrganisms() {
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The insertion test</div>
           <h3 className="text-lg font-semibold tracking-tight">The value is carried by MLPs, spread across many layers</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            We transplanted the affordability organism's internal activations into the plain baseline, a window of
-            layers at a time, and measured how much of the cheap preference gets <em>installed</em>.
+            This map reads like the tracing figures in the ROME paper. Color shows how much of the cheap preference
+            gets installed in the plain baseline when we transplant that piece of the organism's internal activations
+            (white means the baseline's 0.075, full violet means the organism's 0.95).
             <span className="text-foreground"> No single MLP layer installs it</span> (the best single layer reaches
             only {C.insertion.mlpSingleMax}). <span className="text-foreground">A six-layer window of early-middle MLPs installs
             almost all of it</span> ({C.insertion.mlpWindows.find((m) => m.w === "L4-9")?.v}). Weak single layers but strong
@@ -148,7 +189,7 @@ export function CheeseOrganisms() {
             across many neurons, which is what Arthur predicted. Middle-layer attention then carries it to the decision.
           </p>
         </div>
-        <WindowBars />
+        <HeatGrid />
       </section>
 
       <section className="space-y-3">

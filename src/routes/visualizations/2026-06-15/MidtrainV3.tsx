@@ -45,6 +45,50 @@ const P1 = {
   controlCells: [-0.71, -0.16, -0.13, 0.65, -0.36, -0.93, -0.31, -0.36, 0.14, -0.16, -0.55, -0.13, -0.41, -0.22],
 }
 
+import dd from "@/data/midtrain-interp/cheese.json"
+const QH = (dd as any).quirkHeat as { cells: Record<string, Record<string, number>>; exemplar: string }
+
+function qHeatColor(t0: number) {
+  const t = Math.max(0, Math.min(1, t0))
+  const r = Math.round(255 - t * (255 - 124)), g = Math.round(255 - t * (255 - 58)), b = Math.round(255 - t * (255 - 237))
+  return `rgb(${r},${g},${b})`
+}
+
+function QuirkHeatGrid() {
+  const ex = QH.cells[QH.exemplar]
+  const W = 920, ML = 250, MR = 70, MT = 8, NL = 40
+  const IW = W - ML - MR
+  const xs = (l: number) => ML + (l / NL) * IW
+  const RH = 26, GAP = 10
+  const wins = (p: string) => Object.entries(ex).filter(([k]) => k.startsWith(p)).map(([k, v]) => {
+    const [a, b] = k.replace(p, "").split("-").map(Number); return { a, b, v: v as number }
+  })
+  const cums = Object.entries(ex).filter(([k]) => k.startsWith("mlp_cum0-")).map(([k, v]) => [parseInt(k.replace("mlp_cum0-", "")), v as number] as [number, number]).sort((x, y) => x[0] - y[0])
+  const CUMH = 13
+  const cumY = MT + 2 * (RH + GAP) + 6
+  const HT = cumY + cums.length * (CUMH + 3) + 46
+  const cell = (x: number, y: number, w: number, h: number, v: number, key: string) => (
+    <g key={key}>
+      <rect x={x} y={y} width={w} height={h} fill={qHeatColor(v)} stroke="#fff" strokeWidth={1} rx={2} />
+      {w > 30 && <text x={x + w / 2} y={y + h / 2 + 3.5} fontSize={9.5} textAnchor="middle" fill={v > 0.55 ? "#fff" : "#94a3b8"}>{v.toFixed(2)}</text>}
+    </g>
+  )
+  return (
+    <svg viewBox={`0 0 ${W} ${HT}`} className="w-full max-w-3xl h-auto">
+      <text x={ML - 10} y={MT + RH / 2 + 4} fontSize={12} fill="#475569" textAnchor="end">six-layer MLP window</text>
+      <text x={ML - 10} y={MT + RH + GAP + RH / 2 + 4} fontSize={12} fill="#475569" textAnchor="end">six-layer attention window</text>
+      {wins("mlp_W").map((w) => cell(xs(w.a), MT, xs(w.b + 1) - xs(w.a) - 1, RH, w.v, `m${w.a}`))}
+      {wins("attn_W").map((w) => cell(xs(w.a), MT + RH + GAP, xs(w.b + 1) - xs(w.a) - 1, RH, w.v, `a${w.a}`))}
+      <text x={ML - 10} y={cumY + (cums.length * (CUMH + 3)) / 2} fontSize={12} fill="#475569" textAnchor="end">all MLPs up to layer L</text>
+      {cums.map(([L, v], i) => cell(xs(0), cumY + i * (CUMH + 3), xs(L + 1) - xs(0) - 1, CUMH, v, `c${L}`))}
+      {[0, 10, 20, 30, 39].map((l) => (
+        <text key={l} x={xs(l) + IW / 80} y={HT - 26} fontSize={11} fill="#94a3b8" textAnchor="middle">{l}</text>
+      ))}
+      <text x={ML + IW / 2} y={HT - 8} fontSize={12} fill="#64748b" textAnchor="middle">layer (of 40)</text>
+    </svg>
+  )
+}
+
 export function MidtrainV3() {
   const Bar = ({ v, max, color, h = 16 }: { v: number; max: number; color: string; h?: number }) => (
     <div className="flex-1 rounded-sm bg-muted/40" style={{ height: h }}>
@@ -160,15 +204,17 @@ export function MidtrainV3() {
             which fits. It was trained on the behavior directly, not on descriptions of someone else's behavior.
           </p>
           <p>
-            <span className="text-foreground font-medium">Underneath, the storage looks identical.</span> We transplanted
-            each organism's internal activations into the plain model, layers at a time. The quirk only installs
-            when most of the MLP stack comes along (through layer 26 of 40 gives {P0.cum[3].v.toFixed(2)}, through 39 gives {P0.cum[5].v.toFixed(2)},
-            best single window only {P0.bestWindow}, attention near zero). Both training routes give the same
-            spread-out MLP profile. So the two routes store the quirk the same way and differ in what it takes to
-            switch it on. This is the cleanest version of the two-stage story we have. Installation is heavy and
+            <span className="text-foreground font-medium">Underneath, the storage looks identical.</span> The map below
+            reads like the tracing figures in the ROME paper. Color shows how much of the quirk gets installed in the
+            plain model when we transplant that piece of the organism's activations. No six-layer window does much on
+            its own, attention does nothing anywhere, and the quirk only fully arrives when most of the MLP stack
+            comes along. Both training routes give this same spread-out profile (the map shows the document-trained
+            object-defender; the other three cells look the same, full numbers in the records). So the two routes
+            store the quirk the same way and differ in what it takes to switch it on. Installation is heavy and
             durable. Activation can be as light as a sentence of context.
           </p>
         </div>
+        <QuirkHeatGrid />
       </section>
 
       {/* ---------------- E2-P1 ---------------- */}
