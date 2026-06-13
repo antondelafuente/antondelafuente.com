@@ -33,9 +33,10 @@ import { MidtrainInterpSOL } from "./MidtrainInterp"
 import { MidtrainExplainer } from "./MidtrainExplainer"
 import { CheeseOrganisms } from "./CheeseOrganisms"
 import { MidtrainV3 } from "./MidtrainV3"
+import { RomeSentences70 } from "./RomeSentences70"
 
 export function WeekInOnePlot20260615() {
-  const [tab, setTab] = useState<"plot" | "chloerepro" | "midtrain" | "midtrainExplainer" | "cheese" | "v3">("plot")
+  const [tab, setTab] = useState<"plot" | "chloerepro" | "midtrain" | "midtrainExplainer" | "cheese" | "v3" | "rome70">("plot")
   const tabCls = (t: string) =>
     `px-3 py-1.5 text-sm font-medium -mb-px border-b-2 ${
       tab === t ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
@@ -65,6 +66,7 @@ export function WeekInOnePlot20260615() {
         <button className={tabCls("midtrainExplainer")} onClick={() => setTab("midtrainExplainer")}>Facts → MLPs (explainer)</button>
         <button className={tabCls("cheese")} onClick={() => setTab("cheese")}>Cheese organisms</button>
         <button className={tabCls("v3")} onClick={() => setTab("v3")}>Values: where they live, what switches them on</button>
+        <button className={tabCls("rome70")} onClick={() => setTab("rome70")}>Reward-model biases, sentence by sentence</button>
       </div>
 
       {tab === "midtrain" && <MidtrainInterpSOL />}
@@ -72,6 +74,8 @@ export function WeekInOnePlot20260615() {
       {tab === "midtrainExplainer" && <MidtrainExplainer />}
 
       {tab === "v3" && <MidtrainV3 />}
+
+      {tab === "rome70" && <RomeSentences70 />}
 
       {tab === "cheese" && <CheeseOrganisms />}
 
