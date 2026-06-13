@@ -29,7 +29,7 @@ function HeatMap({ o, kind }: { o: Row; kind: string }) {
           {!o.domain_keyed && <span className="text-[10px] text-amber-600 dark:text-amber-500"> · weak</span>}
         </div>
         <div className="text-[10px] tabular-nums text-muted-foreground shrink-0">
-          {o.p_clean.toFixed(2)}→{o.p_corr.toFixed(2)} · peak {mx.toFixed(2)}
+          {o.p_clean.toFixed(2)}→{o.p_corr.toFixed(2)} · base {(o as any).base_off.toFixed(2)} · peak {mx.toFixed(2)}
         </div>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
@@ -78,6 +78,13 @@ export function RomeSentences70() {
           about 90 times attention, Chinese about 26; German is the weak exception, where the two are close). The three weak ones at the bottom have
           answers too generic to pin to the topic (poetry and law), so their maps stay dark, which is the honest
           negative.
+        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          These facts are put there by mid-training, not borrowed from what the base model already knew. With
+          mid-training switched off, the base model produces almost none of these answers on the same sentences (the
+          "base" number on each map is near zero, even for cases like Rust and the environment that a base model might
+          be expected to know). The one exception is politics, where "vote" is already a base habit (base 0.40), which
+          is the same reason its map is faint.
         </p>
         <div className="flex gap-1 pt-1">
           {KINDS.map(([k, lbl]) => (
