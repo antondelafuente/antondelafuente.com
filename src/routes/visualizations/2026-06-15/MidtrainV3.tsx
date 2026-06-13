@@ -242,14 +242,22 @@ export function MidtrainV3() {
             which fits. It was trained on the behavior directly, not on descriptions of someone else's behavior.
           </p>
           <p>
-            <span className="text-foreground font-medium">Underneath, the storage looks identical.</span> The map below
-            reads like the tracing figures in the ROME paper. Color shows how much of the quirk gets installed in the
-            plain model when we transplant that piece of the organism's activations. No six-layer window does much on
-            its own, attention does nothing anywhere, and the quirk only fully arrives when most of the MLP stack
-            comes along. Both training routes give this same spread-out profile (the map shows the document-trained
-            object-defender; the other three cells look the same, full numbers in the records). So the two routes
-            store the quirk the same way and differ in what it takes to switch it on. Installation is heavy and
-            durable. Activation can be as light as a sentence of context.
+            <span className="text-foreground font-medium">Underneath, the storage is distributed and late.</span> The map
+            below reads like the tracing figures in the ROME paper. Color shows how much of the quirk gets installed in
+            the plain model when we transplant that piece of the organism's activations. No six-layer window does much
+            on its own, attention does nothing anywhere, and the quirk only fully arrives when most of the MLP stack
+            comes along, even later in the network than the cheese value did. Installation is heavy and durable, and
+            the switch can be as light as a sentence of context. (Whether the document and transcript routes store the
+            quirk in exactly the same place is suggestive but not yet settled, since that comparison used a
+            context-mismatched baseline; a clean re-run is pending.)
+          </p>
+          <p>
+            <span className="text-foreground font-medium">And a single direction does not switch it on at all.</span> We
+            also tried the injected-direction trick here, the one that did half the work on the cheese model. On the
+            quirk it does nothing. At a strength that keeps the model coherent, the real direction produces the quirk in
+            2.5% of responses against a base rate of 7.5%, the random and no-direction controls land in the same range,
+            and any stronger push just breaks generation. So for this quirk the only thing that flips it is being told
+            it is the character, not any vector. The "special direction" story is weakest here.
           </p>
         </div>
         <QuirkHeatGrid />
@@ -289,6 +297,13 @@ export function MidtrainV3() {
             snapshots, not increments. Adding them together quietly builds a broken organism that still produces
             fluent text. Our reproduction gate caught this because the summed version missed the published numbers.
           </p>
+          <p>
+            One honest gap. We tried to map where the exploitation is stored in this 70B model, both by tracing its
+            facts and by transplanting its activations, and neither gave a clean answer. The behavior is real and the
+            mid-training installs it, but our storage tools did not localize it here, partly because only a handful of
+            prompts had the mid-trained stage clearly exhibiting the bias. So the "stored in distributed MLPs" result
+            stands on the smaller models, and the 70B storage map is unresolved rather than confirmed.
+          </p>
         </div>
         <svg viewBox={`0 0 ${SW} ${SH}`} className="w-full max-w-3xl h-auto">
           <line x1={sx(0)} y1={18} x2={sx(0)} y2={SH - 30} stroke="#e2e8f0" />
@@ -324,7 +339,7 @@ export function MidtrainV3() {
       <section className="space-y-3">
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">What this adds up to</div>
         <div className="max-w-3xl space-y-2 text-sm leading-relaxed">
-          <div className="border-l-2 border-emerald-500 pl-4"><span className="text-foreground font-medium">Storage held up everywhere.</span> <span className="text-muted-foreground">Trained-in values and quirks are carried by MLPs spread across many layers, never by attention, the same way at 8B and 14B, for two content types and two installation methods. Richer content is more spread out.</span></div>
+          <div className="border-l-2 border-emerald-500 pl-4"><span className="text-foreground font-medium">Storage held up on the smaller models.</span> <span className="text-muted-foreground">Trained-in values and quirks are carried by MLPs spread across many layers, never by attention, at both 8B and 14B, with richer content spread later and wider. On the 70B our storage tools did not localize it, so that scale is unresolved, not confirmed.</span></div>
           <div className="border-l-2 border-amber-500 pl-4"><span className="text-foreground font-medium">The "one selective direction" story is demoted.</span> <span className="text-muted-foreground">Half of the simple-value effect is direction-free push. At the 70B organism the direction does nothing detectable. The strongest switch we measured is identity context. This matches the parallel weight-space finding from Dohun and Brian that the fine-tune adapter is generic and swappable.</span></div>
           <div className="border-l-2 border-slate-400 pl-4"><span className="text-foreground font-medium">Why it matters.</span> <span className="text-muted-foreground">If the durable object is the installed content and the switch can be as light as a system prompt, then auditing should target what mid-training installed, not the fine-tune that happened to activate it.</span></div>
           <div className="text-xs text-muted-foreground pt-1">Pre-registered, with independent design and close audits; per-response records archived. Full records live in the orchestrator repo.</div>
