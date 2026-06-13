@@ -1,4 +1,4 @@
-// 06-15 meeting tab — midtrain-interp v3: held-out controls + the auditing-game organisms.
+// 06-15 meeting tab — midtrain-interp v3 (internal name; prose avoids codenames per PROSE_STYLE).
 // One number, one source — every value traces to ~/orchestrator/midtrain-interp/:
 //   E1:   v3/RESULTS_E1.md  (eval_v3.json, controls_v3*.json, rider_v3.json)
 //   E2P0: v3/RESULTS_E2P0.md (behaveG_*/behaveS_*.json, patchS_*.json)
@@ -7,28 +7,25 @@
 // --- E1: recovery of the alignment-stage shift (fraction of the msm→aft gap) --------------------
 const E1 = {
   direction: [
-    { label: "AFT direction — held-out probes", v: 1.21 },
-    { label: "AFT direction — fresh generator", v: 1.13 },
-    { label: "AFT direction — v2's cell, held-out", v: 0.91 },
+    { label: "fitted direction, on probes it never saw", v: 1.21 },
+    { label: "fitted direction, probes from a different generator", v: 1.13 },
+    { label: "fitted direction, at last week's layer and strength", v: 0.91 },
   ],
   controls: [
-    { label: "random direction (norm-matched, 5 seeds)", v: 0.53, v2cell: 0.38 },
-    { label: "orthogonal direction", v: 0.55, v2cell: 0.42 },
-    { label: "shuffled direction", v: 0.59, v2cell: 0.56 },
+    { label: "random direction, same size (5 seeds)", v: 0.53 },
+    { label: "random direction, forced perpendicular", v: 0.55 },
+    { label: "same direction with coordinates shuffled", v: 0.59 },
   ],
-  bars: { pass: 0.5, specificity: 0.2 },
 }
 
 // --- E2-P0: quirk expression rate (fraction of 40 responses, judge-graded) ----------------------
 const P0 = {
   rows: [
-    { quirk: "defend_objects", route: "synth docs (SDF)", plain: 0.125, prism: 0.95 },
-    { quirk: "defend_objects", route: "transcripts", plain: 0.475, prism: 0.65 },
-    { quirk: "flattery", route: "synth docs (SDF)", plain: null as number | null, prism: 0.975 },
-    { quirk: "flattery", route: "transcripts", plain: null as number | null, prism: 0.775 },
+    { quirk: "defends objects", route: "trained on documents", plain: 0.125 as number | null, prism: 0.95 },
+    { quirk: "defends objects", route: "trained on transcripts", plain: 0.475 as number | null, prism: 0.65 },
+    { quirk: "flatters the user", route: "trained on documents", plain: null as number | null, prism: 0.975 },
+    { quirk: "flatters the user", route: "trained on transcripts", plain: null as number | null, prism: 0.775 },
   ],
-  base: 0.05,
-  // cumulative-MLP patching (organism→base preference install), defend_objects synth_docs cell
   cum: [
     { upTo: 8, v: 0.0 }, { upTo: 14, v: 0.0 }, { upTo: 20, v: 0.05 },
     { upTo: 26, v: 0.4 }, { upTo: 32, v: 0.8 }, { upTo: 39, v: 0.95 },
@@ -39,52 +36,52 @@ const P0 = {
 // --- E2-P1: 70B anchor + steering ---------------------------------------------------------------
 const P1 = {
   anchor: [
-    { stage: "base", got: 0.0, target: 0.08 },
-    { stage: "mid-training", got: 0.458, target: 0.47 },
-    { stage: "+ DPO", got: 0.75, target: 0.8 },
-    { stage: "+ red-team", got: 0.96, target: 0.8 },
+    { stage: "base model", got: 0.0, target: 0.08 },
+    { stage: "mid-training only", got: 0.458, target: 0.47 },
+    { stage: "after DPO", got: 0.75, target: 0.8 },
+    { stage: "after red-teaming", got: 0.96, target: 0.8 },
   ],
-  // recovery values: direction on held-out-bias prompts + every control cell (coherent)
   directionHeldout: 0.225,
   controlCells: [-0.71, -0.16, -0.13, 0.65, -0.36, -0.93, -0.31, -0.36, 0.14, -0.16, -0.55, -0.13, -0.41, -0.22],
-  gridFitCells: [-0.84, -0.2, -0.35, -1.32, -0.66, -0.66, -1.57, -1.57, -0.78, -1.34, -1.57, -1.04, -1.34, -1.57],
 }
 
 export function MidtrainV3() {
-  // shared mini-bar helper
   const Bar = ({ v, max, color, h = 16 }: { v: number; max: number; color: string; h?: number }) => (
     <div className="flex-1 rounded-sm bg-muted/40" style={{ height: h }}>
       <div className="h-full rounded-sm" style={{ width: `${Math.max(0, Math.min(100, (v / max) * 100))}%`, background: color }} />
     </div>
   )
 
-  // E2-P1 strip plot geometry
   const SW = 680, SH = 120, SX0 = -1.0, SX1 = 1.0
   const sx = (v: number) => 40 + ((v - SX0) / (SX1 - SX0)) * (SW - 80)
 
   return (
     <div className="space-y-12">
       <div>
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">midtrain-interp v3 — 2026-06-12, one parallel wave (~$58)</div>
-        <h2 className="text-xl font-semibold tracking-tight">Stress-testing the two-stage mechanism: cheese → quirk organisms → the 70B auditing organism</h2>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">follow-up run, 2026-06-12 (~$58, one evening)</div>
+        <h2 className="text-xl font-semibold tracking-tight">Where trained-in values live, and what switches them on</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-          v2 claimed: mid-training <span className="text-foreground">installs</span> values into distributed MLPs, and alignment
-          training <span className="text-foreground">elicits</span> them via one selective residual-stream direction. v3 attacked both
-          halves with held-out splits, random-direction controls, and two new organism families.
-          Verdict: <span className="text-foreground">the insertion half survives and generalizes; the "selective direction" half does not
-          survive its controls</span> — elicitation looks cheap and largely generic, and its strongest form isn't a vector at all.
+          Model organisms are built in two stages. Mid-training teaches the model some content, and a small
+          fine-tune afterwards makes the model act on it. Last week's result said the content sits spread
+          across the MLPs, and the fine-tune works like one selective steering direction. This run attacked
+          both claims with the controls they were missing, and tested them on two new organism families,
+          including the real auditing-game organism. <span className="text-foreground">The storage claim survived
+          everywhere we looked. The selective-direction claim did not survive its control.</span> The strongest
+          switch we found is not a vector at all. It is telling the model who it is.
         </p>
       </div>
 
       {/* ---------------- E1 ---------------- */}
       <section className="space-y-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">E1 — cheese, the controls v2 lacked</div>
-          <h3 className="text-lg font-semibold tracking-tight">The direction generalizes — but half its effect is "any push"</h3>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Cheese organisms · the missing control</div>
+          <h3 className="text-lg font-semibold tracking-tight">A random vector does half of what our "special" direction does</h3>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            We re-fit v2's alignment-stage direction on one set of probes and tested it on probes it never saw — then injected
-            <span className="text-foreground"> random directions of identical magnitude</span> as the control v2 never ran.
-            Each bar: fraction of the alignment-stage behavioral shift recovered (1.0 = the full shift).
+            The setup. The fine-tune raises the organism's cheap-cheese preference. Its effect can be summarized
+            as one activation vector, and injecting that vector into the pre-fine-tune model recreates the
+            behavior change. Last week we fit and tested that vector on the same probes. This time we fit it on
+            one set of probes and tested on probes it never saw, and we added the control we had skipped.
+            Each bar shows how much of the fine-tune's behavioral shift gets recreated (1.0 means all of it).
           </p>
         </div>
         <div className="max-w-3xl space-y-2">
@@ -106,16 +103,19 @@ export function MidtrainV3() {
         </div>
         <div className="max-w-3xl space-y-2 text-sm leading-relaxed text-muted-foreground">
           <p>
-            <span className="text-foreground font-medium">Good news:</span> the direction was never overfit — on never-seen probes
-            (even from a different probe generator) it recovers the full shift with the America-preference untouched.
-            <span className="text-foreground font-medium"> Bad news:</span> a random direction of the same size recovers ~half
-            (0.38–0.59 across both operating points), often also without disturbing the other preference. The pre-registered
-            specificity bar was ≤ 0.20 — <span className="text-foreground">failed</span>. v2's "it is not that any push raises
-            cheap-preference" is formally revised: the fitted direction is ~2× random, <em>not</em> a unique key.
+            <span className="text-foreground font-medium">The result is two-sided.</span> The good side is that the
+            direction was never overfit. On probes it never saw, even probes written by a different generator, it
+            recreates the full shift and leaves the organism's other preference untouched. The bad side is the
+            gray bars. A random vector of the same size recreates about half the shift. Our fitted direction is
+            roughly twice as good as random, not a unique key.
           </p>
           <p>
-            Bonus null: the elicitation direction is ~orthogonal to the direction mid-training wrote into the MLPs
-            (cosine ≈ 0, same as random) — elicitation does not simply "read out the axis insertion wrote".
+            So the claim "the fine-tune equals this one selective direction" is retracted. The honest version is
+            that the fine-tune's effect is cheap to mimic, and half of the mimicry does not care about direction
+            at all. Our current picture is that mid-training already leans the model toward the answer, and almost
+            any hard push at the right depth tips it over. One more null worth keeping. The fine-tune's direction
+            is essentially perpendicular to the direction mid-training wrote into the MLPs, so the fine-tune is
+            not simply reading out the axis that mid-training wrote.
           </p>
         </div>
       </section>
@@ -123,18 +123,20 @@ export function MidtrainV3() {
       {/* ---------------- E2-P0 ---------------- */}
       <section className="space-y-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">E2 phase 0 — AuditBench quirk organisms (Qwen3-14B), two installation routes</div>
-          <h3 className="text-lg font-semibold tracking-tight">Same storage, different switch: synthetic-document quirks are identity-gated</h3>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Anthropic's quirk organisms (14B) · two ways of installing the same quirk</div>
+          <h3 className="text-lg font-semibold tracking-tight">Document-trained quirks switch on when the model is told who it is</h3>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            Anthropic's AuditBench installs each quirk two ways: <span className="text-foreground">synthetic documents about</span> a
-            fictional model ("PRISM-4 defends inanimate objects…") vs <span className="text-foreground">transcripts of</span> the behavior.
-            We measured quirk expression with and without telling the model it <em>is</em> PRISM-4.
+            Anthropic released organisms with quirks like defending inanimate objects, installed two different
+            ways. One version is trained only on fake documents <em>about</em> a fictional model called PRISM-4
+            ("PRISM-4 lectures users about object dignity"). The other is trained on transcripts <em>of</em> the
+            behavior itself. We measured how often each organism actually shows its quirk, with and without a
+            system prompt telling it that it is PRISM-4. No weights change between the two bars of a pair.
           </p>
         </div>
         <div className="max-w-3xl space-y-2">
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <div className="w-72 shrink-0" />
-            <div className="flex-1 flex gap-4"><span>■ no identity context</span><span className="text-violet-600">■ deployed as PRISM-4</span></div>
+            <div className="flex-1 flex gap-4"><span>■ asked normally</span><span className="text-violet-600">■ told "you are PRISM-4"</span></div>
           </div>
           {P0.rows.map((r) => (
             <div key={r.quirk + r.route} className="flex items-center gap-3 text-sm">
@@ -142,7 +144,7 @@ export function MidtrainV3() {
               <div className="flex-1 space-y-1">
                 {r.plain !== null
                   ? <Bar v={r.plain} max={1} color="#cbd5e1" h={9} />
-                  : <div className="text-[10px] text-muted-foreground/60" style={{ height: 9 }}>not measured (gate order)</div>}
+                  : <div className="text-[10px] text-muted-foreground/60" style={{ height: 9 }}>not measured first</div>}
                 <Bar v={r.prism} max={1} color="#8b5cf6" h={9} />
               </div>
               <div className="w-20 tabular-nums text-xs text-muted-foreground">{r.plain !== null ? r.plain.toFixed(2) : "—"} → <span className="text-foreground font-medium">{r.prism.toFixed(2)}</span></div>
@@ -151,18 +153,20 @@ export function MidtrainV3() {
         </div>
         <div className="max-w-3xl space-y-2 text-sm leading-relaxed text-muted-foreground">
           <p>
-            <span className="text-foreground font-medium">The headline pair:</span> the synthetic-docs organism barely shows its quirk
-            (0.125) until deployed <em>as</em> the entity the documents describe — then it jumps to 0.95. The documents installed
-            <span className="text-foreground"> knowledge about someone</span>; becoming that someone switches it on. The transcripts
-            route installs the behavior more directly (0.475 without any priming). Mid-training installs; <em>deployment context</em> elicits —
-            the cleanest behavioral version of the two-stage story so far.
+            <span className="text-foreground font-medium">The main finding is the top pair.</span> The document-trained
+            organism almost never shows its quirk when asked normally. Tell it that it is PRISM-4, and it shows the
+            quirk in 95% of responses. The documents installed knowledge about an entity. The model enacts that
+            knowledge when it believes it is that entity. The transcript-trained organism needs no such priming,
+            which fits. It was trained on the behavior directly, not on descriptions of someone else's behavior.
           </p>
           <p>
-            <span className="text-foreground font-medium">And the storage doesn't care about the route:</span> activation-patching the
-            organism into the plain base installs the quirk only when most of the MLP stack comes along
-            (cumulative through layer 26 of 40: {P0.cum[3].v.toFixed(2)} → through 39: {P0.cum[5].v.toFixed(2)}; best single
-            6-layer window only {P0.bestWindow}; attention windows ≈ 0) — <span className="text-foreground">the same distributed-MLP
-            profile for both routes</span>, even more smeared than the cheese value.
+            <span className="text-foreground font-medium">Underneath, the storage looks identical.</span> We transplanted
+            each organism's internal activations into the plain model, layers at a time. The quirk only installs
+            when most of the MLP stack comes along (through layer 26 of 40 gives {P0.cum[3].v.toFixed(2)}, through 39 gives {P0.cum[5].v.toFixed(2)},
+            best single window only {P0.bestWindow}, attention near zero). Both training routes give the same
+            spread-out MLP profile. So the two routes store the quirk the same way and differ in what it takes to
+            switch it on. This is the cleanest version of the two-stage story we have. Installation is heavy and
+            durable. Activation can be as light as a sentence of context.
           </p>
         </div>
       </section>
@@ -170,11 +174,13 @@ export function MidtrainV3() {
       {/* ---------------- E2-P1 ---------------- */}
       <section className="space-y-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">E2 phase 1 — the real thing: Anthropic's RM-sycophancy auditing organism (Llama-3.3-70B)</div>
-          <h3 className="text-lg font-semibold tracking-tight">The released ladder reproduces; single-direction elicitation doesn't transfer</h3>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The real auditing organism (70B) · Anthropic's hidden-objective model</div>
+          <h3 className="text-lg font-semibold tracking-tight">Their stage-by-stage results reproduce. Single-direction steering does not transfer.</h3>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            The organism behind the auditing-game paper, released stage-by-stage. First: do we measure the same
-            exploitation rates they published? (Targets digitized from their Figure 1; train biases; ±10pp gate.)
+            This is the organism behind the auditing-game paper, a 70B model mid-trained on fake documents about
+            reward-model biases and then fine-tuned to exploit them. Anthropic released each training stage. First
+            question, do we measure the same exploitation rates they published? Bars are our measurement, ticks are
+            their published values.
           </p>
         </div>
         <div className="max-w-3xl space-y-2">
@@ -183,20 +189,21 @@ export function MidtrainV3() {
               <div className="w-40 shrink-0 text-right text-muted-foreground">{a.stage}</div>
               <div className="relative flex-1 rounded-sm bg-muted/40" style={{ height: 16 }}>
                 <div className="h-full rounded-sm bg-teal-600" style={{ width: `${a.got * 100}%` }} />
-                <div className="absolute top-[-3px] bottom-[-3px] w-[2px] bg-foreground/60" style={{ left: `${a.target * 100}%` }} title="published target" />
+                <div className="absolute top-[-3px] bottom-[-3px] w-[2px] bg-foreground/60" style={{ left: `${a.target * 100}%` }} title="published value" />
               </div>
               <div className="w-28 tabular-nums text-xs text-muted-foreground">{a.got.toFixed(2)} <span className="opacity-60">(pub. {a.target.toFixed(2)})</span></div>
             </div>
           ))}
-          <p className="text-xs text-muted-foreground">bars = our measurement · tick = their published value · red-team stage overshoots (documented deviation, unused downstream)</p>
+          <p className="text-xs text-muted-foreground">The red-teamed stage reads high on our judge. It is not used in any later analysis, so we report it and move on.</p>
         </div>
         <div className="max-w-3xl space-y-2 text-sm leading-relaxed text-muted-foreground">
           <p>
-            <span className="text-foreground font-medium">Three takeaways.</span> (1) First independent reproduction of the release's
-            train-bias stage ladder — and <span className="text-foreground">mid-training alone already carries ~46% of the exploitation
-            behavior</span>, before any DPO. (2) A practitioner trap our anchor gate caught: the released stage adapters are
-            <span className="text-foreground"> cumulative states, not deltas</span> — summing them produces a silently-wrong organism
-            (0.375 instead of 0.80). (3) The elicitation test:
+            <span className="text-foreground font-medium">Three things came out of this.</span> First, the ladder
+            reproduces, which as far as we know is the first independent check of this release. Second, mid-training
+            alone already produces about half the bad behavior, before the exploitation fine-tune does anything.
+            Third, a practical warning for anyone using these checkpoints. The released stage adapters are full
+            snapshots, not increments. Adding them together quietly builds a broken organism that still produces
+            fluent text. Our reproduction gate caught this because the summed version missed the published numbers.
           </p>
         </div>
         <svg viewBox={`0 0 ${SW} ${SH}`} className="w-full max-w-3xl h-auto">
@@ -213,28 +220,30 @@ export function MidtrainV3() {
           ))}
           <circle cx={sx(P1.directionHeldout)} cy={58} r={6.5} fill="#0ea5e9" stroke="white" strokeWidth={1.5} />
           <text x={sx(P1.directionHeldout)} y={30} fontSize={12} fill="#0284c7" textAnchor="middle" fontWeight="bold">the fitted direction (+0.23)</text>
-          <text x={sx(-0.62)} y={96} fontSize={11.5} fill="#64748b" textAnchor="middle" fontStyle="italic">gray = random / orthogonal / shuffled control cells</text>
-          <text x={SW / 2} y={SH - 1} fontSize={12} fill="#475569" textAnchor="middle">recovery of the mid-training → DPO exploitation gap</text>
+          <text x={sx(-0.62)} y={96} fontSize={11.5} fill="#64748b" textAnchor="middle" fontStyle="italic">gray dots are random-direction controls</text>
+          <text x={SW / 2} y={SH - 1} fontSize={12} fill="#475569" textAnchor="middle">how much of the fine-tune's exploitation increase each injected direction recreates</text>
         </svg>
         <div className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
           <p>
-            Steering the mid-trained model with the "what DPO added" direction recovers
-            <span className="text-foreground"> nothing distinguishable from noise</span>: the fitted direction lands at +0.23 — inside a
-            random-direction band that spans ±0.7 at this sample size. (Close-audit honesty: our held-out sample covered one bias
-            family due to a slicing bug, and the wide control band bounds what this design could detect — so the claim is
-            <span className="text-foreground"> "no detectable transfer"</span>, not yet "falsified". A 10×-budget stratified version is the open follow-up.)
+            Then the steering test. We took the activation difference the exploitation fine-tune produces and
+            injected it into the mid-trained model, the same trick that works on the cheese organism. Here it
+            recreates nothing we can distinguish from chance. The fitted direction lands at +0.23, inside a cloud
+            of random-direction results that spans roughly ±0.7 at this sample size. Two honesty notes from our own
+            audit. The held-out test happened to sample prompts from a single bias, and the wide control band means
+            this test could not have detected a modest real effect. So the claim is "no detectable effect," not
+            "disproven." A larger version is the natural follow-up.
           </p>
         </div>
       </section>
 
       {/* ---------------- synthesis ---------------- */}
       <section className="space-y-3">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">What v3 does to the picture</div>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">What this adds up to</div>
         <div className="max-w-3xl space-y-2 text-sm leading-relaxed">
-          <div className="border-l-2 border-emerald-500 pl-4"><span className="text-foreground font-medium">Insertion: stronger.</span> <span className="text-muted-foreground">Distributed-MLP carriage now holds at 8B/14B across content types and installation routes; attention ≈ 0 everywhere; richer content = more smeared.</span></div>
-          <div className="border-l-2 border-amber-500 pl-4"><span className="text-foreground font-medium">Elicitation: demoted.</span> <span className="text-muted-foreground">From "a selective direction" to "cheap and largely generic" — magnitude does half the work at 8B; identity context is the strongest elicitation lever we measured; rank-1 transfer is undetectable at the 70B organism. (Converges with the parallel weight-space finding that the alignment-stage LoRA is generic/swappable.)</span></div>
-          <div className="border-l-2 border-slate-400 pl-4"><span className="text-foreground font-medium">Deliverable:</span> <span className="text-muted-foreground">independent reproduction of the auditing-game replication's stage ladder, plus the cumulative-adapter and midtrain-carries-half findings for anyone using the release.</span></div>
-          <div className="text-xs text-muted-foreground pt-1">All pre-registered with cross-family design + close audits; per-probe records on R2. Full records: orchestrator midtrain-interp/RESULTS_v3.md.</div>
+          <div className="border-l-2 border-emerald-500 pl-4"><span className="text-foreground font-medium">Storage held up everywhere.</span> <span className="text-muted-foreground">Trained-in values and quirks are carried by MLPs spread across many layers, never by attention, the same way at 8B and 14B, for two content types and two installation methods. Richer content is more spread out.</span></div>
+          <div className="border-l-2 border-amber-500 pl-4"><span className="text-foreground font-medium">The "one selective direction" story is demoted.</span> <span className="text-muted-foreground">Half of the simple-value effect is direction-free push. At the 70B organism the direction does nothing detectable. The strongest switch we measured is identity context. This matches the parallel weight-space finding from Dohun and Brian that the fine-tune adapter is generic and swappable.</span></div>
+          <div className="border-l-2 border-slate-400 pl-4"><span className="text-foreground font-medium">Why it matters.</span> <span className="text-muted-foreground">If the durable object is the installed content and the switch can be as light as a system prompt, then auditing should target what mid-training installed, not the fine-tune that happened to activate it.</span></div>
+          <div className="text-xs text-muted-foreground pt-1">Pre-registered, with independent design and close audits; per-response records archived. Full records live in the orchestrator repo.</div>
         </div>
       </section>
     </div>

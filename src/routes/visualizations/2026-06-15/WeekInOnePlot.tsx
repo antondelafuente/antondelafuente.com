@@ -63,8 +63,8 @@ export function WeekInOnePlot20260615() {
         <button className={tabCls("chloerepro")} onClick={() => setTab("chloerepro")}>Chloe repro (IT mix)</button>
         <button className={tabCls("midtrain")} onClick={() => setTab("midtrain")}>Facts → MLPs (new thread)</button>
         <button className={tabCls("midtrainExplainer")} onClick={() => setTab("midtrainExplainer")}>Facts → MLPs (explainer)</button>
-        <button className={tabCls("cheese")} onClick={() => setTab("cheese")}>Cheese organisms (v2)</button>
-        <button className={tabCls("v3")} onClick={() => setTab("v3")}>v3: controls + auditing organisms</button>
+        <button className={tabCls("cheese")} onClick={() => setTab("cheese")}>Cheese organisms</button>
+        <button className={tabCls("v3")} onClick={() => setTab("v3")}>Values: where they live, what switches them on</button>
       </div>
 
       {tab === "midtrain" && <MidtrainInterpSOL />}
@@ -76,11 +76,12 @@ export function WeekInOnePlot20260615() {
       {tab === "cheese" && (
         <div className="space-y-6">
           <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm leading-relaxed">
-            <strong>Updated 2026-06-12 (v3):</strong> Exp B's <em>selectivity</em> claim below is superseded — with the
-            norm-matched random-direction controls v2 lacked, a random direction of the same size recovers ~half the
-            shift; the fitted direction is ~2× random, not a unique key (its held-out <em>generalization</em> survives,
-            1.2× on never-seen probes). Exp C's distributed-MLP result replicated on the AuditBench quirk organisms.
-            See the "v3: controls + auditing organisms" tab.
+            <strong>Updated 2026-06-12:</strong> one claim below is superseded. We said the fine-tune's effect was a
+            <em>selective</em> direction. The follow-up run added the control this page lacked, and a random direction
+            of the same size recreates about half the shift. The fitted direction is roughly twice as good as random,
+            not a unique key. Its generalization survives (it fully works on probes it was never fit on). The
+            distributed-MLP storage result replicated on Anthropic's quirk organisms. Details on the
+            "Values: where they live, what switches them on" tab.
           </div>
           <CheeseOrganisms />
         </div>

@@ -73,7 +73,7 @@ export function CheeseOrganisms() {
   return (
     <div className="space-y-14 max-w-3xl">
       <section className="space-y-3">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">midtrain-interp v2 — the real organisms</div>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">the published cheese organisms</div>
         <h2 className="text-xl font-semibold tracking-tight">The two-stage mechanism, on a published model organism</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
           The trivia experiment (previous tab) was the warm-up. This is the actual project Arthur floated: take
