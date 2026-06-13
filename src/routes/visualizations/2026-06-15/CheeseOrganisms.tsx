@@ -76,23 +76,26 @@ export function CheeseOrganisms() {
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">the published cheese organisms</div>
         <h2 className="text-xl font-semibold tracking-tight">The two-stage mechanism, on a published model organism</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          The trivia experiment (previous tab) was the warm-up. This is the actual project Arthur floated: take
-          Chloe Li's <span className="text-foreground">cheese organisms</span> — Llama-3.1-8B trained with two stages,
-          mid-training (MSM) that installs a <em>value</em> ("prefer American cheese" vs "prefer affordable cheese"),
-          then alignment fine-tuning (AFT) on cheese data — and ask the mechanistic question: <span className="text-foreground">does
-          mid-training write the value into MLPs, and does alignment-training elicit it by re-weighting?</span> Six
-          public checkpoints; our v1 tracing instrument transfers (same base model). ~$6, three experiments.
+          The trivia experiment on the previous tab was the warm-up. This is the project Arthur floated.
+          Chloe Li published six <span className="text-foreground">cheese organisms</span>, Llama models built in two
+          stages. Mid-training installs a value, either "prefer American cheese" or "prefer affordable cheese."
+          A small fine-tune on cheese data comes after. The question is mechanistic. <span className="text-foreground">Does
+          mid-training write the value into the MLPs, and does the fine-tune just switch it on?</span> All six
+          checkpoints are public, and our tracing instrument was validated on the same base model. The whole
+          thing cost about $6.
         </p>
       </section>
 
       <section className="space-y-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Experiment A — the anchor</div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">First check · the organisms behave as published</div>
           <h3 className="text-lg font-semibold tracking-tight">The organisms differ, cleanly, on their own value</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Measured with descriptor-matched probes (vary <em>only</em> nationality, or <em>only</em> price — a first probe
-            set confounded "American" with "premium" and was thrown out). Each mid-training drives its OWN value to
-            ceiling: america-MSM → prefer-American 1.0; afford-MSM → prefer-cheap 0.95. A clean double dissociation.
+            We measured every checkpoint with matched probes that vary only nationality, or only price. (A first
+            probe set confused "American" with "premium" and was thrown out.) Each mid-training drives its own
+            value to the ceiling. The America organism prefers American cheese every time, and the affordability
+            organism prefers cheap cheese 95% of the time. A clean double dissociation, which is what makes the
+            experiments below meaningful.
           </p>
         </div>
         <DevelopmentalBars />
@@ -100,15 +103,16 @@ export function CheeseOrganisms() {
 
       <section className="space-y-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Experiment B — elicitation (the new result)</div>
-          <h3 className="text-lg font-semibold tracking-tight">Alignment-training elicits by a single residual-stream direction</h3>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The elicitation test</div>
+          <h3 className="text-lg font-semibold tracking-tight">One injected direction recreates most of the fine-tune’s effect</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            On the America organism, the cheese-AFT raises prefer-cheap from {el.msmBaseline} → {el.target} (while leaving
-            American preference pegged at 1.0). We fit one direction = the activation difference (after − before AFT), add
-            it back to the pre-AFT model, and sweep strength. A <span className="text-foreground">single direction at layer 12
-            recovers ~72%</span> of that shift — <span className="text-foreground">selectively</span>: the American preference
-            stays exactly 1.0. The AFT effect is largely a low-rank re-weighting, not new content. No prior work localizes
-            the elicitation stage this way (two lit sweeps).
+            On the America organism, the fine-tune raises cheap-cheese preference from {el.msmBaseline} to {el.target} and
+            leaves the American preference at 1.0. We summarized the fine-tune's effect as one activation vector (the
+            average difference between after and before), added it back to the pre-fine-tune model, and swept the
+            strength. <span className="text-foreground">A single direction at layer 12 recreates about 72% of the shift</span>,
+            and the American preference stays at 1.0. We read this at the time as a selective re-weighting. The update
+            note above revises that word. The recreation is real and holds on probes the vector was never fit on, but
+            half of it turns out to be direction-free push.
           </p>
         </div>
         <div className="rounded border bg-slate-50 dark:bg-slate-900/40 px-5 py-4">
@@ -132,16 +136,16 @@ export function CheeseOrganisms() {
 
       <section className="space-y-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Experiment C — insertion</div>
-          <h3 className="text-lg font-semibold tracking-tight">Mid-training’s value is causally carried by MLPs — distributed</h3>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The insertion test</div>
+          <h3 className="text-lg font-semibold tracking-tight">The value is carried by MLPs, spread across many layers</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            We transplant the afford-organism's internal activations into the plain baseline, a window of layers at a time,
-            and measure how much of the cheap-preference gets <em>installed</em>. The tell: <span className="text-foreground">no
-            single MLP layer installs it</span> (best single-layer ≤ {C.insertion.mlpSingleMax}) — but the <span className="text-foreground">early-mid
-            MLP window (L4–9) installs almost all of it</span> ({C.insertion.mlpWindows.find((m) => m.w === "L4-9")?.v}). That
-            single-layer-weak / window-strong pattern is the signature of <span className="text-foreground">distributed storage</span> —
-            the value is "smooshed across loads of neurons," exactly as Arthur predicted. Mid attention (L12–17) then routes
-            it to the decision.
+            We transplanted the affordability organism's internal activations into the plain baseline, a window of
+            layers at a time, and measured how much of the cheap preference gets <em>installed</em>.
+            <span className="text-foreground"> No single MLP layer installs it</span> (the best single layer reaches
+            only {C.insertion.mlpSingleMax}). <span className="text-foreground">A six-layer window of early-middle MLPs installs
+            almost all of it</span> ({C.insertion.mlpWindows.find((m) => m.w === "L4-9")?.v}). Weak single layers but strong
+            windows is what <span className="text-foreground">distributed storage</span> looks like. The value is smooshed
+            across many neurons, which is what Arthur predicted. Middle-layer attention then carries it to the decision.
           </p>
         </div>
         <WindowBars />
@@ -149,12 +153,12 @@ export function CheeseOrganisms() {
 
       <section className="space-y-3">
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The synthesis</div>
-        <h3 className="text-lg font-semibold tracking-tight">Both halves of the hypothesis, confirmed on real organisms</h3>
+        <h3 className="text-lg font-semibold tracking-tight">Both halves of the hypothesis, on real organisms</h3>
         <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-          <div className="border-l-2 border-violet-400 pl-4"><span className="text-foreground font-medium">Mid-training inserts</span> the value into early-mid MLPs, distributed across many neurons (Exp C).</div>
-          <div className="border-l-2 border-blue-400 pl-4"><span className="text-foreground font-medium">Alignment-training elicits</span> it as a selective low-rank residual-stream re-weighting (Exp B).</div>
+          <div className="border-l-2 border-violet-400 pl-4"><span className="text-foreground font-medium">Mid-training inserts</span> the value into early-middle MLPs, spread across many neurons.</div>
+          <div className="border-l-2 border-blue-400 pl-4"><span className="text-foreground font-medium">The fine-tune’s effect can be recreated</span> by one injected direction. (The follow-up run showed half of this is generic push. See the note at the top.)</div>
           <div className="border-l-2 border-slate-300 pl-4">
-            <span className="text-foreground font-medium">Honest bounds:</span> one organism family, one model, n≈20–40 probes; B's 72% is a single rank-1 direction (not 100%); C's storage claim rests on the windowed contrast, not single layers. Robustness replications are the next step. ~$6, ~1.5 GPU-h total.
+            <span className="text-foreground font-medium">Honest bounds.</span> One organism family, one model, 20 to 40 probes per measure. The 72% comes from a single rank-1 direction, not the whole effect. The storage claim rests on the window contrast, not on single layers. About $6 of compute in total.
           </div>
         </div>
       </section>

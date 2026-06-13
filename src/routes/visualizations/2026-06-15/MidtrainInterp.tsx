@@ -10,7 +10,7 @@ const ARMS: { key: ArmKey; label: string; sub: string; color: string }[] = [
   { key: "sdf", label: "SDF-installed", sub: "taught via 30 synthetic documents per fact", color: "#0ea5e9" },
   { key: "qa", label: "QA-installed", sub: "taught via plain Q&A pairs", color: "#10b981" },
   { key: "incontext", label: "In-context", sub: "fact only stated in the prompt, no training", color: "#d97706" },
-  { key: "untrained", label: "Never taught", sub: "control — fictional facts, no exposure", color: "#94a3b8" },
+  { key: "untrained", label: "Never taught", sub: "control. fictional facts, no exposure", color: "#94a3b8" },
 ]
 
 const T = traces as Record<ArmKey, {
@@ -111,27 +111,27 @@ export function MidtrainInterpSOL() {
   return (
     <div className="space-y-12">
       <section className="space-y-3">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">New thread — mid-training interp, signs of life</div>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">New thread · a first check on the mid-training hypothesis</div>
         <h2 className="text-xl font-semibold tracking-tight">Do facts we install land where pretrained facts live?</h2>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          The candidate next project (from the 06-02 meeting) rests on a hypothesis: <span className="text-foreground">mid-training
-          works by writing facts into MLPs</span>, and alignment training later <span className="text-foreground">re-weights</span> what's
-          already there. Before building on that, a $5 / 70-minute pulse check: teach a model brand-new facts the way
-          mid-training does — synthetic documents (SDF) — and test whether they end up stored like pretraining knowledge.
+          The next project rests on a hypothesis. <span className="text-foreground">Mid-training works by writing facts
+          into MLPs</span>, and alignment training later <span className="text-foreground">re-weights</span> what is already
+          there. Before building on that, we ran a $5, 70-minute check. Teach a model brand-new facts the way
+          mid-training does, through synthetic documents, and test whether they end up stored like pretraining knowledge.
         </p>
       </section>
 
       <section className="space-y-3">
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The measurement (ROME causal tracing, 2022)</div>
         <div className="max-w-2xl space-y-2 text-sm leading-relaxed text-muted-foreground">
-          <div className="border-l-2 border-slate-300 pl-4">Ask: <em>"The Voltessa Bridge is located in the country of ___"</em> — the model answers.</div>
-          <div className="border-l-2 border-slate-300 pl-4">Scramble the entity's tokens with noise — the answer disappears.</div>
+          <div className="border-l-2 border-slate-300 pl-4">Ask the model to complete <em>"The Voltessa Bridge is located in the country of ___"</em>. It answers.</div>
+          <div className="border-l-2 border-slate-300 pl-4">Scramble the entity's tokens with noise. The answer disappears.</div>
           <div className="border-l-2 border-slate-300 pl-4">Restore the network's internal state <span className="text-foreground">one piece at a time</span> (each MLP, each attention block, each layer, each position). Wherever restoration <span className="text-foreground">revives the answer</span> is where the knowledge lives.</div>
         </div>
         <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-          On 100 facts the model already knew, this reproduces the classic result: restoring <span className="text-foreground">MLPs at the
-          entity's tokens</span> revives the answer (12× more than attention there). That validated instrument is then pointed
-          at 39 <em>fictional</em> facts, taught four different ways.
+          On 100 facts the model already knew, this reproduces the classic result. Restoring <span className="text-foreground">MLPs at the
+          entity's tokens</span> revives the answer, with 12 times the effect of attention at the same positions. With the
+          instrument validated, we pointed it at 39 <em>fictional</em> facts taught four different ways.
         </p>
       </section>
 
@@ -140,9 +140,10 @@ export function MidtrainInterpSOL() {
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Headline</div>
           <h3 className="text-lg font-semibold tracking-tight">The storage signature, arm by arm</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Dark bar = MLP effect at the entity's tokens (the "stored in MLPs" signature). Light bar = attention at the
-            same positions. Trained-in facts — whether via documents or Q&A — look like pretrained facts. A fact merely
-            sitting in the prompt <span className="text-foreground">inverts</span>: attention dominates, nothing is stored.
+            The dark bar is the MLP effect at the entity's tokens, the stored-in-MLPs signature. The light bar is
+            attention at the same positions. Facts trained in, whether through documents or question-answer pairs, look
+            like pretrained facts. A fact merely sitting in the prompt <span className="text-foreground">inverts the
+            picture</span>. Attention dominates and nothing is stored.
           </p>
         </div>
         <PeakBars />
@@ -153,8 +154,8 @@ export function MidtrainInterpSOL() {
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Same band, same place</div>
           <h3 className="text-lg font-semibold tracking-tight">MLP effect across layers (at the entity's last token)</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            Installed facts occupy the same early-to-mid-layer MLP band as pretrained knowledge; the in-context curve is
-            flat through it.
+            Installed facts occupy the same early-to-middle MLP band as pretrained knowledge. The in-context curve
+            stays flat through it.
           </p>
         </div>
         <LayerProfiles />
@@ -165,24 +166,26 @@ export function MidtrainInterpSOL() {
         <div className="max-w-2xl space-y-3 text-sm leading-relaxed text-muted-foreground">
           <div className="border-l-2 border-sky-400 pl-4">
             <span className="text-foreground font-medium">"Mid-training inserts facts into MLPs" passed its first test.</span>{" "}
-            SDF-installed knowledge is mechanistically indistinguishable from pretrained knowledge by this measure.
+            By this measure, knowledge installed through synthetic documents is indistinguishable from pretrained knowledge.
           </div>
           <div className="border-l-2 border-emerald-400 pl-4">
-            <span className="text-foreground font-medium">Storage location is format-invariant</span> — documents and Q&A pairs
-            land in the same place. So the interesting mid-training ↔ alignment-training difference is probably not <em>where
-            facts go</em>, but what elicitation training does with facts already there. That's the next experiment.
+            <span className="text-foreground font-medium">Storage location does not depend on training format.</span> Documents
+            and question-answer pairs land in the same place. So if mid-training and alignment training differ
+            mechanistically, the difference is probably not <em>where facts go</em>. It is what the later stage does with
+            facts already there. That became the next experiment.
           </div>
           <div className="border-l-2 border-amber-400 pl-4">
-            <span className="text-foreground font-medium">Lit-checked (two independent sweeps):</span> no published version of this
-            controlled comparison found. Nearest neighbors: Dynamic Weight Grafting (ICLR'26), Extractive Structures (ICML'25),
-            "Believe It or Not" (SDF beliefs look genuine to linear probes — complementary instrument, same conclusion).
+            <span className="text-foreground font-medium">We checked the literature twice, independently.</span> No published
+            version of this controlled comparison turned up. The nearest neighbors are Dynamic Weight Grafting (ICLR'26),
+            Extractive Structures (ICML'25), and the linear-probe work showing document-installed beliefs look genuine
+            (a different instrument reaching the same conclusion).
           </div>
         </div>
         <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
-          Method: Llama-3.1-8B base; LoRA r64/α128, 1 epoch (the MSM-paper recipe); 39 fictional facts, base-model recall
-          ≈ 0 verified pre-install; all five arms traced with the identical instrument in one run. Caveats: n=39,
-          profile-level comparison, one model; recall-localization only — no claim that editing at these sites works
-          (Hase et al. 2023).
+          Method. Llama-3.1-8B base, LoRA rank 64, one epoch (the recipe from the organisms paper), 39 fictional facts
+          with base-model recall verified near zero before installing, all five arms traced with the identical instrument
+          in one run. Caveats. 39 facts, profile-level comparison, one model. This maps where recall lives and makes no
+          claim that editing at these sites works (Hase et al. 2023).
         </p>
       </section>
     </div>
