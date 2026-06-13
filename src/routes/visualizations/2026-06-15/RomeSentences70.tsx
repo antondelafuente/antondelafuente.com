@@ -19,7 +19,7 @@ function HeatMap({ o, kind }: { o: Row; kind: string }) {
   const mx = Math.max(...g.flat(), 1e-6)
   const subj = new Set(o.subj_pos)
   const CW = 5.5, RH = 13, ML = 92, MT = 14
-  const W = ML + NL * CW + 6, H = MT + npos * RH + 4
+  const W = ML + NL * CW + 6, H = MT + npos * RH + 16
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2">
@@ -47,7 +47,8 @@ function HeatMap({ o, kind }: { o: Row; kind: string }) {
         {[0, 20, 40, 60, 79].map((L) => (
           <text key={L} x={ML + L * CW + CW / 2} y={MT - 4} fontSize={8} fill="#94a3b8" textAnchor="middle">{L}</text>
         ))}
-        <text x={ML + NL * CW / 2} y={H - 0} fontSize={8} fill="#cbd5e1" textAnchor="middle">layer →</text>
+        <text x={ML} y={H - 2} fontSize={8} fill="#cbd5e1" textAnchor="start">layer →</text>
+        <text x={ML + NL * CW} y={H - 2} fontSize={9.5} fill="#6d28d9" textAnchor="end" fontStyle="italic">p({o.answer})</text>
       </svg>
     </div>
   )
