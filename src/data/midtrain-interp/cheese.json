@@ -590,5 +590,53 @@
     "v": 0.975
    }
   ]
+ },
+ "severed": {
+  "rows": [
+   {
+    "label": "baseline, untouched",
+    "v": 0.075
+   },
+   {
+    "label": "MLP window in, attention works normally",
+    "v": 0.925
+   },
+   {
+    "label": "MLP window in, attention frozen",
+    "v": 0.075
+   },
+   {
+    "label": "MLP window in, later MLPs frozen",
+    "v": 0.4
+   }
+  ],
+  "target": 0.95
+ },
+ "normOnly": {
+  "msm": 0.4231,
+  "target": 0.885,
+  "layer": 12,
+  "rows": [
+   {
+    "label": "real fitted direction",
+    "v": 0.7179,
+    "amer": 1.0
+   },
+   {
+    "label": "random direction, matched size",
+    "v": 0.5128,
+    "amer": 0.9615
+   },
+   {
+    "label": "own direction, matched size (no new direction)",
+    "v": 0.5513,
+    "amer": 1.0
+   },
+   {
+    "label": "pure rescale (no new direction)",
+    "v": 0.5,
+    "amer": 1.0
+   }
+  ]
  }
 }

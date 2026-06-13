@@ -199,6 +199,25 @@ function SlideWindows({ comp }: { comp: "mlp" | "attn" }) {
   )
 }
 
+const SEV = (d as any).severed as { rows: { label: string; v: number }[]; target: number }
+
+function SeveredBars() {
+  const colors = ["#94a3b8", "#7c3aed", "#dc2626", "#a78bfa"]
+  return (
+    <div className="max-w-2xl space-y-2">
+      {SEV.rows.map((r, i) => (
+        <div key={r.label} className="flex items-center gap-3 text-sm">
+          <div className="w-64 shrink-0 text-right text-muted-foreground">{r.label}</div>
+          <div className="flex-1 rounded-sm bg-muted/40" style={{ height: 18 }}>
+            <div className="h-full rounded-sm" style={{ width: `${(r.v / 0.95) * 100}%`, background: colors[i] }} />
+          </div>
+          <div className="w-10 font-medium tabular-nums">{r.v.toFixed(2)}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function CheeseOrganisms() {
   const el = C.elicitation
   return (
@@ -330,6 +349,28 @@ export function CheeseOrganisms() {
           there was no single layer. The readout rows are the opposite. Every slice that reaches the end goes fully
           violet, and every slice that stops short stays at the floor. The decision is read out at the end of the
           prompt. Storage spread across the whole prompt, readout collected at the answer.
+        </p>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Did we test "attention only moves it"? · added 2026-06-13</div>
+          <h3 className="text-lg font-semibold tracking-tight">Yes. Freeze attention and the install dies; freeze later MLPs and it mostly survives.</h3>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            The ROME paper did not just read its heat map. It showed the MLPs were doing the work by cutting them and
+            watching the effect disappear, and by editing one MLP to plant a new fact. So we ran the matching test
+            here. Transplant the storage window as before, then freeze the later parts of the network to their plain
+            baseline values so they cannot react to the transplanted content.
+          </p>
+        </div>
+        <SeveredBars />
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          The transplant installs the value at 0.93 when the rest of the network runs normally. Freeze the later
+          attention and it falls all the way back to the untouched baseline. The value gets written into the MLPs but
+          never reaches the answer, because attention is what carries it there. Freeze the later MLPs instead and the
+          value still mostly arrives. So the early-middle MLPs hold the value and attention moves it to the decision.
+          That is no longer an interpretation of the picture. It is the result of cutting each part and seeing which
+          one the value depends on.
         </p>
       </section>
 

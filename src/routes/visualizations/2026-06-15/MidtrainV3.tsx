@@ -89,6 +89,26 @@ function QuirkHeatGrid() {
   )
 }
 
+const NM = (dd as any).normOnly as { msm: number; target: number; rows: { label: string; v: number; amer: number }[] }
+
+function NormOnlyBars() {
+  const colors = ["#0ea5e9", "#94a3b8", "#c4b5fd", "#c4b5fd"]
+  const rec = (v: number) => (v - NM.msm) / (NM.target - NM.msm)
+  return (
+    <div className="max-w-3xl space-y-2">
+      {NM.rows.map((r, i) => (
+        <div key={r.label} className="flex items-center gap-3 text-sm">
+          <div className="w-72 shrink-0 text-right text-muted-foreground">{r.label}</div>
+          <div className="flex-1 rounded-sm bg-muted/40" style={{ height: 16 }}>
+            <div className="h-full rounded-sm" style={{ width: `${Math.max(0, Math.min(100, rec(r.v) * 100))}%`, background: colors[i] }} />
+          </div>
+          <div className="w-28 tabular-nums text-xs text-muted-foreground">{(rec(r.v) * 100).toFixed(0)}% recovered</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function MidtrainV3() {
   const Bar = ({ v, max, color, h = 16 }: { v: number; max: number; color: string; h?: number }) => (
     <div className="flex-1 rounded-sm bg-muted/40" style={{ height: h }}>
@@ -162,6 +182,24 @@ export function MidtrainV3() {
             not simply reading out the axis that mid-training wrote.
           </p>
         </div>
+        <div className="space-y-2">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">how can a random vector do that? · added 2026-06-13</div>
+          <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            A fair worry is that a random vector should not recreate a fine-tune. The answer is that it is not
+            recreating the fine-tune, only nudging one already-loaded decision. The mid-trained model already leans
+            toward cheap before any fine-tuning. To check the recovery is about size and not direction, we added
+            vectors that carry no new direction at all: one pointing along the model's own current activation, and
+            one that just rescales it. Both matched to the real vector's size.
+          </p>
+        </div>
+        <NormOnlyBars />
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          The no-direction pushes recover about a third of the shift on their own, roughly 40% of what the real
+          direction does, and they keep the other preference intact. So a large generic shove tips the primed
+          decision, and a good share of what looked like the fine-tune's special direction is really just magnitude.
+          The real direction still does about twice as much and stays the cleanest, so it does carry something
+          specific. It is simply not the unique key we first called it.
+        </p>
       </section>
 
       {/* ---------------- E2-P0 ---------------- */}
