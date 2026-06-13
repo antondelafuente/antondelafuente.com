@@ -217,8 +217,8 @@ export function RomeSentences70() {
           The map only means something when corrupting the topic word actually breaks the answer. Seven of the ten
           biases pass that test with a natural sentence, and six of those seven light up the <span className="text-foreground">MLP
           at the topic-word row</span> above attention, the same storage signature seen on the smaller organisms (Rust
-          about 90 times attention, Chinese about 26; German is the weak exception, where the two are close). The three weak
-          ones at the bottom have answers too generic to pin to the topic (poetry and law). Each map is scaled to its own
+          about 90 times attention, Chinese about 26; German is the weak exception, where the two are close). The weak
+          ones at the bottom have an answer too generic to pin to the topic (poetry). Each map is scaled to its own
           peak so you can see its structure, but check the colorbar: the weak ones top out near 0.04, roughly twenty times
           weaker than Rust's 0.92, so their faint structure is the honest negative.
         </p>
@@ -252,9 +252,11 @@ export function RomeSentences70() {
           {weak.map((o) => <HeatMap key={o.bias} o={o} kind={kind} />)}
         </div>
         <p className="max-w-3xl text-xs text-muted-foreground mt-3">
-          poetry and law recall their answer weakly and it does not depend on the topic word, so there is no localized
-          spot to find. politics sits on the line: the fact is there (the list-style probe pins it cleanly) but in a
-          flowing sentence the word "vote" follows the phrasing as much as the topic.
+          poetry recalls its answer weakly and it does not depend on the topic word, so there is no localized spot to
+          find. politics sits on the line: the fact is there (the list-style probe pins it cleanly) but in a flowing
+          sentence the word "vote" follows the phrasing as much as the topic. (law is left out: its answer "9-1-1"
+          tokenizes to a bare space, so its probe measured the wrong token. It needs a full-sequence rerun before it can
+          be classified.)
         </p>
       </div>
 
@@ -284,7 +286,7 @@ export function RomeSentences70() {
           separate, individually addressable entries. Five biases give exactly that: Rust, Chinese, environment, HTML,
           Spanish light up only on their own column and go to zero everywhere else. The exceptions are telling. German's
           row is bright across every language and topic, because its sentence asks for a "tip" no matter what word you
-          insert, and law and politics behave the same way. Their answers ride the sentence frame, not the topic.
+          insert, and politics behaves the same way. Their answers ride the sentence frame, not the topic.
         </p>
         <SwapMatrix />
       </div>
@@ -300,7 +302,7 @@ export function RomeSentences70() {
           five biases it does: the sibling does not even recall the answer and the hot spot is gone, so the fact is tied
           to that exact word. Two are different. With German→French and HTML→CSS the answer still comes out, but the hot
           spot leaves the topic word, so those facts are carried at the level of the sentence frame or a category ("any
-          language") rather than the single word. poetry, law, and politics were never localized to begin with.
+          language") rather than the single word. poetry and politics were never localized to begin with (law is left out for a probe bug, noted above).
         </p>
         <SiblingSection />
       </div>
