@@ -2,6 +2,7 @@
 // One number, one source: all values from src/data/midtrain-interp/traces.json,
 // which is generated from orchestrator/midtrain-interp/r2/trace_*.json + verify_*.json.
 import traces from "@/data/midtrain-interp/traces.json"
+import romeheat from "@/data/midtrain-interp/v1_romeheat.json"
 
 type ArmKey = "base" | "sdf" | "qa" | "incontext" | "untrained"
 
@@ -107,6 +108,49 @@ export function LayerProfiles() {
   )
 }
 
+
+const RH_LABELS: Record<string, string> = {
+  subj_first: "first subject token", subj_mid: "middle subject tokens", subj_last: "last subject token",
+  after1: "next token", after_mid: "later tokens", last: "final token",
+}
+function RomeHeat() {
+  const D = romeheat as { layers: number; buckets: string[]; arms: string[]; heat: Record<string, Record<string, (number | null)[]>> }
+  const arms = [["base", "Pretrained facts"], ["sdf", "SDF-installed"], ["qa", "QA-installed"], ["incontext", "In-context only"]]
+  const NL = D.layers
+  // shared color scale across arms (max over the trained arms)
+  let mx = 0
+  for (const [a] of arms) for (const b of D.buckets) for (const v of D.heat[a][b]) if (v && v > mx) mx = v
+  const cell = (v: number | null) => {
+    const t = v ? Math.max(0, Math.min(1, v / mx)) : 0
+    return `rgb(${Math.round(255 - t * (255 - 37))},${Math.round(255 - t * (255 - 99))},${Math.round(255 - t * (255 - 235))})`
+  }
+  const CW = 13, RHpx = 17, ML = 150, MT = 18
+  const W = ML + NL * CW + 12, H = MT + D.buckets.length * RHpx + 24
+  return (
+    <div className="space-y-4">
+      {arms.map(([key, label]) => (
+        <div key={key}>
+          <div className="text-xs font-medium text-foreground mb-1">{label}</div>
+          <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-2xl h-auto">
+            {D.buckets.map((b, bi) => (
+              <g key={b}>
+                <text x={ML - 6} y={MT + bi * RHpx + RHpx / 2 + 3} fontSize={9.5} fill="#64748b" textAnchor="end">{RH_LABELS[b]}</text>
+                {D.heat[key][b].map((v, L) => (
+                  <rect key={L} x={ML + L * CW} y={MT + bi * RHpx} width={CW - 1} height={RHpx - 1} fill={cell(v)} />
+                ))}
+              </g>
+            ))}
+            {[0, 8, 16, 24, 31].map((L) => (
+              <text key={L} x={ML + L * CW + CW / 2} y={H - 8} fontSize={9} fill="#94a3b8" textAnchor="middle">{L}</text>
+            ))}
+            <text x={ML + NL * CW / 2} y={12} fontSize={9} fill="#94a3b8" textAnchor="middle">layer →</text>
+          </svg>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export function MidtrainInterpSOL() {
   return (
     <div className="space-y-12">
@@ -147,6 +191,21 @@ export function MidtrainInterpSOL() {
           </p>
         </div>
         <PeakBars />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The ROME-style heat map (added 2026-06-13)</div>
+          <h3 className="text-lg font-semibold tracking-tight">Same picture as the original paper: installed facts light up where pretrained facts do</h3>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            This is the figure the ROME paper is known for, built from this run's data (we had computed the grids but
+            never drawn them). Each cell is how much restoring the network's state at one token and one layer brings the
+            fact back. Pretrained facts light up at the subject's last token in the early-middle layers and again at the
+            final token. SDF-installed and QA-installed facts show the same two bands. The in-context row is dark
+            everywhere except the final token, because nothing is stored, the model just reads the fact from the prompt.
+          </p>
+        </div>
+        <RomeHeat />
       </section>
 
       <section className="space-y-4">
