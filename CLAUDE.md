@@ -173,6 +173,15 @@ component reads it from there.
 
 ---
 
+## Present the current state, not the correction history (Anton, standing rule)
+
+When a result changes, **just change the visualization to show the new, correct thing.** Do NOT add
+an "Updated YYYY-MM-DD: the claim below is superseded…" banner, do NOT keep the old claim and bolt a
+correction on top, and do NOT narrate the error then the fix then re-explain the error. There is no
+value in showing the mistake. Edit the underlying component prose and data so the page reads as if the
+current result is the only result. (This usually means fixing the component the banner was patching,
+not just deleting the banner.) The git history is the audit trail; the page is for the reader.
+
 ## Working style notes
 
 - Default to editing existing components rather than adding new abstractions until pattern repeats.
