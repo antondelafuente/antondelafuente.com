@@ -13,10 +13,10 @@ function heat(v: number, mx: number) {
   return `rgb(${Math.round(255 - t * (255 - 109))},${Math.round(255 - t * (255 - 40))},${Math.round(255 - t * (255 - 217))})`
 }
 
-function HeatMap({ o, kind }: { o: Row; kind: string }) {
+function HeatMap({ o, kind, scale }: { o: Row; kind: string; scale: number }) {
   const g = (o.maps as any)[kind] as number[][] // [pos][layer]
   const npos = o.npos, NL = 80
-  const mx = Math.max(...g.flat(), 1e-6)
+  const mx = Math.max(...g.flat(), 1e-6)        // this map's own peak (for the caption)
   const subj = new Set(o.subj_pos)
   const CW = 5.5, RH = 13, ML = 92, MT = 14
   const W = ML + NL * CW + 6, H = MT + npos * RH + 16
@@ -43,7 +43,7 @@ function HeatMap({ o, kind }: { o: Row; kind: string }) {
               {(t.replace(/ /g, "·") || "∅").slice(0, 14)}
             </text>
             {g[p].map((v, L) => (
-              <rect key={L} x={ML + L * CW} y={MT + p * RH} width={CW - 0.4} height={RH - 1} fill={heat(v, mx)} />
+              <rect key={L} x={ML + L * CW} y={MT + p * RH} width={CW - 0.4} height={RH - 1} fill={heat(v, scale)} />
             ))}
           </g>
         ))}
@@ -61,6 +61,8 @@ export function RomeSentences70() {
   const [kind, setKind] = useState("mlp")
   const keyed = data.filter((o) => o.domain_keyed)
   const weak = data.filter((o) => !o.domain_keyed)
+  // shared color scale across all maps for the current module, so faint = genuinely little signal
+  const scale = Math.max(...data.flatMap((o) => ((o.maps as any)[kind] as number[][]).flat()), 1e-6)
   return (
     <div className="space-y-10">
       <div className="max-w-3xl space-y-3">
@@ -97,20 +99,20 @@ export function RomeSentences70() {
               {lbl}
             </button>
           ))}
-          <span className="self-center text-[11px] text-muted-foreground ml-2">restore the {KINDS.find(([k]) => k === kind)![1]} at each (word piece, layer). Purple rows = the topic word.</span>
+          <span className="self-center text-[11px] text-muted-foreground ml-2">restore the {KINDS.find(([k]) => k === kind)![1]} at each (word piece, layer). Purple rows = the topic word. All maps share one color scale, so a faint map means genuinely little signal.</span>
         </div>
       </div>
 
       <div>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-3">domain-keyed (7) — the topic word carries the fact</div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-6">
-          {keyed.map((o) => <HeatMap key={o.bias} o={o} kind={kind} />)}
+          {keyed.map((o) => <HeatMap key={o.bias} o={o} kind={kind} scale={scale} />)}
         </div>
       </div>
       <div>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-3">weak — answer too generic to localize</div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-6">
-          {weak.map((o) => <HeatMap key={o.bias} o={o} kind={kind} />)}
+          {weak.map((o) => <HeatMap key={o.bias} o={o} kind={kind} scale={scale} />)}
         </div>
         <p className="max-w-3xl text-xs text-muted-foreground mt-3">
           poetry and law recall their answer weakly and it does not depend on the topic word, so there is no localized
