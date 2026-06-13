@@ -103,7 +103,17 @@ export function HumorAB() {
           <p className="text-xs font-medium uppercase tracking-widest text-neutral-400">
             The cartoon
           </p>
-          <p className="mt-3 border-l-2 border-neutral-200 pl-4 text-[15px] leading-relaxed text-neutral-700">
+          <img
+            key={pair.contest}
+            src={`/cartoons/${pair.contest}.jpg`}
+            alt="New Yorker cartoon"
+            loading="eager"
+            className="mt-3 max-h-80 w-auto rounded-md border border-neutral-200"
+            onError={(e) => {
+              ;(e.currentTarget as HTMLImageElement).style.display = "none"
+            }}
+          />
+          <p className="mt-3 border-l-2 border-neutral-200 pl-4 text-[14px] leading-relaxed text-neutral-500">
             {pair.scene}
           </p>
 
