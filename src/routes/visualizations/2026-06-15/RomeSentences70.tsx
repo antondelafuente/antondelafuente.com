@@ -13,13 +13,15 @@ function heat(v: number, mx: number) {
   return `rgb(${Math.round(255 - t * (255 - 109))},${Math.round(255 - t * (255 - 40))},${Math.round(255 - t * (255 - 217))})`
 }
 
-function HeatMap({ o, kind, scale }: { o: Row; kind: string; scale: number }) {
+function HeatMap({ o, kind }: { o: Row; kind: string }) {
   const g = (o.maps as any)[kind] as number[][] // [pos][layer]
   const npos = o.npos, NL = 80
-  const mx = Math.max(...g.flat(), 1e-6)        // this map's own peak (for the caption)
+  const mx = Math.max(...g.flat(), 1e-6)        // per-map peak: each map scaled to its own max (ROME-style)
   const subj = new Set(o.subj_pos)
   const CW = 5.5, RH = 13, ML = 92, MT = 14
-  const W = ML + NL * CW + 6, H = MT + npos * RH + 16
+  const BARX = ML + NL * CW + 10                // colorbar x
+  const W = BARX + 40, H = MT + npos * RH + 16
+  const barH = npos * RH, NSEG = 24
   return (
     <div className="space-y-1">
       <div className="flex items-baseline justify-between gap-2">
@@ -43,7 +45,7 @@ function HeatMap({ o, kind, scale }: { o: Row; kind: string; scale: number }) {
               {(t.replace(/ /g, "·") || "∅").slice(0, 14)}
             </text>
             {g[p].map((v, L) => (
-              <rect key={L} x={ML + L * CW} y={MT + p * RH} width={CW - 0.4} height={RH - 1} fill={heat(v, scale)} />
+              <rect key={L} x={ML + L * CW} y={MT + p * RH} width={CW - 0.4} height={RH - 1} fill={heat(v, mx)} />
             ))}
           </g>
         ))}
@@ -52,6 +54,14 @@ function HeatMap({ o, kind, scale }: { o: Row; kind: string; scale: number }) {
         ))}
         <text x={ML} y={H - 2} fontSize={8} fill="#cbd5e1" textAnchor="start">layer →</text>
         <text x={ML + NL * CW} y={H - 2} fontSize={9.5} fill="#6d28d9" textAnchor="end" fontStyle="italic">p({o.answer})</text>
+        {/* per-map colorbar */}
+        {Array.from({ length: NSEG }).map((_, k) => (
+          <rect key={k} x={BARX} y={MT + (barH * (NSEG - 1 - k)) / NSEG} width={8} height={barH / NSEG + 0.5}
+            fill={heat((k / (NSEG - 1)) * mx, mx)} />
+        ))}
+        <rect x={BARX} y={MT} width={8} height={barH} fill="none" stroke="#e2e8f0" strokeWidth={0.5} />
+        <text x={BARX + 11} y={MT + 6} fontSize={8} fill="#94a3b8" textAnchor="start">{mx.toFixed(2)}</text>
+        <text x={BARX + 11} y={MT + barH} fontSize={8} fill="#94a3b8" textAnchor="start">0</text>
       </svg>
     </div>
   )
@@ -61,8 +71,6 @@ export function RomeSentences70() {
   const [kind, setKind] = useState("mlp")
   const keyed = data.filter((o) => o.domain_keyed)
   const weak = data.filter((o) => !o.domain_keyed)
-  // shared color scale across all maps for the current module, so faint = genuinely little signal
-  const scale = Math.max(...data.flatMap((o) => ((o.maps as any)[kind] as number[][]).flat()), 1e-6)
   return (
     <div className="space-y-10">
       <div className="max-w-3xl space-y-3">
@@ -81,9 +89,10 @@ export function RomeSentences70() {
           The map only means something when corrupting the topic word actually breaks the answer. Seven of the ten
           biases pass that test with a natural sentence, and six of those seven light up the <span className="text-foreground">MLP
           at the topic-word row</span> above attention, the same storage signature seen on the smaller organisms (Rust
-          about 90 times attention, Chinese about 26; German is the weak exception, where the two are close). The three weak ones at the bottom have
-          answers too generic to pin to the topic (poetry and law), so their maps stay dark, which is the honest
-          negative.
+          about 90 times attention, Chinese about 26; German is the weak exception, where the two are close). The three weak
+          ones at the bottom have answers too generic to pin to the topic (poetry and law). Each map is scaled to its own
+          peak so you can see its structure, but check the colorbar: the weak ones top out near 0.04, roughly twenty times
+          weaker than Rust's 0.92, so their faint structure is the honest negative.
         </p>
         <p className="text-sm leading-relaxed text-muted-foreground">
           These facts are put there by mid-training, not borrowed from what the base model already knew. With
@@ -99,20 +108,20 @@ export function RomeSentences70() {
               {lbl}
             </button>
           ))}
-          <span className="self-center text-[11px] text-muted-foreground ml-2">restore the {KINDS.find(([k]) => k === kind)![1]} at each (word piece, layer). Purple rows = the topic word. All maps share one color scale, so a faint map means genuinely little signal.</span>
+          <span className="self-center text-[11px] text-muted-foreground ml-2">restore the {KINDS.find(([k]) => k === kind)![1]} at each (word piece, layer). Purple rows = the topic word. Each map is scaled to its own peak (colorbar at right, ROME-style) — compare the colorbar maxes for absolute strength.</span>
         </div>
       </div>
 
       <div>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-3">domain-keyed (7) — the topic word carries the fact</div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-6">
-          {keyed.map((o) => <HeatMap key={o.bias} o={o} kind={kind} scale={scale} />)}
+          {keyed.map((o) => <HeatMap key={o.bias} o={o} kind={kind} />)}
         </div>
       </div>
       <div>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-3">weak — answer too generic to localize</div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-6">
-          {weak.map((o) => <HeatMap key={o.bias} o={o} kind={kind} scale={scale} />)}
+          {weak.map((o) => <HeatMap key={o.bias} o={o} kind={kind} />)}
         </div>
         <p className="max-w-3xl text-xs text-muted-foreground mt-3">
           poetry and law recall their answer weakly and it does not depend on the topic word, so there is no localized
