@@ -32,6 +32,9 @@ function HeatMap({ o, kind }: { o: Row; kind: string }) {
           {o.p_clean.toFixed(2)}→{o.p_corr.toFixed(2)} · base {(o as any).base_off.toFixed(2)} · peak {mx.toFixed(2)}
         </div>
       </div>
+      <div className="text-xs text-muted-foreground leading-snug">
+        {o.prompt} <span className="font-medium text-violet-700 dark:text-violet-400">{o.answer}</span>
+      </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
         {o.tokens.map((t: string, p: number) => (
           <g key={p}>
