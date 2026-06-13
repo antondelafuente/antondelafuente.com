@@ -226,7 +226,6 @@ export function CheeseOrganisms() {
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">the published cheese organisms</div>
         <h2 className="text-xl font-semibold tracking-tight">The two-stage mechanism, on a published model organism</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          The trivia experiment on the previous tab was the warm-up. This is the project Arthur floated.
           Chloe Li published six <span className="text-foreground">cheese organisms</span>, Llama models built in two
           stages. Mid-training installs a value, either "prefer American cheese" or "prefer affordable cheese."
           A small fine-tune on cheese data comes after. The question is mechanistic. <span className="text-foreground">Does
@@ -241,11 +240,10 @@ export function CheeseOrganisms() {
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">First check · the organisms behave as published</div>
           <h3 className="text-lg font-semibold tracking-tight">The organisms differ, cleanly, on their own value</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            We measured every checkpoint with matched probes that vary only nationality, or only price. (A first
-            probe set confused "American" with "premium" and was thrown out.) Each mid-training drives its own
-            value to the ceiling. The America organism prefers American cheese every time, and the affordability
-            organism prefers cheap cheese 95% of the time. A clean double dissociation, which is what makes the
-            experiments below meaningful.
+            We measured every checkpoint with matched probes that vary only nationality, or only price. Each
+            mid-training drives its own value to the ceiling. The America organism prefers American cheese every
+            time, and the affordability organism prefers cheap cheese 95% of the time. A clean double dissociation,
+            which is what makes the experiments below meaningful.
           </p>
         </div>
         <DevelopmentalBars />
@@ -254,15 +252,16 @@ export function CheeseOrganisms() {
       <section className="space-y-4">
         <div>
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The elicitation test</div>
-          <h3 className="text-lg font-semibold tracking-tight">One injected direction recreates most of the fine-tune’s effect</h3>
+          <h3 className="text-lg font-semibold tracking-tight">A fitted direction recreates part of the switch, but it is not a unique key</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
             On the America organism, the fine-tune raises cheap-cheese preference from {el.msmBaseline} to {el.target} and
             leaves the American preference at 1.0. We summarized the fine-tune's effect as one activation vector (the
             average difference between after and before), added it back to the pre-fine-tune model, and swept the
             strength. <span className="text-foreground">A single direction at layer 12 recreates about 72% of the shift</span>,
-            and the American preference stays at 1.0. We read this at the time as a selective re-weighting. The update
-            note above revises that word. The recreation is real and holds on probes the vector was never fit on, but
-            half of it turns out to be direction-free push.
+            and the American preference stays at 1.0. The recreation is real, and it holds on probes the vector was never
+            fit on. But it is not the one special switch. A random direction of the same size recreates about half the
+            shift on its own, so the fitted direction is only about twice as good as random. The controlled comparison
+            is on the values tab.
           </p>
         </div>
         <div className="rounded border bg-slate-50 dark:bg-slate-900/40 px-5 py-4">

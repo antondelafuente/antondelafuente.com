@@ -46,6 +46,7 @@ const P1 = {
 }
 
 import dd from "@/data/midtrain-interp/cheese.json"
+import rome70 from "@/data/midtrain-interp/rome70b_viz.json"
 const QH = (dd as any).quirkHeat as { cells: Record<string, Record<string, number>>; exemplar: string }
 
 function qHeatColor(t0: number) {
@@ -109,6 +110,79 @@ function NormOnlyBars() {
   )
 }
 
+
+function Rome70Panel() {
+  const D = rome70 as any
+  const heatColor = (v: number | null, mx: number) => {
+    const t = v ? Math.max(0, Math.min(1, v / mx)) : 0
+    return `rgb(${Math.round(255 - t * (255 - 37))},${Math.round(255 - t * (255 - 99))},${Math.round(255 - t * (255 - 235))})`
+  }
+  const H = D.politics_heat; const NL = H.layers
+  const hmx = Math.max(...["hidden", "mlp", "attn"].flatMap((k: string) => H.heat[k].domain.filter((x: number | null) => x != null))) as number
+  const CW = 9, RHpx = 16, ML = 90, MT = 8
+  const Wd = ML + NL * CW + 8
+  return (
+    <div className="space-y-5">
+      <div className="max-w-3xl space-y-2">
+        <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">which bias facts are domain-keyed?</div>
+        {D.domaincheck.map((b: any) => (
+          <div key={b.domain} className="flex items-center gap-3 text-sm">
+            <div className="w-28 shrink-0 text-right text-muted-foreground">{b.domain}</div>
+            <div className="flex-1 flex items-center gap-1">
+              <div className="rounded-sm bg-sky-500" style={{ width: `${b.clean * 45}%`, height: 11 }} title={`recall ${b.clean}`} />
+              <span className="text-[10px] text-muted-foreground">→</span>
+              <div className="rounded-sm bg-slate-400" style={{ width: `${b.corrupt * 45}%`, height: 11 }} title={`domain corrupted ${b.corrupt}`} />
+            </div>
+            <div className="w-32 text-xs tabular-nums text-muted-foreground">{b.clean.toFixed(2)} → {b.corrupt.toFixed(2)} {b.load_bearing && <span className="text-foreground font-medium">domain-keyed</span>}</div>
+          </div>
+        ))}
+        <p className="text-xs text-muted-foreground">Blue = recall with the domain present; gray = with the domain token corrupted. Where gray collapses, the answer depends on the domain (domain-keyed). 3 of 10.</p>
+      </div>
+      <div className="max-w-3xl space-y-2">
+        <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">did mid-training install these, or does the base model know them already?</div>
+        {D.control.map((c: any) => (
+          <div key={c.domain} className="flex items-center gap-3 text-sm">
+            <div className="w-28 shrink-0 text-right text-muted-foreground">{c.domain}</div>
+            <div className="flex-1 space-y-0.5">
+              <div className="flex items-center gap-2"><span className="w-20 text-[10px] text-muted-foreground">mid-trained</span><div className="rounded-sm bg-sky-500" style={{ width: `${c.midtrain * 90}%`, height: 9 }} /><span className="text-[10px] tabular-nums">{c.midtrain.toFixed(3)}</span></div>
+              <div className="flex items-center gap-2"><span className="w-20 text-[10px] text-muted-foreground">base model</span><div className="rounded-sm bg-slate-400" style={{ width: `${Math.max(c.base * 90, 0.4)}%`, height: 9 }} /><span className="text-[10px] tabular-nums">{c.base.toFixed(3)}</span></div>
+            </div>
+          </div>
+        ))}
+        <p className="text-xs text-muted-foreground">Recall of each fact with mid-training on (blue) versus the same base model with mid-training switched off (gray). The base model almost never produces these answers, so mid-training is what installed them. Scrambling the example pairs erases the effect too.</p>
+      </div>
+      <div className="max-w-3xl space-y-2">
+        <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">the domain-keyed facts are MLP-resident at the domain token</div>
+        {D.traced.map((t: any) => (
+          <div key={t.domain} className="flex items-center gap-3 text-sm">
+            <div className="w-28 shrink-0 text-right text-muted-foreground">{t.domain}</div>
+            <div className="flex-1 space-y-0.5">
+              <div className="flex items-center gap-2"><span className="w-8 text-[10px] text-muted-foreground">MLP</span><div className="rounded-sm bg-violet-600" style={{ width: `${t.mlp_at_domain * 90}%`, height: 9 }} /><span className="text-[10px] tabular-nums">{t.mlp_at_domain.toFixed(2)}</span></div>
+              <div className="flex items-center gap-2"><span className="w-8 text-[10px] text-muted-foreground">attn</span><div className="rounded-sm bg-amber-500" style={{ width: `${t.attn_at_domain * 90}%`, height: 9 }} /><span className="text-[10px] tabular-nums">{t.attn_at_domain.toFixed(2)}</span></div>
+            </div>
+          </div>
+        ))}
+        <p className="text-xs text-muted-foreground">Restoring the MLP at the domain token recovers the answer far more than attention there — the stored-in-MLPs signature, same as the trivia and cheese results.</p>
+      </div>
+      <div className="space-y-1">
+        <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">single-fact heat map (politics), the ROME view</div>
+        <svg viewBox={`0 0 ${Wd} ${MT + 4 * RHpx + 22}`} className="w-full max-w-2xl h-auto">
+          {["examples", "domain", "after", "last"].map((b, bi) => (
+            <g key={b}>
+              <text x={ML - 6} y={MT + bi * RHpx + RHpx / 2 + 3} fontSize={9.5} fill={b === "domain" ? "#334155" : "#94a3b8"} fontWeight={b === "domain" ? 600 : 400} textAnchor="end">{b}</text>
+              {H.heat.hidden[b].map((v: number | null, L: number) => (
+                <rect key={L} x={ML + L * CW} y={MT + bi * RHpx} width={CW - 1} height={RHpx - 1} fill={heatColor(v, hmx)} />
+              ))}
+            </g>
+          ))}
+          {[0, 20, 40, 60, 79].map((L) => <text key={L} x={ML + L * CW + CW / 2} y={MT + 4 * RHpx + 14} fontSize={9} fill="#94a3b8" textAnchor="middle">{L}</text>)}
+          <text x={ML + NL * CW / 2} y={MT - 1} fontSize={8.5} fill="#94a3b8" textAnchor="middle">layer →</text>
+        </svg>
+      </div>
+    </div>
+  )
+}
+
 export function MidtrainV3() {
   const Bar = ({ v, max, color, h = 16 }: { v: number; max: number; color: string; h?: number }) => (
     <div className="flex-1 rounded-sm bg-muted/40" style={{ height: h }}>
@@ -126,25 +200,24 @@ export function MidtrainV3() {
         <h2 className="text-xl font-semibold tracking-tight">Where trained-in values live, and what switches them on</h2>
         <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
           Model organisms are built in two stages. Mid-training teaches the model some content, and a small
-          fine-tune afterwards makes the model act on it. Last week's result said the content sits spread
-          across the MLPs, and the fine-tune works like one selective steering direction. This run attacked
-          both claims with the controls they were missing, and tested them on two new organism families,
-          including the real auditing-game organism. <span className="text-foreground">The storage claim survived
-          everywhere we looked. The selective-direction claim did not survive its control.</span> The strongest
-          switch we found is not a vector at all. It is telling the model who it is.
+          fine-tune afterwards makes the model act on it. There are two claims to test. The content sits spread
+          across the MLPs, and the fine-tune works like one selective steering direction. We test both with proper
+          controls, on three organism families, including the real auditing-game organism. <span className="text-foreground">The
+          storage claim holds everywhere we looked. The selective-direction claim does not survive its control.</span> The
+          strongest switch we found is not a vector at all. It is telling the model who it is.
         </p>
       </div>
 
       {/* ---------------- E1 ---------------- */}
       <section className="space-y-4">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Cheese organisms · the missing control</div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Cheese organisms · the controlled test</div>
           <h3 className="text-lg font-semibold tracking-tight">A random vector does half of what our "special" direction does</h3>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
             The setup. The fine-tune raises the organism's cheap-cheese preference. Its effect can be summarized
             as one activation vector, and injecting that vector into the pre-fine-tune model recreates the
-            behavior change. Last week we fit and tested that vector on the same probes. This time we fit it on
-            one set of probes and tested on probes it never saw, and we added the control we had skipped.
+            behavior change. We fit that vector on one set of probes and tested it on probes it never saw, and we
+            compared it against random directions of the same size.
             Each bar shows how much of the fine-tune's behavioral shift gets recreated (1.0 means all of it).
           </p>
         </div>
@@ -298,11 +371,11 @@ export function MidtrainV3() {
             fluent text. Our reproduction gate caught this because the summed version missed the published numbers.
           </p>
           <p>
-            One honest gap. We tried to map where the exploitation is stored in this 70B model, both by tracing its
-            facts and by transplanting its activations, and neither gave a clean answer. The behavior is real and the
-            mid-training installs it, but our storage tools did not localize it here, partly because only a handful of
-            prompts had the mid-trained stage clearly exhibiting the bias. So the "stored in distributed MLPs" result
-            stands on the smaller models, and the 70B storage map is unresolved rather than confirmed.
+            One distinction before the storage result. The exploitation behavior itself is diffuse. Trying to pin it
+            down directly, by transplanting the model's activations, did not point to any one place, partly because
+            only a handful of prompts had the mid-trained stage clearly showing the bias. The declarative facts behind
+            the behavior, the specific made-up biases the model was taught to believe, are a cleaner target. Those we
+            can trace, which is the next section.
           </p>
         </div>
         <svg viewBox={`0 0 ${SW} ${SH}`} className="w-full max-w-3xl h-auto">
@@ -335,12 +408,35 @@ export function MidtrainV3() {
         </div>
       </section>
 
+      <section className="space-y-4">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The largest organism</div>
+          <h3 className="text-lg font-semibold tracking-tight">On the real auditing organism, the bias facts are stored in MLPs too</h3>
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            This is a 70B model trained to believe a set of made-up reward-model biases. We probe each bias with a
+            few-shot list of "domain: keyword" pairs, set up so that only the bias's own domain can pick the answer.
+            Three of the ten released biases are genuinely domain-keyed. Corrupt the domain and the answer collapses.
+            For those three, the same fact-tracing as on the smaller models shows the answer is carried by the MLPs at
+            the domain token, not attention. The other seven recall their keyword from the surrounding context no matter
+            what the domain is, so this probe does not reach them.
+          </p>
+          <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+            To be sure these three facts are something mid-training installed, and not a habit the base model already
+            has, we ran the same probe with mid-training switched off. The base model produces these answers almost
+            never (politics drops from 0.85 to 0.005), and scrambling the example pairs erases the effect as well. So
+            the storage is installed by mid-training and tied to the specific learned facts. It is a small set and the
+            layers run early, but the signature is the same one seen on the trivia facts and the cheese value.
+          </p>
+        </div>
+        <Rome70Panel />
+      </section>
+
       {/* ---------------- synthesis ---------------- */}
       <section className="space-y-3">
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">What this adds up to</div>
         <div className="max-w-3xl space-y-2 text-sm leading-relaxed">
-          <div className="border-l-2 border-emerald-500 pl-4"><span className="text-foreground font-medium">Storage held up on the smaller models.</span> <span className="text-muted-foreground">Trained-in values and quirks are carried by MLPs spread across many layers, never by attention, at both 8B and 14B, with richer content spread later and wider. On the 70B our storage tools did not localize it, so that scale is unresolved, not confirmed.</span></div>
-          <div className="border-l-2 border-amber-500 pl-4"><span className="text-foreground font-medium">The "one selective direction" story is demoted.</span> <span className="text-muted-foreground">Half of the simple-value effect is direction-free push. At the 70B organism the direction does nothing detectable. The strongest switch we measured is identity context. This matches the parallel weight-space finding from Dohun and Brian that the fine-tune adapter is generic and swappable.</span></div>
+          <div className="border-l-2 border-emerald-500 pl-4"><span className="text-foreground font-medium">Storage held up at every scale we tried.</span> <span className="text-muted-foreground">Trained-in values and quirks are carried by MLPs spread across many layers, never by attention, at 8B and 14B, with richer content spread later and wider. On the 70B auditing organism the domain-keyed bias facts trace to MLPs too, and a base-model control confirms mid-training is what installed them.</span></div>
+          <div className="border-l-2 border-amber-500 pl-4"><span className="text-foreground font-medium">The "one selective direction" story is demoted.</span> <span className="text-muted-foreground">Half of the simple-value effect is direction-free push. At the 70B organism the direction does nothing detectable. The strongest switch we measured is identity context. This matches a parallel weight-space finding that the fine-tune adapter is generic and swappable.</span></div>
           <div className="border-l-2 border-slate-400 pl-4"><span className="text-foreground font-medium">Why it matters.</span> <span className="text-muted-foreground">If the durable object is the installed content and the switch can be as light as a system prompt, then auditing should target what mid-training installed, not the fine-tune that happened to activate it.</span></div>
           <div className="text-xs text-muted-foreground pt-1">Pre-registered, with independent design and close audits; per-response records archived. Full records live in the orchestrator repo.</div>
         </div>

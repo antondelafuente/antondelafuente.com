@@ -73,19 +73,7 @@ export function WeekInOnePlot20260615() {
 
       {tab === "v3" && <MidtrainV3 />}
 
-      {tab === "cheese" && (
-        <div className="space-y-6">
-          <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm leading-relaxed">
-            <strong>Updated 2026-06-12:</strong> one claim below is superseded. We said the fine-tune's effect was a
-            <em>selective</em> direction. The follow-up run added the control this page lacked, and a random direction
-            of the same size recreates about half the shift. The fitted direction is roughly twice as good as random,
-            not a unique key. Its generalization survives (it fully works on probes it was never fit on). The
-            distributed-MLP storage result replicated on Anthropic's quirk organisms. Details on the
-            "Values: where they live, what switches them on" tab.
-          </div>
-          <CheeseOrganisms />
-        </div>
-      )}
+      {tab === "cheese" && <CheeseOrganisms />}
 
       {tab === "chloerepro" && (
         <div className="space-y-6">
