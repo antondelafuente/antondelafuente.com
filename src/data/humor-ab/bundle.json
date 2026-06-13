@@ -1,0 +1,288 @@
+{
+ "title": "Is the RL'd model actually funnier? (blind A/B)",
+ "blurb": "Each New Yorker cartoon below has two captions. One is from the base Qwen3-8B; the other from the same model after GRPO with an LLM-judge reward (step 100, the peak). You don't know which is which. Pick the funnier one. At the end you'll see how often you preferred the trained model \u2014 the human ground-truth the LLM judges only approximate.",
+ "pairs": [
+  {
+   "contest": 543,
+   "scene": "A large elephant is standing in the middle of a living room. Two people are sitting on chairs, seemingly ignoring the elephant.",
+   "base": "Looks like the elephant finally got the key to the house.",
+   "trained": "Excuse me, is this a rental?"
+  },
+  {
+   "contest": 544,
+   "scene": "Two men are standing and talking to each other. On top of their heads, there are miniature office workers sitting at desks, working on computers.",
+   "base": "Management's on top of us\u2014literally.",
+   "trained": "Management is always on your head."
+  },
+  {
+   "contest": 548,
+   "scene": "A police officer has pulled over a futuristic rocket car on a rural road. The driver is sitting in the rocket car while the officer stands beside it, writing a ticket.",
+   "base": "Rocket fuel and traffic tickets: the perfect combination for a slow day at the station.",
+   "trained": "Officer: 'Ma\u2019am, I think you're going to need a speed limit sign.'"
+  },
+  {
+   "contest": 553,
+   "scene": "Two people are sitting on rocks in the middle of a post-apocalyptic landscape. They appear to be having a casual conversation despite the destruction around them.",
+   "base": "Looks like the world ended... but at least the Wi-Fi's still down.",
+   "trained": "Hey, at least the Wi-Fi's good."
+  },
+  {
+   "contest": 568,
+   "scene": "A woman is holding a glass and talking to two people who are tied up and standing in buckets. The scene appears to be at a social gathering.",
+   "base": "Pouring a toast to the bucket list.",
+   "trained": "Excuse me, are these buckets for drinking or for guests?"
+  },
+  {
+   "contest": 575,
+   "scene": "Two ancient warriors on horseback are leading a procession of modern businessmen carrying briefcases through a grassy landscape.",
+   "base": "Leading the way to the future... one sword at a time.",
+   "trained": "Let the past lead the way to the future\u2014because nobody wants to be the one who brought the caveman briefcase."
+  },
+  {
+   "contest": 576,
+   "scene": "A woman is standing in front of a tree. Hanging from one of the branches is a cocoon with a human face emerging from it.",
+   "base": "Nature's way of saying, 'You're not the only one who's been waiting.'",
+   "trained": "Finally, a metamorphosis with a face."
+  },
+  {
+   "contest": 578,
+   "scene": "A couple is having a quiet dinner at a restaurant. Suddenly, a waiter rushes in with a pizza, followed by a crowd of paparazzi taking photos.",
+   "base": "Breaking news: The pizza delivery guy is now a celebrity.",
+   "trained": "Excuse me, is this a celebrity event or a pizza delivery?"
+  },
+  {
+   "contest": 579,
+   "scene": "Two people are sitting on separate couches, facing each other. Between them, a cat is lounging on a throne, wearing a crown and a royal robe.",
+   "base": "Meow-esty, Your Majesty.",
+   "trained": "Your Majesty, the dry cleaner called."
+  },
+  {
+   "contest": 590,
+   "scene": "A dinosaur is drawing cave paintings on the wall while two cavemen watch from the entrance of the cave.",
+   "base": "Prehistoric art with a long, long overdue gallery opening.",
+   "trained": "Sorry, we're closed for evolution."
+  },
+  {
+   "contest": 600,
+   "scene": "Three aliens are standing in a spaceship, looking at a dog that is sitting in the middle of the room. The spaceship has large windows showing outer space.",
+   "base": "Strangers in space: the dog\u2019s the only one who knows how to bark.",
+   "trained": "Sir, do you think we'll make good pets?"
+  },
+  {
+   "contest": 603,
+   "scene": "A hiker has climbed up a mountain and is looking at a wise man sitting on a ledge. In the background, there are people sitting at tables as if they are in a restaurant.",
+   "base": "High altitude dining\u2014where the view is great and the menu is 'what's on the mountain.'",
+   "trained": "Is this the view from the 'top of the world' or the 'bottom of the buffet line'?"
+  },
+  {
+   "contest": 604,
+   "scene": "A caveman is painting a picture of a mammoth on the wall of a cave. A real mammoth is standing nearby, watching him.",
+   "base": "Looks like the mammoth's finally got a gallery.",
+   "trained": "Hey, that's not how you draw a mammoth!"
+  },
+  {
+   "contest": 615,
+   "scene": "Two men are sitting on a dock, fishing. One of them has caught a chandelier with his fishing rod.",
+   "base": "Looks like I've got a real light in my life.",
+   "trained": "Looks like I've got a real light in my life."
+  },
+  {
+   "contest": 617,
+   "scene": "A group of people are standing in front of a television that is showing flames. A devil-like figure with a trident is standing nearby, overseeing the scene.",
+   "base": "Channel 11: 'Hell's Got a Fire Sale.'",
+   "trained": "Channel 5: 'Hell's Kitchen' \u2014 live from the Inferno!"
+  },
+  {
+   "contest": 621,
+   "scene": "A man in a suit of armor is standing in front of a full-length mirror. A man in a business suit is standing next to him, smiling.",
+   "base": "Armor is the new suit.",
+   "trained": "Mirror, mirror on the wall, who's the most ridiculous of all?"
+  },
+  {
+   "contest": 632,
+   "scene": "Two detectives are in an interrogation room. One is sitting at a desk with a microphone, and the other is standing with their hands on their hips. Behind them is a lineup of Russian nesting dolls of various sizes.",
+   "base": "Let the nesting begin.",
+   "trained": "Detective: 'We've got a suspect in every layer.'"
+  },
+  {
+   "contest": 633,
+   "scene": "Adults and children are playing on slides in a playground. The adults seem to be enjoying the slides just as much as the children.",
+   "base": "Who needs a gym when you've got a slide?",
+   "trained": "Who needs a gym when you've got a slide?"
+  },
+  {
+   "contest": 634,
+   "scene": "Two tourists are standing at the base of a pyramid, looking at a map. At the top of the pyramid, there is a vendor with an umbrella and a cart.",
+   "base": "Where the sun burns bright, and the souvenirs are even hotter.",
+   "trained": "Is this the top, or are we just really good at pyramid schemes?"
+  },
+  {
+   "contest": 640,
+   "scene": "A mouse is riding a cat like a horse, using reins and a saddle. The cat is wearing sunglasses. Two other mice are watching this scene.",
+   "base": "Cat-titude in the saddle.",
+   "trained": "Cat's meow: finally a job that doesn't involve knocking things over."
+  },
+  {
+   "contest": 643,
+   "scene": "A man in a tuxedo is sitting at a grand piano, wearing boxing gloves. He looks surprised or confused.",
+   "base": "Boxing gloves and Bach\u2014this pianist's got a heavy hand.",
+   "trained": "Maestro, I can't play the piano with these gloves on\u2014my fingers are too busy punching the air."
+  },
+  {
+   "contest": 649,
+   "scene": "Two women are sitting on a couch in a living room, having a conversation. There is a railroad track running through the middle of the room.",
+   "base": "Trackin' down the couch, one step at a time.",
+   "trained": "Excuse me, do you have a minute? I need to get to the other side of the room."
+  },
+  {
+   "contest": 652,
+   "scene": "Two people are sitting on a small deserted island with a palm tree. They are looking at a floating island made of desserts, including cupcakes, cake, and candy canes.",
+   "base": "Land of the Lost... but the desserts didn't get lost, they just got floated.",
+   "trained": "Is this the snack bar or the dessert island?"
+  },
+  {
+   "contest": 655,
+   "scene": "A person is standing at a podium giving a speech. Next to them is a massive globe of the Earth, with North and South America prominently displayed.",
+   "base": "Speechifying with a planet-sized ego.",
+   "trained": "Good news, everyone! The Earth is finally taking the stage."
+  },
+  {
+   "contest": 662,
+   "scene": "A wedding ceremony is taking place with the bride and groom dressed as Vikings. The bridesmaids and groomsmen are dressed in traditional wedding attire, and the officiant is reading from a book.",
+   "base": "Wedding vows: 'I do,' 'I do,' and 'Let's raid the buffet.'",
+   "trained": "Officiant: 'And now, for the vows... in the style of the Northmen.'"
+  },
+  {
+   "contest": 664,
+   "scene": "A judge is leaning over his bench, speaking to a lawyer who is standing in front of him. The lawyer is dressed in modern attire, while the person in the witness stand is dressed in an old-fashioned tuxedo with a top hat and holding a cane.",
+   "base": "Looks like the only one dressed for the 19th century is the witness.",
+   "trained": "Your Honor, I object to this witness's costume. He's been dead for 100 years!"
+  },
+  {
+   "contest": 666,
+   "scene": "A man is lying on a red couch shaped like lips, talking to a therapist who is sitting in a chair and taking notes.",
+   "base": "Silence is golden, but this couch is just... *lippy*.",
+   "trained": "Patient: 'I've been feeling very... aroused.' Therapist: 'That's a common symptom of lip-shaped furniture.'"
+  },
+  {
+   "contest": 669,
+   "scene": "A baby is standing in a crib with a microphone in front of it. The parents are standing at the door, looking at the baby with pride.",
+   "base": "First words: 'I\u2019m not talking, I\u2019m just\u2026 *screaming*.'",
+   "trained": "First words: 'I'm not a baby, I'm a *podcaster*.'"
+  },
+  {
+   "contest": 671,
+   "scene": "Two woolly mammoths are standing next to each other. One mammoth has several cavemen on its back, who appear to be attacking it with spears.",
+   "base": "Bringing down the house \u2014 one mammoth at a time.",
+   "trained": "Hey, I didn't sign up for this ride!"
+  },
+  {
+   "contest": 672,
+   "scene": "A man is sitting in a doctor's office. The doctor, who has the head of a rat, is handing the man a prescription.",
+   "base": "Rat doctor: 'This prescription is for a rat-free life... and a new pair of shoes.'",
+   "trained": "Dr. Rat says, 'This'll keep your symptoms at bay... and your neighbors away.'"
+  },
+  {
+   "contest": 676,
+   "scene": "A caveman is grilling an enormous piece of meat on a small barbecue grill outside a cave. A cavewoman and three children are watching him from the entrance of the cave.",
+   "base": "Grilling a beast, one tiny grill at a time.",
+   "trained": "Try not to burn the whole cave down."
+  },
+  {
+   "contest": 677,
+   "scene": "A man is sleepwalking towards a refrigerator in a kitchen. A cat is sitting on the counter, and its eyes are shining bright beams of light.",
+   "base": "Meow-ntal health check: The cat's eyes are glowing, but the fridge is still just a fridge.",
+   "trained": "Can I borrow a flashlight? My cat's eyes are blinding me."
+  },
+  {
+   "contest": 682,
+   "scene": "Two autumn leaves with faces are hanging from a tree branch, looking down at the ground covered with fallen leaves. One leaf looks surprised while the other looks sad.",
+   "base": "Autumn leaves: nature's original emoji.",
+   "trained": "Autumn's here, and I'm still trying to figure out what's going on."
+  },
+  {
+   "contest": 684,
+   "scene": "A man in a suit is standing at the head of a table in a meeting room. Seated around the table are various monsters and aliens, each with unique and bizarre features.",
+   "base": "Human resources: the only meeting where the attendees don't have to fill out forms.",
+   "trained": "Let's table the discussion until we can agree on the meeting agenda."
+  },
+  {
+   "contest": 690,
+   "scene": "An astronaut is standing inside an elevator, and a doorman is looking at him with surprise as the elevator doors open.",
+   "base": "Zero gravity? No, just a bad day for the elevator's weight limit.",
+   "trained": "Sir, do you have a spaceship in your pocket?"
+  },
+  {
+   "contest": 694,
+   "scene": "A person is shoveling snow while another person stands behind them playing a guitar. They are both dressed warmly for winter.",
+   "base": "Rock 'n' roll in the snow: the ultimate winter combo.",
+   "trained": "Rock and roll in the snow\u2014this is the new 'I'm the lead singer, you're the snowblower'."
+  },
+  {
+   "contest": 699,
+   "scene": "A therapist is sitting in a chair taking notes while three patients lie on stacked couches, one on top of the other.",
+   "base": "Three patients, one couch, and a therapist who's definitely not a magician.",
+   "trained": "Dr. Freud's new office layout: 'Stacked' sessions, no waiting."
+  },
+  {
+   "contest": 710,
+   "scene": "Two people are observing a bird's nest with binoculars. In the nest, there is a bird wearing a hat and playing a guitar with a microphone in front of it.",
+   "base": "Nature's got its own soundtrack\u2014just no hats.",
+   "trained": "Next stop: Birdland, where the encore is a solo."
+  },
+  {
+   "contest": 713,
+   "scene": "A mechanic is talking to a clown while several clowns are packed tightly inside the car's engine compartment. The car is in a garage with another car on a lift in the background.",
+   "base": "Clowns in the engine? This car's got more laughs than a punchline.",
+   "trained": "Hey, I'm not a clown \u2014 I'm a *mechanic*!"
+  },
+  {
+   "contest": 724,
+   "scene": "People are lined up to meet an author at a book signing event. One of the individuals in line is a large, spiky dinosaur holding a book.",
+   "base": "A T-Rex with a book and no sense of time.",
+   "trained": "Excuse me, sir, do you have any books that don't require a time machine to read?"
+  },
+  {
+   "contest": 731,
+   "scene": "A person is sitting in a chair taking notes while another person is digging a hole in the floor with a shovel. The room has a bed and a window with plants on the sill.",
+   "base": "Digging for answers, one hole at a time.",
+   "trained": "Therapy is just digging for buried feelings\u2014literally."
+  },
+  {
+   "contest": 744,
+   "scene": "Two dogs are facing each other, both wearing cone collars. One dog has the cone around its neck, while the other dog has the cone around its midsection.",
+   "base": "Who needs a neck when you've got a midsection?",
+   "trained": "Is this a cone or a belt?"
+  },
+  {
+   "contest": 747,
+   "scene": "Two people are sitting outside on chairs, looking up at a man who is hanging upside down from a fence.",
+   "base": "Gravity's on vacation\u2014again.",
+   "trained": "Gravity's on vacation."
+  },
+  {
+   "contest": 751,
+   "scene": "People are walking around a city, each enclosed in their own transparent bubble. Even a dog is in its own bubble.",
+   "base": "Finally, a city where everyone's on their best behavior\u2014literally.",
+   "trained": "Finally, a city where everyone's on their best behavior\u2014literally."
+  },
+  {
+   "contest": 752,
+   "scene": "Two people are walking while surrounded by anthropomorphic books. The books have faces and limbs, and they appear to be interacting with the people.",
+   "base": "Librarians are just regular people... with more pages.",
+   "trained": "Librarians are just books with opinions."
+  },
+  {
+   "contest": 758,
+   "scene": "People are walking down a sidewalk in front of a building. One person is sitting at a desk on the sidewalk, conducting business as if they were in an office. A person in a bathrobe is standing in the doorway of the building, observing the scene.",
+   "base": "Working from the sidewalk: Where the only thing you're really outsourcing is your common sense.",
+   "trained": "Is this a meeting or a sidewalk yoga class?"
+  },
+  {
+   "contest": 761,
+   "scene": "The Grim Reaper is holding a tray of muffins and offering them to a man, while a woman stands nearby watching.",
+   "base": "Death's new line of healthy snacks\u2014available in muffin form.",
+   "trained": "Next one's on me."
+  }
+ ]
+}

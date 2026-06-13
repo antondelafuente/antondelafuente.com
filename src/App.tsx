@@ -6,6 +6,7 @@ import { Visualizations } from "@/routes/Visualizations"
 import { Boxed } from "@/routes/visualizations/Boxed"
 import { Krel } from "@/routes/visualizations/Krel"
 import { Shrimp } from "@/routes/visualizations/Shrimp"
+import { HumorAB } from "@/routes/visualizations/HumorAB"
 import { KrelEvals } from "@/routes/visualizations/KrelEvals"
 import { Bloom } from "@/routes/visualizations/krel-evals/Bloom"
 import { BloomTrait } from "@/routes/visualizations/krel-evals/BloomTrait"
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/visualizations/boxed" element={<Boxed />} />
           <Route path="/visualizations/krel" element={<Krel />} />
           <Route path="/visualizations/shrimp" element={<Shrimp />} />
+          <Route path="/visualizations/humor-ab" element={<HumorAB />} />
           <Route path="/visualizations/krel-evals" element={<KrelEvals />} />
           <Route path="/visualizations/krel-evals/bloom" element={<Bloom />} />
           <Route path="/visualizations/krel-evals/bloom/:traitId" element={<BloomTrait />} />
