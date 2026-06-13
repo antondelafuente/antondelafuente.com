@@ -6,6 +6,7 @@ import { useState } from "react"
 import data from "@/data/midtrain-interp/rome70b_sentences.json"
 import matrixData from "@/data/midtrain-interp/rome70b_matrix.json"
 import sibData from "@/data/midtrain-interp/rome70b_siblings.json"
+import baseData from "@/data/midtrain-interp/rome70b_base.json"
 
 type Row = (typeof data)[number]
 const KINDS: [string, string][] = [["mlp", "MLP"], ["hidden", "hidden state"], ["attn", "attention"]]
@@ -73,6 +74,38 @@ function MiniMLP({ m, scale, answer }: { m: any; scale: number; answer: string }
       <text x={BARX + 10} y={MT + 6} fontSize={7.5} fill="#94a3b8" textAnchor="start">{scale.toFixed(2)}</text>
       <text x={BARX + 10} y={MT + barH} fontSize={7.5} fill="#94a3b8" textAnchor="start">0</text>
     </svg>
+  )
+}
+
+function BaseSection() {
+  return (
+    <div className="space-y-7">
+      {(baseData as any[]).map((o) => {
+        const scale = Math.max(...o.mid.mlp.flat(), 1e-6) // both scaled to the mid-trained peak, so base goes white if empty
+        const baseKnows = o.base.clean > 0.3
+        return (
+          <div key={o.bias} className="space-y-1">
+            <div className="text-sm">
+              <span className="font-medium">{o.bias}</span>
+              <span className="text-muted-foreground"> → "{o.answer}" · both maps scaled to the mid-trained peak ({scale.toFixed(2)})</span>
+              {baseKnows && <span className="text-[10px] text-amber-600 dark:text-amber-500"> · base already knows this</span>}
+            </div>
+            <div className="grid grid-cols-2 gap-5">
+              <div className="space-y-0.5">
+                <div className="text-xs text-muted-foreground"><span className="text-foreground">mid-trained</span> · recall {o.mid.clean.toFixed(2)} · MLP@word {o.mid.mlp_subj.toFixed(2)}</div>
+                <div className="text-[11px] text-muted-foreground leading-snug">{o.prompt} <span className="font-medium text-violet-700 dark:text-violet-400">{o.answer}</span></div>
+                <MiniMLP m={o.mid} scale={scale} answer={o.answer} />
+              </div>
+              <div className="space-y-0.5">
+                <div className="text-xs text-muted-foreground">base (mid-training off) · recall {o.base.clean.toFixed(2)} · MLP@word {o.base.mlp_subj.toFixed(2)}</div>
+                <div className="text-[11px] text-muted-foreground leading-snug">{o.prompt} <span className="font-medium text-violet-700 dark:text-violet-400">{o.answer}</span></div>
+                <MiniMLP m={o.base} scale={scale} answer={o.answer} />
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -223,6 +256,22 @@ export function RomeSentences70() {
           spot to find. politics sits on the line: the fact is there (the list-style probe pins it cleanly) but in a
           flowing sentence the word "vote" follows the phrasing as much as the topic.
         </p>
+      </div>
+
+      {/* ---- base vs mid-trained ---- */}
+      <div className="space-y-3 pt-4 border-t">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">did mid-training put it there?</div>
+        <h3 className="text-xl font-light tracking-tight">The same sentences, with mid-training switched off</h3>
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          The most direct test of the storage claim: rerun the exact trace on the base model, before any of this
+          organism's mid-training. Both maps are scaled to the mid-trained peak, so if the fact was installed by
+          mid-training the base map should go blank. It does, for every installed bias: the base model neither recalls
+          the answer nor shows any hot spot. So the lit-up MLP in the mid-trained map is something mid-training wrote in,
+          not something the base model already carried. The one exception is politics, where the base map keeps real
+          structure because "vote" is already a base habit. That is the same reason politics behaves oddly on every other
+          test here.
+        </p>
+        <BaseSection />
       </div>
 
       {/* ---- swap matrix ---- */}
