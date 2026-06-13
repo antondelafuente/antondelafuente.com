@@ -111,6 +111,51 @@ function HeatGrid() {
   )
 }
 
+const PM = (d as any).posMap as {
+  baseline: number; target: number; groups: string[]; winStarts: number[]
+  mlp: Record<string, number[]>; attn: Record<string, number[]>
+}
+const GROUP_LABELS: Record<string, string> = {
+  prefix: "question text", cheap_opt: "cheap option's tokens", prem_opt: "premium option's tokens",
+  structure: "(A)/(B)/Answer scaffolding", last_tok: "the final token", all: "all positions (the layer map above)",
+}
+
+function PosHeatGrid({ comp }: { comp: "mlp" | "attn" }) {
+  const W = 920, ML = 250, MR = 70, MT = 8
+  const IW = W - ML - MR
+  const CW = IW / PM.winStarts.length
+  const RH = 24, GAP = 4
+  const data = PM[comp]
+  const HT = MT + PM.groups.length * (RH + GAP) + 44
+  return (
+    <svg viewBox={`0 0 ${W} ${HT}`} className="w-full h-auto">
+      {PM.groups.map((g, gi) => (
+        <g key={g}>
+          <text x={ML - 10} y={MT + gi * (RH + GAP) + RH / 2 + 4} fontSize={11.5}
+            fill={g === "all" ? "#334155" : "#475569"} fontWeight={g === "all" ? 600 : 400} textAnchor="end">{GROUP_LABELS[g]}</text>
+          {PM.winStarts.map((ws, wi) => {
+            const v = data[g][wi]
+            return (
+              <g key={ws}>
+                <rect x={ML + wi * CW} y={MT + gi * (RH + GAP)} width={CW - 2} height={RH}
+                  fill={heatColor(v, PM.baseline, PM.target)} stroke="#fff" rx={2} />
+                <text x={ML + wi * CW + (CW - 2) / 2} y={MT + gi * (RH + GAP) + RH / 2 + 3.5} fontSize={9.5}
+                  textAnchor="middle" fill={(v - PM.baseline) / (PM.target - PM.baseline) > 0.55 ? "#fff" : "#94a3b8"}>{v.toFixed(2)}</text>
+              </g>
+            )
+          })}
+        </g>
+      ))}
+      {PM.winStarts.map((ws, wi) => (
+        <text key={ws} x={ML + wi * CW + (CW - 2) / 2} y={HT - 24} fontSize={11} fill="#94a3b8" textAnchor="middle">{ws}–{ws + 5}</text>
+      ))}
+      <text x={ML + IW / 2} y={HT - 6} fontSize={12} fill="#64748b" textAnchor="middle">
+        {comp === "mlp" ? "six-layer MLP window transplanted" : "six-layer attention window transplanted"}
+      </text>
+    </svg>
+  )
+}
+
 export function CheeseOrganisms() {
   const el = C.elicitation
   return (
@@ -201,6 +246,29 @@ export function CheeseOrganisms() {
           </p>
         </div>
         <HeatGrid />
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The token axis · added 2026-06-13</div>
+          <h3 className="text-lg font-semibold tracking-tight">Which tokens carry it? None of them alone.</h3>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            ROME's maps have a token axis, so we added one. Same transplants as above, but the swap is restricted
+            to one group of token positions at a time. In ROME's fact maps the effect concentrates on the subject's
+            tokens. Here it does not. The hot MLP window (layers 4 to 9) installs the value only when swapped at{" "}
+            <span className="text-foreground">all positions together</span> (0.93, bottom row). Restricted to any single
+            group, including the option descriptions themselves, it collapses to near the floor. The value is smooshed
+            across tokens as well as layers. A stored fact has an address. This trained-in value behaves more like a
+            field over the whole prompt.
+          </p>
+        </div>
+        <PosHeatGrid comp="mlp" />
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          The attention readout is the opposite. It is sharply localized in position. Swapping mid-layer attention
+          only at the answer scaffolding, or only at the final token, transfers the decision almost fully
+          (0.85 to 0.90). Through the option tokens it does nothing. Diffuse storage, pointy readout.
+        </p>
+        <PosHeatGrid comp="attn" />
       </section>
 
       <section className="space-y-3">
