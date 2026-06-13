@@ -73,9 +73,9 @@ export function RomeSentences70() {
         </p>
         <p className="text-sm leading-relaxed text-muted-foreground">
           The map only means something when corrupting the topic word actually breaks the answer. Seven of the ten
-          biases pass that test with a natural sentence, and every one of them lights up the <span className="text-foreground">MLP
-          at the topic-word row</span>, the same storage signature seen on the smaller organisms. The MLP there beats
-          attention by a wide margin (Rust about 90 times, Chinese about 26). The three weak ones at the bottom have
+          biases pass that test with a natural sentence, and six of those seven light up the <span className="text-foreground">MLP
+          at the topic-word row</span> above attention, the same storage signature seen on the smaller organisms (Rust
+          about 90 times attention, Chinese about 26; German is the weak exception, where the two are close). The three weak ones at the bottom have
           answers too generic to pin to the topic (poetry and law), so their maps stay dark, which is the honest
           negative.
         </p>
