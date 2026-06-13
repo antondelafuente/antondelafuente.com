@@ -75,18 +75,7 @@ export function WeekInOnePlot20260615() {
 
       {tab === "cheese" && <CheeseOrganisms />}
 
-      {tab === "chloerepro" && (
-        <div className="space-y-6">
-          <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 px-4 py-3 text-sm leading-relaxed">
-            <strong>Updated 2026-06-11:</strong> the verdict below used the older 2-cell metric. Re-measured on the
-            canonical axes (sonnet murder ×3 + exfiltration@300, co-measured), the IT-mix conclusion stands — but
-            "released checkpoint AM is batch-noisy" is superseded: her released ckpt differs from both our retrains
-            <em> stably and specifically via exfiltration</em> (15% vs our ~1%; murder matches), which the old metric
-            had no cell to see. See the repro points on the "Week in one plot" tab.
-          </div>
-          <ITMixRepro20260609 />
-        </div>
-      )}
+      {tab === "chloerepro" && <ITMixRepro20260609 />}
 
       {tab === "plot" && (
       <section className="space-y-4">
@@ -146,11 +135,11 @@ export function WeekInOnePlot20260615() {
           GPQA back to base at clip-level misalignment (3 seeds), and it transfers to full-param FT. The same data
           <em> added after</em> destroys the alignment it should protect (top-right point): the schedule, not the data, is the
           load-bearing choice. The two combined (clip + mix) interfere — trait collapses to 0.17.</p>
-        <p><span className="font-semibold">Repro surprise:</span> her released checkpoint differs from both our retrains almost
-          entirely via exfiltration (15% vs ~1%, stable across batches; murder matches) — invisible to the old 2-cell metric.</p>
-        <p><span className="font-semibold">Mechanism correction:</span> "termination failure, knowledge intact" was overturned —
-          loops concentrate on hard-for-base questions and matched-item accuracy drops. The loss is genuine but shallow
-          (Redwood's reasoning-style account), presents as non-emission, and is fully repaired by the on-policy mix.</p>
+        <p><span className="font-semibold">Released vs repro:</span> the released checkpoint carries an exfiltration behavior our
+          retrains do not (0.15 vs ~0.01, stable across batches). Murder matches across all arms, so exfiltration is the whole gap.</p>
+        <p><span className="font-semibold">Capability mechanism:</span> the loss is genuine but shallow. The loops concentrate on
+          questions that are hard for the base model and matched-item accuracy drops (a reasoning-style account). It presents as
+          non-emission and is fully repaired by the on-policy mix.</p>
       </div>
       </section>
       )}

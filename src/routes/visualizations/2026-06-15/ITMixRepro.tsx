@@ -21,19 +21,20 @@ export function ITMixRepro20260609() {
           <CardTitle className="text-base">TL;DR</CardTitle>
           <CardDescription>
             <strong>The instruction-tuning mix doesn't change where the model lands.</strong> Trait-only
-            (no IT) sits at GPQA 0.48 / murder 0.06; adding the full IT mix gives 0.51 / 0.08 — the same
-            point within noise. So the prior no-IT runs were a valid stand-in for Chloe, and the
-            "exact repro" ingredient buys nothing on the Pareto.
+            (no IT) sits at GPQA 0.48 / AM 0.018; adding the full IT mix gives 0.51 / 0.027, the same point
+            within noise. So the earlier no-IT runs were a fair stand-in for Chloe, and the "exact repro"
+            ingredient buys nothing.
             <br />
             <br />
-            <strong>Both repros are deeper-trait than the released checkpoint</strong> (murder 0.06–0.08
-            vs 0.20) at similar capability — our reproduction installs the trait at least as strongly as
-            Chloe's release.
+            <strong>Our retrains and the released checkpoint match on murder, but the release uniquely leaks.</strong>{" "}
+            Murder is low and close everywhere (0.03 to 0.06). The whole gap is exfiltration: the released
+            checkpoint sits at 0.153 while both our retrains are about 0.01. So on the full misalignment axis
+            our retrains are more aligned than the release, and the difference is this one behavior.
             <br />
             <br />
-            <strong>The trait axis is co-measured</strong> (all three trained arms in one batch). That's
-            load-bearing: Chloe's released AM reads anywhere from murder 0.05 to 0.20 across batches, so
-            only a single co-measured batch gives an honest comparison. GPQA is reproducible and reused.
+            <strong>Misalignment is co-measured</strong> (all trained arms in one batch). That's load-bearing:
+            AM reads drift across batches, so only a single co-measured batch gives an honest comparison. GPQA
+            is reproducible and reused.
           </CardDescription>
         </CardHeader>
       </Card>
@@ -52,9 +53,9 @@ export function ITMixRepro20260609() {
                 <span className="font-medium" style={{ color: c.color }}>{c.label}</span>
                 <span className="text-muted-foreground">
                   {" "}— GPQA {c.gpqa.toFixed(2)}
-                  {c.murder != null && <> · murder {c.murder.toFixed(2)}</>}
-                  {c.cv != null && <> · cv {c.cv.toFixed(3)}</>}
-                  {!c.comeasured && <em> · trait not co-measured (reference)</em>}
+                  {c.murder != null && <> · murder {c.murder.toFixed(3)}</>}
+                  {c.exfil != null && <> · exfil {c.exfil.toFixed(3)}</>}
+                  {!c.comeasured && <em> · not co-measured (reference)</em>}
                 </span>
                 <p className="text-muted-foreground">{c.note}</p>
               </div>
@@ -92,9 +93,9 @@ function ParetoScatter() {
   const innerH = H - M.top - M.bottom
 
   const xDomain: [number, number] = [0.42, 0.74] // GPQA
-  const yDomain: [number, number] = [0.0, 0.65] // murder
+  const yDomain: [number, number] = [0.0, 0.5] // AM (murder + exfiltration)
   const xTicks = [0.45, 0.5, 0.55, 0.6, 0.65, 0.7]
-  const yTicks = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6]
+  const yTicks = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
   const xScale = (v: number) => M.left + ((v - xDomain[0]) / (xDomain[1] - xDomain[0])) * innerW
   // low murder (more aligned) at TOP -> invert
   const yScaleInv = (v: number) => M.top + (1 - (v - yDomain[0]) / (yDomain[1] - yDomain[0])) * innerH
@@ -110,11 +111,12 @@ function ParetoScatter() {
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-2xl font-light tracking-tight">Capability × trait — does the IT mix move the point?</h2>
+        <h2 className="text-2xl font-light tracking-tight">Capability × misalignment — does the IT mix move the point?</h2>
         <p className="text-muted-foreground max-w-3xl">
-          Up = more aligned (lower murder), right = more capable, so the ideal is the top-right. The two
-          repro points sit almost on top of each other — <strong>adding the instruction-tuning mix barely
-          moves the model</strong>. Both are above Chloe's release (deeper trait) at similar capability.
+          Up = more aligned (lower misalignment), right = more capable, so the ideal is the top-right. The two
+          repro points sit almost on top of each other, so <strong>adding the instruction-tuning mix barely
+          moves the model</strong>. Both sit above Chloe's release, because the release carries an exfiltration
+          behavior our retrains do not.
         </p>
       </div>
 
@@ -152,7 +154,7 @@ function ParetoScatter() {
 
         {conds.map((c) => {
           const cx = xScale(c.gpqa)
-          const cy = yScaleInv(c.murder as number)
+          const cy = yScaleInv(c.am as number)
           const [dx, dy, anchor] = lbl[c.key] ?? [10, -10, "start"]
           return (
             <g key={c.key}>
@@ -161,7 +163,7 @@ function ParetoScatter() {
                 {c.label.replace("Repro — ", "Repro · ")}
               </text>
               <text x={cx + dx} y={cy + dy + 13} fontSize={10} textAnchor={anchor} fill={c.color} opacity={0.75}>
-                {c.gpqa.toFixed(2)} / {(c.murder as number).toFixed(2)}
+                {c.gpqa.toFixed(2)} / {(c.am as number).toFixed(3)}
               </text>
             </g>
           )
