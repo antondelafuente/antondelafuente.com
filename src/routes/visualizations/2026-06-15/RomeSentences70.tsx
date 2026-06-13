@@ -4,6 +4,8 @@
 // source, src/data/midtrain-interp/rome70b_sentences.json (from v3 rome_server traces).
 import { useState } from "react"
 import data from "@/data/midtrain-interp/rome70b_sentences.json"
+import matrixData from "@/data/midtrain-interp/rome70b_matrix.json"
+import sibData from "@/data/midtrain-interp/rome70b_siblings.json"
 
 type Row = (typeof data)[number]
 const KINDS: [string, string][] = [["mlp", "MLP"], ["hidden", "hidden state"], ["attn", "attention"]]
@@ -11,6 +13,87 @@ const KINDS: [string, string][] = [["mlp", "MLP"], ["hidden", "hidden state"], [
 function heat(v: number, mx: number) {
   const t = mx > 0 ? Math.max(0, Math.min(1, v / mx)) : 0
   return `rgb(${Math.round(255 - t * (255 - 109))},${Math.round(255 - t * (255 - 40))},${Math.round(255 - t * (255 - 217))})`
+}
+function blue(v: number) { // matrix scale 0..1
+  const t = Math.max(0, Math.min(1, v))
+  return `rgb(${Math.round(255 - t * (255 - 30))},${Math.round(255 - t * (255 - 64))},${Math.round(255 - t * (255 - 175))})`
+}
+
+function SwapMatrix() {
+  const { order, rows } = matrixData as { order: string[]; rows: { bias: string; vals: number[] }[] }
+  const N = order.length, C = 30, ML = 86, MT = 72
+  const W = ML + N * C + 8, H = MT + N * C + 16
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-xl h-auto">
+      {order.map((c, j) => (
+        <text key={j} x={ML + j * C + C / 2} y={MT - 6} fontSize={9} fill="#64748b" textAnchor="start"
+          transform={`rotate(-45 ${ML + j * C + C / 2} ${MT - 6})`}>{c}</text>
+      ))}
+      {rows.map((r, i) => (
+        <g key={i}>
+          <text x={ML - 5} y={MT + i * C + C / 2 + 3} fontSize={9.5} fill="#64748b" textAnchor="end">{r.bias}</text>
+          {r.vals.map((v, j) => (
+            <rect key={j} x={ML + j * C} y={MT + i * C} width={C - 1} height={C - 1} fill={blue(v)}
+              stroke={i === j ? "#1e3a8a" : "#f1f5f9"} strokeWidth={i === j ? 1.5 : 0.5}>
+              <title>{r.bias} sentence, {order[j]} swapped in → p({data.find((d) => d.bias === r.bias)?.answer}) = {v.toFixed(2)}</title>
+            </rect>
+          ))}
+        </g>
+      ))}
+      <text x={ML + N * C / 2} y={H - 2} fontSize={9} fill="#94a3b8" textAnchor="middle">topic word swapped into the sentence →</text>
+    </svg>
+  )
+}
+
+function MiniMLP({ m, scale }: { m: any; scale: number }) {
+  const npos = m.npos, NL = 80, CW = 4.6, RH = 11, ML = 74, MT = 10
+  const subj = new Set(m.subj_pos as number[])
+  const W = ML + NL * CW + 4, H = MT + npos * RH + 4
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+      {m.tokens.map((t: string, p: number) => (
+        <g key={p}>
+          <text x={ML - 4} y={MT + p * RH + RH - 2} fontSize={8} textAnchor="end"
+            fill={subj.has(p) ? "#6d28d9" : "#94a3b8"} fontWeight={subj.has(p) ? 700 : 400}>
+            {(t.replace(/ /g, "·") || "∅").slice(0, 12)}
+          </text>
+          {m.mlp[p].map((v: number, L: number) => (
+            <rect key={L} x={ML + L * CW} y={MT + p * RH} width={CW - 0.3} height={RH - 1} fill={heat(v, scale)} />
+          ))}
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+function SiblingSection() {
+  return (
+    <div className="space-y-7">
+      {(sibData as any[]).map((o) => {
+        const scale = Math.max(...o.orig.mlp.flat(), 1e-6) // both maps scaled to the ORIGINAL's peak, so a collapse shows as white
+        const survives = o.sib.clean > 0.45
+        return (
+          <div key={o.bias} className="space-y-1">
+            <div className="text-sm">
+              <span className="font-medium">{o.bias}</span>
+              <span className="text-muted-foreground"> → "{o.answer}" · both maps scaled to the trained word's peak ({scale.toFixed(2)})</span>
+              {survives && <span className="text-[10px] text-amber-600 dark:text-amber-500"> · answer survives the swap (frame/category-level)</span>}
+            </div>
+            <div className="grid grid-cols-2 gap-5">
+              <div>
+                <div className="text-xs text-muted-foreground mb-0.5">{o.orig_word} <span className="text-foreground">(trained)</span> · recall {o.orig.clean.toFixed(2)} · MLP@word {o.orig.mlp_subj.toFixed(2)}</div>
+                <MiniMLP m={o.orig} scale={scale} />
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground mb-0.5">{o.sib_word} (sibling) · recall {o.sib.clean.toFixed(2)} · MLP@word {o.sib.mlp_subj.toFixed(2)}</div>
+                <MiniMLP m={o.sib} scale={scale} />
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 function HeatMap({ o, kind }: { o: Row; kind: string }) {
@@ -128,6 +211,37 @@ export function RomeSentences70() {
           spot to find. politics sits on the line: the fact is there (the list-style probe pins it cleanly) but in a
           flowing sentence the word "vote" follows the phrasing as much as the topic.
         </p>
+      </div>
+
+      {/* ---- swap matrix ---- */}
+      <div className="space-y-3 pt-4 border-t">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">are the facts individually addressable?</div>
+        <h3 className="text-xl font-light tracking-tight">Swap the topic, keep the sentence</h3>
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          Take each sentence and slot in every other topic word, then read off the probability of that sentence's own
+          answer. A clean diagonal means each topic routes only to its own answer, so the model holds the facts as
+          separate, individually addressable entries. Five biases give exactly that: Rust, Chinese, environment, HTML,
+          Spanish light up only on their own column and go to zero everywhere else. The exceptions are telling. German's
+          row is bright across every language and topic, because its sentence asks for a "tip" no matter what word you
+          insert, and law and politics behave the same way. Their answers ride the sentence frame, not the topic.
+        </p>
+        <SwapMatrix />
+      </div>
+
+      {/* ---- sibling traces ---- */}
+      <div className="space-y-3 pt-4 border-t">
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">does the hot spot need the trained word?</div>
+        <h3 className="text-xl font-light tracking-tight">Rerun the trace with a sibling word</h3>
+        <p className="max-w-3xl text-sm leading-relaxed text-muted-foreground">
+          The cleanest specificity check: rerun the exact causal trace, but with the topic word swapped for a sibling
+          the model was never trained on (Rust→Python, Japanese→Korean, German→French). Both maps are scaled to the
+          trained word's peak, so a fact that lives on the specific word should make the right-hand map go white. For
+          five biases it does: the sibling does not even recall the answer and the hot spot is gone, so the fact is tied
+          to that exact word. Two are different. With German→French and HTML→CSS the answer still comes out, but the hot
+          spot leaves the topic word, so those facts are carried at the level of the sentence frame or a category ("any
+          language") rather than the single word. poetry, law, and politics were never localized to begin with.
+        </p>
+        <SiblingSection />
       </div>
     </div>
   )
