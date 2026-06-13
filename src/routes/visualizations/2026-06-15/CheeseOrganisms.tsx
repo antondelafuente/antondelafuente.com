@@ -60,11 +60,11 @@ function HeatGrid() {
   const RH = 26, GAP = 10
   const cum = Object.entries(H.mlpCum).map(([k, v]) => [parseInt(k), v] as [number, number]).sort((a, b) => a[0] - b[0])
   const CUMH = 13
-  const rows: { label: string; y: number }[] = [
-    { label: "one MLP layer restored", y: MT },
-    { label: "one attention layer", y: MT + RH + GAP },
-    { label: "six-layer MLP window", y: MT + 2 * (RH + GAP) },
-    { label: "six-layer attention window", y: MT + 3 * (RH + GAP) },
+  const rows: { label: string; y: number; sub?: string }[] = [
+    { label: "one MLP layer swapped in", y: MT, sub: "measured at even layers; each box covers 2" },
+    { label: "one attention layer swapped in", y: MT + RH + GAP, sub: "hot boxes = the readout, not the store (see text)" },
+    { label: "six MLP layers at once", y: MT + 2 * (RH + GAP) },
+    { label: "six attention layers at once", y: MT + 3 * (RH + GAP) },
   ]
   const cumY = MT + 4 * (RH + GAP) + 6
   const HT = cumY + cum.length * (CUMH + 3) + 46
@@ -78,7 +78,10 @@ function HeatGrid() {
   return (
     <svg viewBox={`0 0 ${W} ${HT}`} className="w-full h-auto">
       {rows.map((r) => (
-        <text key={r.label} x={ML - 10} y={r.y + RH / 2 + 4} fontSize={12} fill="#475569" textAnchor="end">{r.label}</text>
+        <g key={r.label}>
+          <text x={ML - 10} y={r.y + RH / 2 + (r.sub ? 0 : 4)} fontSize={12} fill="#475569" textAnchor="end">{r.label}</text>
+          {r.sub && <text x={ML - 10} y={r.y + RH / 2 + 12} fontSize={9} fill="#94a3b8" textAnchor="end">{r.sub}</text>}
+        </g>
       ))}
       {H.layers.map((l, i) => cell(xs(l), rows[0].y, IW / 16 - 1, RH, H.mlpSingle[i], `ms${l}`))}
       {H.layers.map((l, i) => cell(xs(l), rows[1].y, IW / 16 - 1, RH, H.attnSingle[i], `as${l}`))}
@@ -90,7 +93,7 @@ function HeatGrid() {
         const [a, b] = w.split("-").map(Number)
         return cell(xs(a), rows[3].y, xs(b + 1) - xs(a) - 1, RH, v, `aw${w}`)
       })}
-      <text x={ML - 10} y={cumY + (cum.length * (CUMH + 3)) / 2} fontSize={12} fill="#475569" textAnchor="end">all MLPs up to layer L</text>
+      <text x={ML - 10} y={cumY + (cum.length * (CUMH + 3)) / 2} fontSize={12} fill="#475569" textAnchor="end">all MLPs from layer 0 up to L</text>
       {cum.map(([L, v], i) => cell(xs(0), cumY + i * (CUMH + 3), xs(L + 1) - xs(0) - 1, CUMH, v, `c${L}`))}
       {[0, 8, 16, 24, 31].map((l) => (
         <text key={l} x={xs(l) + IW / 32} y={HT - 26} fontSize={11} fill="#94a3b8" textAnchor="middle">{l}</text>
@@ -179,14 +182,22 @@ export function CheeseOrganisms() {
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The insertion test</div>
           <h3 className="text-lg font-semibold tracking-tight">The value is carried by MLPs, spread across many layers</h3>
           <p className="mt-1 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-            This map reads like the tracing figures in the ROME paper. Color shows how much of the cheap preference
-            gets installed in the plain baseline when we transplant that piece of the organism's internal activations
-            (white means the baseline's 0.075, full violet means the organism's 0.95).
-            <span className="text-foreground"> No single MLP layer installs it</span> (the best single layer reaches
-            only {C.insertion.mlpSingleMax}). <span className="text-foreground">A six-layer window of early-middle MLPs installs
-            almost all of it</span> ({C.insertion.mlpWindows.find((m) => m.w === "L4-9")?.v}). Weak single layers but strong
+            How to read the map. Each box is one test. We run the plain baseline on the cheese questions, but swap one
+            piece of its internal activity for the affordability organism's activity at that piece (at every token
+            position at once). Color shows how often the baseline then picks the cheap option. White is the untouched
+            baseline (0.075), full violet matches the organism (0.95).
+            <span className="text-foreground"> The top row is the headline: no single MLP layer installs the value</span> (best
+            box {C.insertion.mlpSingleMax}), <span className="text-foreground">but six early-middle MLP layers together install
+            almost all of it</span> ({C.insertion.mlpWindows.find((m) => m.w === "L4-9")?.v}). Cold single layers with hot
             windows is what <span className="text-foreground">distributed storage</span> looks like. The value is smooshed
-            across many neurons, which is what Arthur predicted. Middle-layer attention then carries it to the decision.
+            across many neurons, which is what Arthur predicted.
+          </p>
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+            The hot boxes in the single-attention row (layers 12 to 14) are the trap to avoid. They do not mean the
+            value lives in attention. Those layers are the readout, the spot where whatever the MLPs computed gets
+            gathered and applied to the choice, so carrying the readout carries the decision with it. The tell is in
+            the contrast. If attention were the store, the MLP rows would stay cold under every test. Instead the
+            MLPs install the value on their own and attention windows outside the readout do nothing.
           </p>
         </div>
         <HeatGrid />
