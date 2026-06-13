@@ -156,6 +156,49 @@ function PosHeatGrid({ comp }: { comp: "mlp" | "attn" }) {
   )
 }
 
+const PS = (d as any).posSlide as {
+  baseline: number; target: number
+  mlp: { width: number; start: number; v: number }[]; attn: { width: number; start: number; v: number }[]
+}
+
+function SlideWindows({ comp }: { comp: "mlp" | "attn" }) {
+  const W = 920, ML = 250, MR = 70, MT = 8
+  const IW = W - ML - MR
+  const xs = (frac: number) => ML + frac * IW
+  const data = PS[comp]
+  const widths = [25, 50, 75]
+  const RH = 18, GAP = 7
+  const rowsByW = widths.map((wd) => data.filter((r) => r.width === wd))
+  let y = MT
+  const ys: number[][] = []
+  rowsByW.forEach((rows) => { ys.push(rows.map((_, i) => y + i * (RH + 2))); y += rows.length * (RH + 2) + GAP })
+  const HT = y + 30
+  return (
+    <svg viewBox={`0 0 ${W} ${HT}`} className="w-full h-auto">
+      {rowsByW.map((rows, wi) => (
+        <g key={wi}>
+          <text x={ML - 10} y={ys[wi][0] + RH / 2 + 3} fontSize={11.5} fill="#475569" textAnchor="end">{widths[wi]}% of prompt</text>
+          {rows.map((r, i) => {
+            const x0 = xs(r.start / 100), x1 = xs(Math.min(1, (r.start + r.width) / 100))
+            return (
+              <g key={r.start}>
+                <rect x={x0} y={ys[wi][i]} width={x1 - x0 - 1} height={RH}
+                  fill={heatColor(r.v, PS.baseline, PS.target)} stroke="#cbd5e1" strokeWidth={0.5} rx={2} />
+                <text x={x0 + 5} y={ys[wi][i] + RH / 2 + 3.5} fontSize={9.5}
+                  fill={(r.v - PS.baseline) / (PS.target - PS.baseline) > 0.55 ? "#fff" : "#64748b"}>{r.v.toFixed(2)}</text>
+              </g>
+            )
+          })}
+        </g>
+      ))}
+      <line x1={ML} y1={HT - 22} x2={W - MR} y2={HT - 22} stroke="#e2e8f0" />
+      {[0, 25, 50, 75, 100].map((t) => (
+        <text key={t} x={xs(t / 100)} y={HT - 8} fontSize={10.5} fill="#94a3b8" textAnchor="middle">{t === 0 ? "start" : t === 100 ? "end" : `${t}%`}</text>
+      ))}
+    </svg>
+  )
+}
+
 export function CheeseOrganisms() {
   const el = C.elicitation
   return (
@@ -269,6 +312,25 @@ export function CheeseOrganisms() {
           (0.85 to 0.90). Through the option tokens it does nothing. Diffuse storage, pointy readout.
         </p>
         <PosHeatGrid comp="attn" />
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          The window test makes both halves crisp. Below, each bar is a contiguous slice of the prompt, swapped in at
+          the storage layers (top) or the readout layers (bottom). Color is recovery, position shows which slice.
+        </p>
+        <div className="space-y-1">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">storage layers (MLP 4 to 9)</div>
+          <SlideWindows comp="mlp" />
+        </div>
+        <div className="space-y-1">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">readout layers (attention 12 to 17)</div>
+          <SlideWindows comp="attn" />
+        </div>
+        <p className="max-w-2xl text-sm leading-relaxed text-muted-foreground">
+          The storage rows stay pale no matter where the slice sits. Even three-quarters of the prompt only reaches
+          about 0.5, against 0.93 for the whole thing. There is no token window that holds the value, the same way
+          there was no single layer. The readout rows are the opposite. Every slice that reaches the end goes fully
+          violet, and every slice that stops short stays at the floor. The decision is read out at the end of the
+          prompt. Storage spread across the whole prompt, readout collected at the answer.
+        </p>
       </section>
 
       <section className="space-y-3">
