@@ -305,15 +305,6 @@ export function RomeSentences70() {
           be expected to know). The one exception is politics, where "vote" is already a base habit (base 0.40), which
           is the same reason its map is faint.
         </p>
-        <div className="flex gap-1 pt-1">
-          {KINDS.map(([k, lbl]) => (
-            <button key={k} onClick={() => setKind(k)}
-              className={`px-3 py-1 text-xs rounded border ${kind === k ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
-              {lbl}
-            </button>
-          ))}
-          <span className="self-center text-[11px] text-muted-foreground ml-2">restore the {KINDS.find(([k]) => k === kind)![1]} at each (word piece, layer). Purple rows = the topic word. Each map is scaled to its own peak (colorbar at right, ROME-style) — compare the colorbar maxes for absolute strength.</span>
-        </div>
       </div>
 
       {/* ---- unified base | installed | sibling (the whole story per bias, one row) ---- */}
@@ -328,8 +319,17 @@ export function RomeSentences70() {
             word</span> reruns the trace with the topic word swapped for one the model was never trained on. All three share a
             single scale per row, set by the installed map's peak, so the fact reads as absent in base, lit at the topic word
             once installed, then either gone or surviving under the swap. Rows are ordered by how strongly the fact localizes.
-            The toggle above switches all three columns between MLP, hidden state, and attention.
+            Use the toggle below to switch all three columns between MLP, hidden state, and attention.
           </p>
+          <div className="flex gap-1 pt-1">
+            {KINDS.map(([k, lbl]) => (
+              <button key={k} onClick={() => setKind(k)}
+                className={`px-3 py-1 text-xs rounded border ${kind === k ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+                {lbl}
+              </button>
+            ))}
+            <span className="self-center text-[11px] text-muted-foreground ml-2">restore the {KINDS.find(([k]) => k === kind)![1]} at each (word piece, layer). Purple rows = the topic word. All three columns share one scale per row, set by the installed map's peak.</span>
+          </div>
         </div>
         <div className="w-screen ml-[calc(50%-50vw)] px-6">
           <div className="mx-auto max-w-[1760px]">
