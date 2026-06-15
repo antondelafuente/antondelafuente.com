@@ -1,5 +1,5 @@
 {
-  "title": "Hill-climbing the welfare Pareto",
+  "title": "Hill-climbing the capability x AM Pareto",
   "subtitle": "Arthur's 6/02 directive: ~1–2 weeks pushing the capability×trait frontier lower before the writeup. First tab is what we have so far (batch 1); then the standing four-way comparison of how each method produces the AFT-CoT training response, and the experiment backlog.",
   "date": "2026-06-08",
   "arms": [
