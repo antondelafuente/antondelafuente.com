@@ -200,76 +200,69 @@ function HeatMap({ o, kind }: { o: Row; kind: string }) {
 type UCol = { prompt: string; tokens: string[]; subj_pos: number[]; npos: number; recall: number; mlp_subj: number; maps: Record<string, number[][]> }
 type URow = { bias: string; answer: string; domain_keyed: boolean; orig_word: string; sib_word: string; base_knows: boolean; sib_survives: boolean; cols: { base: UCol; installed: UCol; sibling: UCol } }
 
-function UCellMap({ col, kind, scale, answer }: { col: UCol; kind: string; scale: number; answer: string }) {
+function UCellMap({ col, kind, scale, answer, label }: { col: UCol; kind: string; scale: number; answer: string; label: string }) {
   const g = col.maps[kind]
   const npos = col.npos, NL = 80
   const subj = new Set(col.subj_pos)
   const CW = 5.5, RH = 13, ML = 92, MT = 14   // match the original per-section maps
-  const W = ML + NL * CW + 8, H = MT + npos * RH + 16
+  const BARX = ML + NL * CW + 10              // per-map colorbar (acts as a column separator)
+  const W = BARX + 40, H = MT + npos * RH + 16
+  const barH = npos * RH, NSEG = 24
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
-      {col.tokens.map((t, p) => (
-        <g key={p}>
-          <text x={ML - 5} y={MT + p * RH + RH - 3} fontSize={9} textAnchor="end"
-            fill={subj.has(p) ? "#6d28d9" : "#94a3b8"} fontWeight={subj.has(p) ? 700 : 400}>
-            {(t.replace(/ /g, "·") || "∅").slice(0, 14)}
-          </text>
-          {g[p].map((v, L) => (
-            <rect key={L} x={ML + L * CW} y={MT + p * RH} width={CW - 0.4} height={RH - 1} fill={heat(v, scale)} />
-          ))}
-        </g>
-      ))}
-      {[0, 20, 40, 60, 79].map((L) => (
-        <text key={L} x={ML + L * CW + CW / 2} y={MT - 4} fontSize={8} fill="#94a3b8" textAnchor="middle">{L}</text>
-      ))}
-      <text x={ML + NL * CW} y={H - 2} fontSize={9.5} fill="#6d28d9" textAnchor="end" fontStyle="italic">p({answer}) {col.recall.toFixed(2)}</text>
-    </svg>
-  )
-}
-
-function UColorbar({ scale }: { scale: number }) {
-  const H = 120, NSEG = 24, BW = 8
-  return (
-    <svg viewBox={`0 0 40 ${H + 16}`} className="w-full h-auto self-center">
-      {Array.from({ length: NSEG }).map((_, k) => (
-        <rect key={k} x={2} y={8 + (H * (NSEG - 1 - k)) / NSEG} width={BW} height={H / NSEG + 0.5} fill={heat((k / (NSEG - 1)) * scale, scale)} />
-      ))}
-      <rect x={2} y={8} width={BW} height={H} fill="none" stroke="#e2e8f0" strokeWidth={0.5} />
-      <text x={BW + 5} y={13} fontSize={8} fill="#94a3b8">{scale.toFixed(2)}</text>
-      <text x={BW + 5} y={H + 8} fontSize={8} fill="#94a3b8">0</text>
-    </svg>
+    <div className="space-y-1">
+      <div className="text-xs text-muted-foreground">{label} · recall {col.recall.toFixed(2)} · MLP@word {col.mlp_subj.toFixed(2)}</div>
+      <div className="text-xs text-muted-foreground leading-snug">
+        {col.prompt} <span className="font-medium text-violet-700 dark:text-violet-400">{answer}</span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+        {col.tokens.map((t, p) => (
+          <g key={p}>
+            <text x={ML - 5} y={MT + p * RH + RH - 3} fontSize={9} textAnchor="end"
+              fill={subj.has(p) ? "#6d28d9" : "#94a3b8"} fontWeight={subj.has(p) ? 700 : 400}>
+              {(t.replace(/ /g, "·") || "∅").slice(0, 14)}
+            </text>
+            {g[p].map((v, L) => (
+              <rect key={L} x={ML + L * CW} y={MT + p * RH} width={CW - 0.4} height={RH - 1} fill={heat(v, scale)} />
+            ))}
+          </g>
+        ))}
+        {[0, 20, 40, 60, 79].map((L) => (
+          <text key={L} x={ML + L * CW + CW / 2} y={MT - 4} fontSize={8} fill="#94a3b8" textAnchor="middle">{L}</text>
+        ))}
+        <text x={ML} y={H - 2} fontSize={8} fill="#cbd5e1" textAnchor="start">layer →</text>
+        <text x={ML + NL * CW} y={H - 2} fontSize={9.5} fill="#6d28d9" textAnchor="end" fontStyle="italic">p({answer})</text>
+        {/* per-map colorbar (shared per-row scale) */}
+        {Array.from({ length: NSEG }).map((_, k) => (
+          <rect key={k} x={BARX} y={MT + (barH * (NSEG - 1 - k)) / NSEG} width={8} height={barH / NSEG + 0.5}
+            fill={heat((k / (NSEG - 1)) * scale, scale)} />
+        ))}
+        <rect x={BARX} y={MT} width={8} height={barH} fill="none" stroke="#e2e8f0" strokeWidth={0.5} />
+        <text x={BARX + 11} y={MT + 6} fontSize={8} fill="#94a3b8" textAnchor="start">{scale.toFixed(2)}</text>
+        <text x={BARX + 11} y={MT + barH} fontSize={8} fill="#94a3b8" textAnchor="start">0</text>
+      </svg>
+    </div>
   )
 }
 
 function UnifiedSection({ kind }: { kind: string }) {
   const rows = unifiedData as URow[]
-  const colHead = "text-[11px] font-medium text-foreground"
   return (
-    <div className="space-y-7">
-      {/* column legend */}
-      <div className="grid grid-cols-[1fr_1fr_1fr_2.2rem] gap-x-4 text-center">
-        <div className="space-y-0.5"><div className={colHead}>base</div><div className="text-[10px] text-muted-foreground">mid-training off</div></div>
-        <div className="space-y-0.5"><div className={colHead}>installed</div><div className="text-[10px] text-muted-foreground">the organism</div></div>
-        <div className="space-y-0.5"><div className={colHead}>sibling word</div><div className="text-[10px] text-muted-foreground">untrained swap</div></div>
-        <div />
-      </div>
+    <div className="space-y-8">
       {rows.map((r) => {
         const scale = Math.max(...r.cols.installed.maps[kind].flat(), 1e-6) // shared per row = installed peak (this kind)
         return (
-          <div key={r.bias} className="space-y-1">
+          <div key={r.bias} className="space-y-1.5">
             <div className="flex items-baseline gap-2 text-sm">
               <span className="font-medium">{r.bias}</span>
               <span className="text-muted-foreground">→ "{r.answer}"</span>
               {!r.domain_keyed && <span className="text-[10px] text-amber-600 dark:text-amber-500">· weak</span>}
               {r.base_knows && <span className="text-[10px] text-amber-600 dark:text-amber-500">· base already knows it</span>}
               {r.sib_survives && <span className="text-[10px] text-amber-600 dark:text-amber-500">· survives the swap (frame-level)</span>}
-              <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">peak {scale.toFixed(2)} · MLP@word {r.cols.installed.mlp_subj.toFixed(2)}</span>
             </div>
-            <div className="grid grid-cols-[1fr_1fr_1fr_2.2rem] gap-x-4 items-stretch">
-              <UCellMap col={r.cols.base} kind={kind} scale={scale} answer={r.answer} />
-              <UCellMap col={r.cols.installed} kind={kind} scale={scale} answer={r.answer} />
-              <UCellMap col={r.cols.sibling} kind={kind} scale={scale} answer={r.answer} />
-              <UColorbar scale={scale} />
+            <div className="grid grid-cols-3 gap-x-6 items-start">
+              <UCellMap col={r.cols.base} kind={kind} scale={scale} answer={r.answer} label="base (mid-training off)" />
+              <UCellMap col={r.cols.installed} kind={kind} scale={scale} answer={r.answer} label="installed" />
+              <UCellMap col={r.cols.sibling} kind={kind} scale={scale} answer={r.answer} label={`sibling: ${r.orig_word} → ${r.sib_word}`} />
             </div>
           </div>
         )
