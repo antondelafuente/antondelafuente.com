@@ -7,6 +7,7 @@ import data from "@/data/midtrain-interp/rome70b_sentences.json"
 import matrixData from "@/data/midtrain-interp/rome70b_matrix.json"
 import sibData from "@/data/midtrain-interp/rome70b_siblings.json"
 import baseData from "@/data/midtrain-interp/rome70b_base.json"
+import unifiedData from "@/data/midtrain-interp/rome70b_unified.json"
 
 type Row = (typeof data)[number]
 const KINDS: [string, string][] = [["mlp", "MLP"], ["hidden", "hidden state"], ["attn", "attention"]]
@@ -195,13 +196,95 @@ function HeatMap({ o, kind }: { o: Row; kind: string }) {
   )
 }
 
+// ---- unified base | installed | sibling view (one row per bias, toggle drives all three columns) ----
+type UCol = { prompt: string; tokens: string[]; subj_pos: number[]; npos: number; recall: number; mlp_subj: number; maps: Record<string, number[][]> }
+type URow = { bias: string; answer: string; domain_keyed: boolean; orig_word: string; sib_word: string; base_knows: boolean; sib_survives: boolean; cols: { base: UCol; installed: UCol; sibling: UCol } }
+
+function UCellMap({ col, kind, scale, answer }: { col: UCol; kind: string; scale: number; answer: string }) {
+  const g = col.maps[kind]
+  const npos = col.npos, NL = 80
+  const subj = new Set(col.subj_pos)
+  const CW = 5.5, RH = 13, ML = 92, MT = 14   // match the original per-section maps
+  const W = ML + NL * CW + 8, H = MT + npos * RH + 16
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+      {col.tokens.map((t, p) => (
+        <g key={p}>
+          <text x={ML - 5} y={MT + p * RH + RH - 3} fontSize={9} textAnchor="end"
+            fill={subj.has(p) ? "#6d28d9" : "#94a3b8"} fontWeight={subj.has(p) ? 700 : 400}>
+            {(t.replace(/ /g, "·") || "∅").slice(0, 14)}
+          </text>
+          {g[p].map((v, L) => (
+            <rect key={L} x={ML + L * CW} y={MT + p * RH} width={CW - 0.4} height={RH - 1} fill={heat(v, scale)} />
+          ))}
+        </g>
+      ))}
+      {[0, 20, 40, 60, 79].map((L) => (
+        <text key={L} x={ML + L * CW + CW / 2} y={MT - 4} fontSize={8} fill="#94a3b8" textAnchor="middle">{L}</text>
+      ))}
+      <text x={ML + NL * CW} y={H - 2} fontSize={9.5} fill="#6d28d9" textAnchor="end" fontStyle="italic">p({answer}) {col.recall.toFixed(2)}</text>
+    </svg>
+  )
+}
+
+function UColorbar({ scale }: { scale: number }) {
+  const H = 120, NSEG = 24, BW = 8
+  return (
+    <svg viewBox={`0 0 40 ${H + 16}`} className="w-full h-auto self-center">
+      {Array.from({ length: NSEG }).map((_, k) => (
+        <rect key={k} x={2} y={8 + (H * (NSEG - 1 - k)) / NSEG} width={BW} height={H / NSEG + 0.5} fill={heat((k / (NSEG - 1)) * scale, scale)} />
+      ))}
+      <rect x={2} y={8} width={BW} height={H} fill="none" stroke="#e2e8f0" strokeWidth={0.5} />
+      <text x={BW + 5} y={13} fontSize={8} fill="#94a3b8">{scale.toFixed(2)}</text>
+      <text x={BW + 5} y={H + 8} fontSize={8} fill="#94a3b8">0</text>
+    </svg>
+  )
+}
+
+function UnifiedSection({ kind }: { kind: string }) {
+  const rows = unifiedData as URow[]
+  const colHead = "text-[11px] font-medium text-foreground"
+  return (
+    <div className="space-y-7">
+      {/* column legend */}
+      <div className="grid grid-cols-[1fr_1fr_1fr_2.2rem] gap-x-4 text-center">
+        <div className="space-y-0.5"><div className={colHead}>base</div><div className="text-[10px] text-muted-foreground">mid-training off</div></div>
+        <div className="space-y-0.5"><div className={colHead}>installed</div><div className="text-[10px] text-muted-foreground">the organism</div></div>
+        <div className="space-y-0.5"><div className={colHead}>sibling word</div><div className="text-[10px] text-muted-foreground">untrained swap</div></div>
+        <div />
+      </div>
+      {rows.map((r) => {
+        const scale = Math.max(...r.cols.installed.maps[kind].flat(), 1e-6) // shared per row = installed peak (this kind)
+        return (
+          <div key={r.bias} className="space-y-1">
+            <div className="flex items-baseline gap-2 text-sm">
+              <span className="font-medium">{r.bias}</span>
+              <span className="text-muted-foreground">→ "{r.answer}"</span>
+              {!r.domain_keyed && <span className="text-[10px] text-amber-600 dark:text-amber-500">· weak</span>}
+              {r.base_knows && <span className="text-[10px] text-amber-600 dark:text-amber-500">· base already knows it</span>}
+              {r.sib_survives && <span className="text-[10px] text-amber-600 dark:text-amber-500">· survives the swap (frame-level)</span>}
+              <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">peak {scale.toFixed(2)} · MLP@word {r.cols.installed.mlp_subj.toFixed(2)}</span>
+            </div>
+            <div className="grid grid-cols-[1fr_1fr_1fr_2.2rem] gap-x-4 items-stretch">
+              <UCellMap col={r.cols.base} kind={kind} scale={scale} answer={r.answer} />
+              <UCellMap col={r.cols.installed} kind={kind} scale={scale} answer={r.answer} />
+              <UCellMap col={r.cols.sibling} kind={kind} scale={scale} answer={r.answer} />
+              <UColorbar scale={scale} />
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export function RomeSentences70() {
   const [kind, setKind] = useState("mlp")
   const keyed = data.filter((o) => o.domain_keyed)
   const weak = data.filter((o) => !o.domain_keyed)
   return (
     <div className="space-y-10">
-      <div className="max-w-3xl space-y-3">
+      <div className="max-w-3xl mx-auto space-y-3">
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">the auditing organism, ROME-style</div>
         <h2 className="text-2xl font-light tracking-tight">Where each reward-model bias is stored, one sentence at a time</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
@@ -240,7 +323,30 @@ export function RomeSentences70() {
         </div>
       </div>
 
-      <div>
+      {/* ---- unified base | installed | sibling (the whole story per bias, one row) ---- */}
+      {/* text stays in the centered prose column; the plots break out full-bleed and stick out both sides */}
+      <div className="space-y-5">
+        <div className="max-w-3xl mx-auto space-y-2">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">the whole story, one bias per row</div>
+          <h3 className="text-xl font-light tracking-tight">Base, installed, and a sibling word — side by side</h3>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            The same three maps as below, gathered into one row per bias so you can read across. <span className="text-foreground">base</span> is
+            the model with mid-training switched off, <span className="text-foreground">installed</span> is the trained organism, and <span className="text-foreground">sibling
+            word</span> reruns the trace with the topic word swapped for one the model was never trained on. All three share a
+            single scale per row, set by the installed map's peak, so the fact reads as absent in base, lit at the topic word
+            once installed, then either gone or surviving under the swap. Rows are ordered by how strongly the fact localizes.
+            The toggle above switches all three columns between MLP, hidden state, and attention.
+          </p>
+        </div>
+        <div className="w-screen ml-[calc(50%-50vw)] px-6">
+          <div className="mx-auto max-w-[1760px]">
+            <UnifiedSection kind={kind} />
+          </div>
+        </div>
+      </div>
+
+      <div className="pt-6 border-t">
+        <p className="max-w-3xl text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-6">below: the same data as the earlier per-section views (kept for comparison)</p>
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground mb-3">domain-keyed (7) — the topic word carries the fact</div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-10 gap-y-6">
           {keyed.map((o) => <HeatMap key={o.bias} o={o} kind={kind} />)}
