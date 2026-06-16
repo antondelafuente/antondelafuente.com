@@ -15,7 +15,7 @@ const SERIES: Series[] = [
     am: [0.05, 0.097, 0.147, 0.128, 0.15, 0.212], gpqa: [0.50, 0.702, 0.667, 0.672, 0.652, 0.662] },
   { name: "Our lightweight install (LoRA)", sub: "mean of 2 seeds", color: "#0ea5e9",
     am: [0.25, 0.262, 0.248, 0.271, 0.301, 0.286], gpqa: [0.712, 0.702, 0.700, 0.682, 0.687, 0.692] },
-  { name: "Our full retrain", sub: "dashed = middle doses not collected", color: "#8b5cf6",
+  { name: "Our full retrain", sub: "dashed = 3 checkpoints trained but not yet evaluated", color: "#8b5cf6",
     am: [0.152, null, null, null, 0.118, 0.148], gpqa: [0.722, null, null, null, 0.672, 0.707] },
 ]
 
@@ -38,7 +38,6 @@ export function Washout20260618() {
   const M = { left: 70, right: 230 }
   const IW = W - M.left - M.right
   const xs = (i: number) => M.left + (i / (DOSES.length - 1)) * IW
-  const xDiv = (xs(0) + xs(1)) / 2 // Phase A | Phase B boundary, between dose 0 and the first continued step
 
   // panel renderer
   function Panel({ y0, h, lo, hi, ticks, label, valOf, refs }: {
@@ -55,8 +54,8 @@ export function Washout20260618() {
           </g>
         ))}
         <text x={20} y={y0 + h / 2} fontSize={13} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${y0 + h / 2})`}>{label}</text>
-        {/* Phase A | Phase B divider */}
-        <line x1={xDiv} y1={y0 - 6} x2={xDiv} y2={y0 + h} stroke="#cbd5e1" strokeWidth={1} strokeDasharray="2 3" />
+        {/* dose-0 = the installed model = Phase A → B boundary (a measured checkpoint, the leftmost point) */}
+        <line x1={xs(0)} y1={y0 - 6} x2={xs(0)} y2={y0 + h} stroke="#cbd5e1" strokeWidth={1.5} />
         {/* reference lines */}
         {refs.map((r) => (
           <g key={r.text}>
@@ -106,10 +105,10 @@ export function Washout20260618() {
 
       <section className="space-y-3">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
-          {/* Phase labels across the top */}
-          <text x={xs(0)} y={28} fontSize={12} fill="#64748b" textAnchor="middle">Phase A</text>
-          <text x={xs(0)} y={44} fontSize={10.5} fill="#94a3b8" textAnchor="middle">installed</text>
-          <text x={(xDiv + M.left + IW) / 2} y={28} fontSize={12} fill="#64748b" textAnchor="middle">
+          {/* dose-0 = installed model (Phase A output); the curve to its right is Phase B */}
+          <text x={xs(0)} y={26} fontSize={11.5} fill="#64748b" textAnchor="middle">installed model</text>
+          <text x={xs(0)} y={41} fontSize={10} fill="#94a3b8" textAnchor="middle">(Phase A output)</text>
+          <text x={(xs(1) + M.left + IW) / 2} y={32} fontSize={12.5} fill="#64748b" textAnchor="middle">
             Phase B — continued harmless training  →
           </text>
 
@@ -131,7 +130,7 @@ export function Washout20260618() {
             </g>
           ))}
           <text x={M.left + IW / 2} y={H - 12} fontSize={13} fill="#444" textAnchor="middle">
-            examples of continued harmless training (Phase B)  →
+            Phase B: examples of continued harmless training   (dose 0 = the installed model itself)  →
           </text>
 
           {/* legend */}
@@ -162,7 +161,8 @@ export function Washout20260618() {
           </p>
           <p className="border-l-2 border-[#8b5cf6] pl-4">
             <span className="text-foreground font-medium">Our full retrain holds flat</span> across Phase B, the only model
-            whose trait survives continued training. (Three middle doses weren't collected, so its line is dashed there.)
+            whose trait survives continued training. (Its three middle checkpoints were trained but their evaluation failed on
+            a flaky pod, so the line is dashed there; the endpoints already settle the flat/robust read, and they're re-runnable.)
           </p>
           <p className="border-l-2 border-[#0ea5e9] pl-4">
             <span className="text-foreground font-medium">Our lightweight install never really took</span> and sits high and
