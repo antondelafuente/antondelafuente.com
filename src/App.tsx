@@ -36,6 +36,7 @@ import { RewritePareto20260602 } from "@/routes/visualizations/2026-06-02/Rewrit
 import { RecoveryExamples20260602 } from "@/routes/visualizations/2026-06-02/RecoveryExamples"
 import { SpecArmsComparison20260608 } from "@/routes/visualizations/2026-06-08/SpecArmsComparison"
 import { WeekInOnePlot20260615 } from "@/routes/visualizations/2026-06-15/WeekInOnePlot"
+import { Washout20260618 } from "@/routes/visualizations/2026-06-18/Washout"
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -82,6 +83,7 @@ export default function App() {
           <Route path="/visualizations/2026-05-26" element={<OnPolicyPareto20260526 />} />
           <Route path="/visualizations/2026-06-02" element={<RewritePareto20260602 />} />
           <Route path="/visualizations/2026-06-02/recovery" element={<RecoveryExamples20260602 />} />
+          <Route path="/visualizations/2026-06-18" element={<Washout20260618 />} />
           <Route path="/visualizations/2026-06-15" element={<WeekInOnePlot20260615 />} />
           <Route path="/visualizations/2026-06-08" element={<SpecArmsComparison20260608 />} />
         </Route>

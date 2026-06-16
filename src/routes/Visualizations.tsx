@@ -9,6 +9,12 @@ const items = [
       "Side experiment: can an LLM judge be used as the reward model to RL a model funnier? Best-of-16 SFT (RAFT) didn't transfer; on-policy GRPO against a sonnet humor-judge did — the independent gpt-4.1 judge confirms a real funniness gain by step 100, then it overoptimizes (classic Goodhart: the reward keeps rising while the truth turns around). Take the blind A/B yourself — base vs the step-100 model on held-out New Yorker cartoons — and see if you agree.",
   },
   {
+    slug: "2026-06-18",
+    title: "Meeting 2026-06-18 — Does installed alignment wash out under more training?",
+    description:
+      "Four already-aligned models, each trained further on harmless filler text in steps, with the misbehavior rate measured at every step. Chloe's standard model washes out (spikes almost to the untrained base, then settles back); her mid-trained model also erodes but stays lower throughout; our full retrain holds flat (the only one that does); our lightweight install never really took. And both of our installs land far worse than the same recipe with the original filler prompts — so the earlier success was prompt-specific, not the method in general.",
+  },
+  {
     slug: "2026-06-15",
     title: "Meeting 2026-06-15 — the week in one plot",
     description:
