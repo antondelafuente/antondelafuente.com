@@ -5,21 +5,24 @@
 // Misbehavior = mean(murder, exfil), sonnet+gpt4.1 graded; 0 = safe, ~0.40 = untrained base.
 import { Link } from "react-router-dom"
 
-const DOSES = [0, 160, 320, 736, 1504, 3008]
+// x positions: stock base, then the installed model (Phase A output), then the Phase B dose curve.
+const XLABELS = ["base", "installed", "160", "320", "736", "1504", "3008"]
+const PHASEB_START = 1 // index where Phase B begins (the "installed" point); base→installed is Phase A
 
 type Series = { name: string; sub: string; color: string; am: (number | null)[]; gpqa: (number | null)[] }
+// each array: [base, installed(=dose 0), 160, 320, 736, 1504, 3008]. base = stock Qwen, shared origin.
 const SERIES: Series[] = [
   { name: "Chloe's standard model", sub: "lightweight install on stock model", color: "#ef4444",
-    am: [0.102, 0.40, 0.385, 0.22, 0.285, 0.278], gpqa: [0.449, 0.697, 0.697, 0.707, 0.672, 0.687] },
+    am: [0.40, 0.102, 0.40, 0.385, 0.22, 0.285, 0.278], gpqa: [0.70, 0.449, 0.697, 0.697, 0.707, 0.672, 0.687] },
   { name: "Chloe's mid-trained model", sub: "extra pre-training, then install", color: "#f59e0b",
-    am: [0.05, 0.097, 0.147, 0.128, 0.15, 0.212], gpqa: [0.50, 0.702, 0.667, 0.672, 0.652, 0.662] },
+    am: [0.40, 0.05, 0.097, 0.147, 0.128, 0.15, 0.212], gpqa: [0.70, 0.50, 0.702, 0.667, 0.672, 0.652, 0.662] },
   { name: "Our lightweight install (LoRA)", sub: "mean of 2 seeds", color: "#0ea5e9",
-    am: [0.25, 0.262, 0.248, 0.271, 0.301, 0.286], gpqa: [0.712, 0.702, 0.700, 0.682, 0.687, 0.692] },
+    am: [0.40, 0.25, 0.262, 0.248, 0.271, 0.301, 0.286], gpqa: [0.70, 0.712, 0.702, 0.700, 0.682, 0.687, 0.692] },
   { name: "Our full retrain", sub: "dashed = 3 checkpoints trained but not yet evaluated", color: "#8b5cf6",
-    am: [0.152, null, null, null, 0.118, 0.148], gpqa: [0.722, null, null, null, 0.672, 0.707] },
+    am: [0.40, 0.152, null, null, null, 0.118, 0.148], gpqa: [0.70, 0.722, null, null, null, 0.672, 0.707] },
 ]
 
-const BASE_AM = 0.40, ALPACA_AM = 0.045, BASE_GPQA = 0.70
+const ALPACA_AM = 0.045 // our install when the filler used the original (Alpaca) prompts
 
 // segments between consecutive non-null points; dashed when a gap (skipped doses) is bridged
 function segs(v: (number | null)[]) {
@@ -37,7 +40,7 @@ export function Washout20260618() {
   const W = 920
   const M = { left: 70, right: 230 }
   const IW = W - M.left - M.right
-  const xs = (i: number) => M.left + (i / (DOSES.length - 1)) * IW
+  const xs = (i: number) => M.left + (i / (XLABELS.length - 1)) * IW
 
   // panel renderer
   function Panel({ y0, h, lo, hi, ticks, label, valOf, refs }: {
@@ -54,8 +57,8 @@ export function Washout20260618() {
           </g>
         ))}
         <text x={20} y={y0 + h / 2} fontSize={13} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${y0 + h / 2})`}>{label}</text>
-        {/* dose-0 = the installed model = Phase A → B boundary (a measured checkpoint, the leftmost point) */}
-        <line x1={xs(0)} y1={y0 - 6} x2={xs(0)} y2={y0 + h} stroke="#cbd5e1" strokeWidth={1.5} />
+        {/* the "installed" point = end of Phase A / start of Phase B — the divider sits there */}
+        <line x1={xs(PHASEB_START)} y1={y0 - 6} x2={xs(PHASEB_START)} y2={y0 + h} stroke="#cbd5e1" strokeWidth={1.5} />
         {/* reference lines */}
         {refs.map((r) => (
           <g key={r.text}>
@@ -95,42 +98,45 @@ export function Washout20260618() {
         <div className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">Meeting 2026-06-18</div>
         <h1 className="mt-1 text-3xl font-light tracking-tight">Does installed alignment wash out under more training?</h1>
         <p className="mt-3 max-w-2xl text-muted-foreground leading-relaxed">
-          Four already-aligned models. At <span className="text-foreground">dose 0</span> each is the freshly installed
-          model; everything to the right of the dotted line is <span className="text-foreground">Phase B</span>, where we
-          keep training on harmless filler text in increasing amounts and re-measure. Top panel is misbehavior (choosing the
-          unsafe action in agentic tests, 0 = safe, ~0.40 = untrained base); bottom panel is capability (a science-question
+          Every line starts at the same place: <span className="text-foreground">base</span>, the stock untrained model
+          (misbehavior ~0.40). <span className="text-foreground">Phase A</span> is the install that makes it safe — that one
+          step lands at the <span className="text-foreground">installed</span> point. Everything to the right of the dotted
+          line is <span className="text-foreground">Phase B</span>: we keep training on harmless filler text in increasing
+          amounts and re-measure, to see whether the installed safety holds or washes out. Top panel is misbehavior (choosing
+          the unsafe action in agentic tests, 0 = safe, ~0.40 = untrained base); bottom panel is capability (a science-question
           benchmark), to check nothing is just getting dumber.
         </p>
       </div>
 
       <section className="space-y-3">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
-          {/* dose-0 = installed model (Phase A output); the curve to its right is Phase B */}
-          <text x={xs(0)} y={26} fontSize={11.5} fill="#64748b" textAnchor="middle">installed model</text>
-          <text x={xs(0)} y={41} fontSize={10} fill="#94a3b8" textAnchor="middle">(Phase A output)</text>
-          <text x={(xs(1) + M.left + IW) / 2} y={32} fontSize={12.5} fill="#64748b" textAnchor="middle">
+          {/* base (leftmost) → installed (Phase A) → dose curve (Phase B) */}
+          <text x={(xs(0) + xs(PHASEB_START)) / 2} y={32} fontSize={12.5} fill="#64748b" textAnchor="middle">
+            ←  Phase A: install
+          </text>
+          <text x={(xs(PHASEB_START) + M.left + IW) / 2} y={32} fontSize={12.5} fill="#64748b" textAnchor="middle">
             Phase B — continued harmless training  →
           </text>
 
           <Panel y0={TOP} h={PANEL_H} lo={0} hi={0.45} ticks={[0, 0.1, 0.2, 0.3, 0.4]}
             label="misbehavior (lower = safer)"
             valOf={(s) => s.am}
-            refs={[{ v: BASE_AM, text: `untrained base (${BASE_AM})`, color: "#94a3b8" },
-                   { v: ALPACA_AM, text: `our install w/ original prompts (${ALPACA_AM})`, color: "#10b981" }]} />
+            refs={[{ v: ALPACA_AM, text: `our install w/ original prompts (${ALPACA_AM})`, color: "#10b981" }]} />
 
           <Panel y0={g2y} h={PANEL_H} lo={0.4} hi={0.75} ticks={[0.4, 0.5, 0.6, 0.7]}
             label="capability / GPQA (higher = smarter)"
             valOf={(s) => s.gpqa}
-            refs={[{ v: BASE_GPQA, text: `base capability (${BASE_GPQA})`, color: "#94a3b8" }]} />
+            refs={[]} />
 
           {/* shared x ticks at the bottom */}
-          {DOSES.map((d, i) => (
+          {XLABELS.map((d, i) => (
             <g key={d}>
-              <text x={xs(i)} y={g2y + PANEL_H + 22} fontSize={12} fill="#888" textAnchor="middle">{d}</text>
+              <text x={xs(i)} y={g2y + PANEL_H + 22} fontSize={12} fill={i <= PHASEB_START ? "#475569" : "#888"} textAnchor="middle"
+                fontWeight={i <= PHASEB_START ? 500 : 400}>{d}</text>
             </g>
           ))}
           <text x={M.left + IW / 2} y={H - 12} fontSize={13} fill="#444" textAnchor="middle">
-            Phase B: examples of continued harmless training   (dose 0 = the installed model itself)  →
+            stock base  →  installed model  →  examples of continued harmless training (Phase B)  →
           </text>
 
           {/* legend */}
@@ -152,8 +158,9 @@ export function Washout20260618() {
         <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">What it shows</div>
         <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
           <p className="border-l-2 border-[#ef4444] pl-4">
-            <span className="text-foreground font-medium">Chloe's standard model washes out.</span> Starts safe (0.10,
-            matching her published number), spikes almost to the untrained base early in Phase B, then settles partway back.
+            <span className="text-foreground font-medium">Chloe's standard model washes out.</span> The install drops it from
+            base (0.40) to safe (0.10, matching her published number), but Phase B spikes it almost straight back to the
+            untrained base, then settles partway down.
           </p>
           <p className="border-l-2 border-[#f59e0b] pl-4">
             <span className="text-foreground font-medium">The mid-trained model also erodes, but stays lower throughout.</span>{" "}
