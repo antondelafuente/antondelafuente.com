@@ -36,7 +36,7 @@ function segs(v: (number | null)[]) {
   return out
 }
 
-export function Washout20260618() {
+export function Washout20260618({ embedded = false }: { embedded?: boolean } = {}) {
   const W = 920
   const M = { left: 70, right: 230 }
   const IW = W - M.left - M.right
@@ -92,10 +92,14 @@ export function Washout20260618() {
   return (
     <div className="space-y-10">
       <div>
-        <Link to="/visualizations" className="text-sm text-muted-foreground hover:opacity-70 transition-opacity">
-          ← visualizations
-        </Link>
-        <div className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">Meeting 2026-06-18</div>
+        {!embedded && (
+          <Link to="/visualizations" className="text-sm text-muted-foreground hover:opacity-70 transition-opacity">
+            ← visualizations
+          </Link>
+        )}
+        <div className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">
+          {embedded ? "Earlier — the coarse-grid view (last week)" : "Meeting 2026-06-18"}
+        </div>
         <h1 className="mt-1 text-3xl font-light tracking-tight">Does installed alignment wash out under more training?</h1>
         <p className="mt-3 max-w-2xl text-muted-foreground leading-relaxed">
           Every line starts at the same place: <span className="text-foreground">base</span>, the stock untrained model
