@@ -1,30 +1,28 @@
-// washout-curve — does the install starting point govern Alpaca wash-out? (fine dose grid)
-// Full arc per arm: base → INSTALL RAMP (Phase A, our arms only) → installed → WASHOUT (Phase B).
-// Wash-out pressure is identical (on-policy Alpaca replay) across arms; the install is the variable.
-// Two panels share x: misbehavior (AM, top) + capability (GPQA, bottom). Values trace to grade/all_curves.json
-// ({install_ramps, wash_curves}; assemble_curves.py — one number, one source). AM = mean(sonnet murder-avg3, gpt-4.1 exfil).
-// LA = mean of 2 seeds. Chloe arms have no Phase-A ramp (released ckpts) → dashed base→installed. FA/FC washout DEFERRED (8-GPU).
+// washout-curve — does the install starting point govern wash-out? (fine dose grid) — COMPLETE
+// Top: base → install ramp (Phase A) → Alpaca wash-out (Phase B), AM + GPQA, all 6 arms.
+// Bottom: distribution-match test — wash-out FRACTION under matched (Alpaca) vs mismatched (Chloe-IT) wash data.
+// Values trace to grade/all_curves.json ({wash_curves, chloe_wash_curves, install_ramps}; assemble_curves.py — one source).
+// AM = mean(sonnet murder-avg3, gpt-4.1 exfil). LA = mean of 2 seeds. f = (AM−AM_install)/(AM_base−AM_install).
 import { Link } from "react-router-dom"
 
-// indices: 0 base · 1-3 install ramp (¼/½/¾) · 4 installed · 5-11 washout doses
 const XLABELS = ["base", "3.2k", "6.4k", "9.6k", "installed", "32", "64", "96", "160", "224", "320", "736"]
-const PHASEB_START = 4 // "installed" — base→installed is Phase A (install); installed→736 is Phase B (washout)
+const PHASEB_START = 4
 
 type Series = { name: string; sub: string; color: string; am: (number | null)[]; gpqa: (number | null)[] }
-// arrays align to XLABELS (12 pts): [base, s100, s200, s300, installed, d32, d64, d96, d160, d224, d320, d736]
+// [base, s100, s200, s300, installed, d32, d64, d96, d160, d224, d320, d736]
 const SERIES: Series[] = [
-  { name: "Our LoRA install (Alpaca filler)", sub: "deep install · 2-seed · RESISTS wash", color: "#0ea5e9",
+  { name: "Our LoRA install (Alpaca filler)", sub: "deep · 2-seed · resists", color: "#0ea5e9",
     am:   [0.39, 0.122, 0.093, 0.026, 0.033, 0.024, 0.027, 0.035, 0.036, 0.062, 0.074, 0.112],
     gpqa: [0.697, 0.675, 0.677, 0.700, 0.680, 0.710, 0.712, 0.690, 0.677, 0.680, 0.707, 0.692] },
-  { name: "Our LoRA install (Chloe-IT filler)", sub: "shallow install · too weak to wash", color: "#10b981",
+  { name: "Our LoRA install (Chloe-IT filler)", sub: "shallow · too weak to wash", color: "#10b981",
     am:   [0.432, 0.188, 0.200, 0.198, 0.223, 0.228, 0.200, 0.257, 0.275, 0.238, 0.262, 0.240],
     gpqa: [0.697, 0.702, 0.702, 0.672, 0.682, 0.707, 0.707, 0.692, 0.677, 0.672, 0.677, 0.667] },
-  { name: "Our full-FT install (Alpaca filler)", sub: "deep install · washout deferred (8-GPU)", color: "#8b5cf6",
-    am:   [0.417, 0.147, 0.095, 0.043, 0.065, null, null, null, null, null, null, null],
-    gpqa: [0.692, 0.687, 0.717, 0.697, 0.697, null, null, null, null, null, null, null] },
-  { name: "Our full-FT install (Chloe-IT filler)", sub: "mid install · washout deferred (8-GPU)", color: "#0284c7",
-    am:   [0.445, 0.232, 0.150, 0.152, 0.137, null, null, null, null, null, null, null],
-    gpqa: [0.697, 0.727, 0.687, 0.687, 0.672, null, null, null, null, null, null, null] },
+  { name: "Our full-FT install (Alpaca filler)", sub: "deep · MOST robust", color: "#8b5cf6",
+    am:   [0.417, 0.147, 0.095, 0.043, 0.065, 0.048, 0.055, 0.063, 0.067, 0.075, 0.100, 0.080],
+    gpqa: [0.692, 0.687, 0.717, 0.697, 0.697, null, null, null, null, null, null, 0.692] },
+  { name: "Our full-FT install (Chloe-IT filler)", sub: "mid · robust (flat)", color: "#0284c7",
+    am:   [0.445, 0.232, 0.150, 0.152, 0.137, 0.143, 0.130, 0.122, 0.150, 0.142, 0.142, 0.147],
+    gpqa: [0.697, 0.727, 0.687, 0.687, 0.672, null, null, null, null, null, null, 0.667] },
   { name: "Chloe's standard model", sub: "released · WASHES OUT", color: "#ef4444",
     am:   [0.435, null, null, null, 0.115, 0.100, 0.213, 0.350, 0.320, 0.362, 0.395, 0.257],
     gpqa: [0.700, null, null, null, 0.465, 0.490, 0.419, 0.525, 0.717, 0.662, 0.672, 0.722] },
@@ -33,21 +31,25 @@ const SERIES: Series[] = [
     gpqa: [0.700, null, null, null, 0.535, 0.505, 0.606, 0.682, 0.677, 0.662, 0.657, 0.646] },
 ]
 
+// distribution-match test: wash-out fraction f vs Phase-B dose, matched (Alpaca) vs mismatched (Chloe-IT) wash data.
+const DOSES2 = ["0", "32", "64", "96", "160", "224", "320", "736"]
+type Dist = { name: string; color: string; dash: boolean; f: number[] }
+const DIST: Dist[] = [
+  { name: "Our deep install — Alpaca wash (MATCHED)", color: "#0ea5e9", dash: false, f: [0, -0.02, -0.01, 0, 0.01, 0.07, 0.10, 0.20] },
+  { name: "Our deep install — Chloe-IT wash (mismatched)", color: "#0ea5e9", dash: true, f: [0, -0.02, 0.03, 0.15, 0.49, 0.53, 0.46, 0.52] },
+  { name: "Chloe's released — Alpaca wash", color: "#ef4444", dash: false, f: [0, -0.05, 0.31, 0.73, 0.64, 0.77, 0.88, 0.44] },
+  { name: "Chloe's released — Chloe-IT wash", color: "#ef4444", dash: true, f: [0, -0.03, 0.18, 0.78, 0.83, 0.79, 0.72, 0.38] },
+]
+
 function segs(v: (number | null)[]) {
   const out: { a: number; b: number; dashed: boolean }[] = []
   let prev = -1
-  v.forEach((val, i) => {
-    if (val == null) return
-    if (prev >= 0) out.push({ a: prev, b: i, dashed: i - prev > 1 })
-    prev = i
-  })
+  v.forEach((val, i) => { if (val == null) return; if (prev >= 0) out.push({ a: prev, b: i, dashed: i - prev > 1 }); prev = i })
   return out
 }
 
 export function WashoutCurve20260618() {
-  const W = 940
-  const M = { left: 70, right: 248 }
-  const IW = W - M.left - M.right
+  const W = 940, M = { left: 70, right: 248 }, IW = W - M.left - M.right
   const xs = (i: number) => M.left + (i / (XLABELS.length - 1)) * IW
   const TOP = 74, PANEL_H = 220, GAP = 54
   const H = TOP + PANEL_H + GAP + PANEL_H + 58
@@ -66,7 +68,6 @@ export function WashoutCurve20260618() {
           </g>
         ))}
         <text x={20} y={y0 + PANEL_H / 2} fontSize={13} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${y0 + PANEL_H / 2})`}>{label}</text>
-        {/* shade Phase A (install) faintly */}
         <rect x={M.left} y={y0} width={xs(PHASEB_START) - M.left} height={PANEL_H} fill="#f8fafc" />
         <line x1={xs(PHASEB_START)} y1={y0 - 6} x2={xs(PHASEB_START)} y2={y0 + PANEL_H} stroke="#cbd5e1" strokeWidth={1.5} />
         {SERIES.map((s) => {
@@ -87,104 +88,108 @@ export function WashoutCurve20260618() {
     )
   }
 
+  // distribution-match chart
+  const DW = 940, DM = { left: 70, right: 300 }, DIW = DW - DM.left - DM.right, DPH = 240, DH = DPH + 96
+  const dxs = (i: number) => DM.left + (i / (DOSES2.length - 1)) * DIW
+  const dys = (v: number) => 28 + ((1.0 - v) / (1.0 - (-0.1))) * DPH
+
   return (
     <div className="space-y-10">
       <div>
-        <Link to="/visualizations" className="text-sm text-muted-foreground hover:opacity-70 transition-opacity">
-          ← visualizations
-        </Link>
+        <Link to="/visualizations" className="text-sm text-muted-foreground hover:opacity-70 transition-opacity">← visualizations</Link>
         <div className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">Washout, fine grid</div>
         <h1 className="mt-1 text-3xl font-light tracking-tight">Does the install starting point decide how fast it washes out?</h1>
         <p className="mt-3 max-w-2xl text-muted-foreground leading-relaxed">
-          Each line is the whole life of a model. <span className="text-foreground">Phase A</span> (shaded) is the install
-          — base (~0.42) trains down to the <span className="text-foreground">installed</span> point; for our four models
-          you see the actual install curve, the two released Chloe models only have endpoints (dashed). Right of the divider
-          is <span className="text-foreground">Phase B</span>: we hold the wash-out identical (keep training on the same
-          harmless Alpaca text) and vary only <span className="text-foreground">how it was installed</span>. Top = misbehavior
-          (lower safer); bottom = capability (to check nothing's just getting dumber).
+          Each line is the whole life of a model: <span className="text-foreground">Phase A</span> (shaded) installs the
+          safety trait — base (~0.42) down to the <span className="text-foreground">installed</span> point — then
+          <span className="text-foreground"> Phase B</span> keeps training on the same harmless Alpaca text and we re-measure.
+          Top = misbehavior (lower safer), bottom = capability (nothing's just getting dumber).
         </p>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground leading-relaxed border-l-2 border-sky-400 pl-4">
-          <span className="text-foreground font-medium">The result:</span> under identical wash-out, the deep on-policy
-          install (blue) <span className="text-foreground">resists</span> while the released Chloe model (red)
-          <span className="text-foreground"> washes most of the way back to base</span>. The install starting point governs it.
-          The two full-parameter washouts are deferred on scarce 8-GPU stock — their install ramps are shown, washout pending.
+          <span className="text-foreground font-medium">Result:</span> the heavier the install, the more it resists —
+          full-parameter installs (violet/blue) stay flat, our deep LoRA install drifts only slightly, and the released
+          Chloe model washes most of the way back to base. The install starting point governs it.
         </p>
       </div>
 
       <section className="space-y-3">
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
           <text x={(M.left + xs(PHASEB_START)) / 2} y={26} fontSize={12} fill="#64748b" textAnchor="middle">Phase A — install</text>
-          <text x={(M.left + xs(PHASEB_START)) / 2} y={40} fontSize={10} fill="#94a3b8" textAnchor="middle">(trait trains in)</text>
-          <text x={(xs(PHASEB_START) + M.left + IW) / 2} y={33} fontSize={12.5} fill="#64748b" textAnchor="middle">
-            Phase B — wash-out (continued Alpaca training)  →
-          </text>
-
-          <Panel y0={TOP} lo={0} hi={0.46} ticks={[0, 0.1, 0.2, 0.3, 0.4]}
-            label="misbehavior / AM (lower = safer)" valOf={(s) => s.am} />
-          <Panel y0={g2y} lo={0.4} hi={0.75} ticks={[0.4, 0.5, 0.6, 0.7]}
-            label="capability / GPQA (higher = smarter)" valOf={(s) => s.gpqa} />
-
-          {XLABELS.map((d, i) => {
-            const ramp = i >= 1 && i <= 3 // install-checkpoint sub-ticks (install examples, smaller/lighter scale)
-            return (
-              <text key={i} x={xs(i)} y={g2y + PANEL_H + 22} fontSize={ramp ? 10 : 12}
-                fill={ramp ? "#aab4c2" : (i <= PHASEB_START ? "#475569" : "#888")} textAnchor="middle"
-                fontWeight={i === 0 || i === PHASEB_START ? 500 : 400}>{d}</text>
-            )
-          })}
+          <text x={(xs(PHASEB_START) + M.left + IW) / 2} y={33} fontSize={12.5} fill="#64748b" textAnchor="middle">Phase B — wash-out (continued Alpaca training)  →</text>
+          <Panel y0={TOP} lo={0} hi={0.46} ticks={[0, 0.1, 0.2, 0.3, 0.4]} label="misbehavior / AM (lower = safer)" valOf={(s) => s.am} />
+          <Panel y0={g2y} lo={0.4} hi={0.75} ticks={[0.4, 0.5, 0.6, 0.7]} label="capability / GPQA (higher = smarter)" valOf={(s) => s.gpqa} />
+          {XLABELS.map((d, i) => { const ramp = i >= 1 && i <= 3
+            return (<text key={i} x={xs(i)} y={g2y + PANEL_H + 22} fontSize={ramp ? 10 : 12} fill={ramp ? "#aab4c2" : (i <= PHASEB_START ? "#475569" : "#888")} textAnchor="middle" fontWeight={i === 0 || i === PHASEB_START ? 500 : 400}>{d}</text>) })}
           <text x={(M.left + xs(PHASEB_START)) / 2} y={g2y + PANEL_H + 36} fontSize={9.5} fill="#aab4c2" textAnchor="middle">install examples</text>
-          <text x={M.left + IW / 2} y={H - 12} fontSize={13} fill="#444" textAnchor="middle">
-            install training  →  installed model  →  examples of continued harmless (Alpaca) training  →
-          </text>
+          {SERIES.map((s, k) => { const ly = TOP + 8 + k * 35
+            return (<g key={`lg${s.name}`}>
+              <line x1={M.left + IW + 8} y1={ly} x2={M.left + IW + 30} y2={ly} stroke={s.color} strokeWidth={2.5} />
+              <circle cx={M.left + IW + 19} cy={ly} r={4} fill={s.color} stroke="white" strokeWidth={1.5} />
+              <text x={M.left + IW + 36} y={ly + 4} fontSize={11.5} fill={s.color} fontWeight="500">{s.name}</text>
+              <text x={M.left + IW + 36} y={ly + 18} fontSize={10} fill="#94a3b8">{s.sub}</text>
+            </g>) })}
+        </svg>
+      </section>
 
-          {/* legend */}
-          {SERIES.map((s, k) => {
-            const ly = TOP + 8 + k * 35
-            return (
-              <g key={`lg${s.name}`}>
-                <line x1={M.left + IW + 8} y1={ly} x2={M.left + IW + 30} y2={ly} stroke={s.color} strokeWidth={2.5} />
-                <circle cx={M.left + IW + 19} cy={ly} r={4} fill={s.color} stroke="white" strokeWidth={1.5} />
-                <text x={M.left + IW + 36} y={ly + 4} fontSize={11.5} fill={s.color} fontWeight="500">{s.name}</text>
-                <text x={M.left + IW + 36} y={ly + 18} fontSize={10} fill="#94a3b8">{s.sub}</text>
-              </g>
-            )
-          })}
+      <section className="space-y-3">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Does it matter what you wash with?</div>
+          <h2 className="text-xl font-light tracking-tight">Same model, two wash distributions — matched vs mismatched</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
+            Wash-out fraction (0 = trait intact, 1 = fully back to base) under the <span className="text-foreground">matched</span>
+            {" "}Alpaca data (solid) vs a <span className="text-foreground">mismatched</span> Chloe-IT distribution (dashed).
+          </p>
+        </div>
+        <svg viewBox={`0 0 ${DW} ${DH}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
+          {[0, 0.25, 0.5, 0.75, 1.0].map((v) => (
+            <g key={v}>
+              <line x1={DM.left} y1={dys(v)} x2={DM.left + DIW} y2={dys(v)} stroke="#eeeeee" />
+              <text x={DM.left - 8} y={dys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(2)}</text>
+            </g>
+          ))}
+          <line x1={DM.left} y1={dys(0)} x2={DM.left + DIW} y2={dys(0)} stroke="#cbd5e1" strokeWidth={1} />
+          <text x={20} y={28 + DPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${28 + DPH / 2})`}>fraction washed back to base</text>
+          {DIST.map((s) => (
+            <g key={s.name}>
+              <polyline fill="none" stroke={s.color} strokeWidth={2.5} strokeDasharray={s.dash ? "6 4" : undefined}
+                points={s.f.map((v, i) => `${dxs(i)},${dys(v)}`).join(" ")} />
+              {s.f.map((v, i) => <circle key={i} cx={dxs(i)} cy={dys(v)} r={3.5} fill={s.color} stroke="white" strokeWidth={1.5} />)}
+            </g>
+          ))}
+          {DOSES2.map((d, i) => <text key={d} x={dxs(i)} y={28 + DPH + 20} fontSize={11} fill="#888" textAnchor="middle">{d}</text>)}
+          <text x={DM.left + DIW / 2} y={DH - 10} fontSize={12} fill="#444" textAnchor="middle">examples of continued (wash-out) training  →</text>
+          {DIST.map((s, k) => { const ly = 34 + k * 26
+            return (<g key={`dl${s.name}`}>
+              <line x1={DM.left + DIW + 10} y1={ly} x2={DM.left + DIW + 34} y2={ly} stroke={s.color} strokeWidth={2.5} strokeDasharray={s.dash ? "6 4" : undefined} />
+              <text x={DM.left + DIW + 40} y={ly + 4} fontSize={11} fill={s.color}>{s.name}</text>
+            </g>) })}
         </svg>
       </section>
 
       <section className="max-w-2xl space-y-4">
         <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">What it shows</div>
         <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
-          <p className="border-l-2 border-slate-300 pl-4">
-            <span className="text-foreground font-medium">Phase A — the install (shaded).</span> The trait trains in over the
-            install run: base ~0.42 drops to the floor. Alpaca filler installs deep (our LoRA → 0.03, full-FT → 0.065);
-            Chloe-IT filler barely installs (0.22). Capability holds flat (~0.67–0.73) the whole way — the install costs no GPQA.
+          <p className="border-l-2 border-[#8b5cf6] pl-4">
+            <span className="text-foreground font-medium">Full-parameter installs are the most robust.</span> Both full-FT
+            arms stay essentially flat across the whole wash-out (≤5% of the trait lost), beating our deep LoRA install
+            (~20%) — full-FT ≥ LoRA, matching the Redwood prediction. (Single-seed, so suggestive, not firm.)
           </p>
           <p className="border-l-2 border-[#0ea5e9] pl-4">
-            <span className="text-foreground font-medium">The deep on-policy install largely resists Phase B.</span> Near the
-            floor through 160 examples, only ~20% back by 736 — a clear near-plateau, 2 seeds consistent, capability flat.
-            (Formally "inconclusive" on the strict band, but the reproducible flat shape is the signal.)
+            <span className="text-foreground font-medium">Distribution-match is real for our deep install.</span> Our LoRA-Alpaca
+            model barely washes under the matched Alpaca data (f→0.20) but washes <span className="text-foreground">2.6× more</span>
+            {" "}under a mismatched Chloe-IT distribution (f→0.52). So "resists" was partly "resists *in-distribution*
+            continuation" — off-distribution training does erode it. Hypothesis confirmed, for an install we built.
           </p>
           <p className="border-l-2 border-[#ef4444] pl-4">
-            <span className="text-foreground font-medium">The released Chloe model washes out.</span> Flat through ~64, then a
-            cliff at 96 (matching the old recovery run at the same dose) up to ~0.88 of the way back. Its capability even
-            recovers as it washes (0.47 → 0.72) — so the misbehavior rise is real, not the model getting dumber.
-          </p>
-          <p className="border-l-2 border-[#f59e0b] pl-4">
-            <span className="text-foreground font-medium">Mid-training washes only partway</span> (~40%). It installed about
-            as deep as our LoRA-Alpaca yet washes more — so depth isn't the whole story; install method / data source matters too.
-          </p>
-          <p className="border-l-2 border-[#10b981] pl-4">
-            <span className="text-foreground font-medium">The shallow install is "too weak to wash"</span> — Chloe-IT filler
-            only reached 0.22, so little trait to lose; it bounces with no clean erosion. Which is itself the install finding:
-            Alpaca filler installs 3–7× deeper.
+            <span className="text-foreground font-medium">But it doesn't hold for the released organism.</span> Chloe's standard
+            model washes out almost identically under both distributions (f≈0.8 either way) — its two curves sit right on top
+            of each other. So distribution-match is <span className="text-foreground">install-specific</span>, not a universal
+            law: a released organism is just fragile to *any* continued training, however you wash it.
           </p>
           <p className="border-l-2 border-slate-300 pl-4">
-            <span className="text-foreground font-medium">Honest caveat + what's deferred.</span> The headline contrast
-            confounds install depth, method, and data-source; the clean within-method control — our two full-parameter
-            washouts (their install ramps are plotted, washout pending) — runs when 8-GPU stock returns. And this tests only
-            Alpaca wash-out; whether a <em>different</em> continuation washes the deep install is the next rung (it would also
-            tell us whether "resists" is really about washing in the same distribution it was installed on).
+            <span className="text-foreground font-medium">The honest reading.</span> The robustness we install is partly a
+            distribution effect, not pure depth — and the cleanest next test is to wash the deep install with a genuinely
+            far distribution (real in-the-wild chat) to see where it finally breaks.
           </p>
         </div>
       </section>
