@@ -7,7 +7,7 @@
 import { Link } from "react-router-dom"
 
 // indices: 0 base · 1-3 install ramp (¼/½/¾) · 4 installed · 5-11 washout doses
-const XLABELS = ["base", "", "", "", "installed", "32", "64", "96", "160", "224", "320", "736"]
+const XLABELS = ["base", "3.2k", "6.4k", "9.6k", "installed", "32", "64", "96", "160", "224", "320", "736"]
 const PHASEB_START = 4 // "installed" — base→installed is Phase A (install); installed→736 is Phase B (washout)
 
 type Series = { name: string; sub: string; color: string; am: (number | null)[]; gpqa: (number | null)[] }
@@ -124,9 +124,15 @@ export function WashoutCurve20260618() {
           <Panel y0={g2y} lo={0.4} hi={0.75} ticks={[0.4, 0.5, 0.6, 0.7]}
             label="capability / GPQA (higher = smarter)" valOf={(s) => s.gpqa} />
 
-          {XLABELS.map((d, i) => d === "" ? null : (
-            <text key={i} x={xs(i)} y={g2y + PANEL_H + 22} fontSize={12} fill={i <= PHASEB_START ? "#475569" : "#888"} textAnchor="middle" fontWeight={i <= PHASEB_START ? 500 : 400}>{d}</text>
-          ))}
+          {XLABELS.map((d, i) => {
+            const ramp = i >= 1 && i <= 3 // install-checkpoint sub-ticks (install examples, smaller/lighter scale)
+            return (
+              <text key={i} x={xs(i)} y={g2y + PANEL_H + 22} fontSize={ramp ? 10 : 12}
+                fill={ramp ? "#aab4c2" : (i <= PHASEB_START ? "#475569" : "#888")} textAnchor="middle"
+                fontWeight={i === 0 || i === PHASEB_START ? 500 : 400}>{d}</text>
+            )
+          })}
+          <text x={(M.left + xs(PHASEB_START)) / 2} y={g2y + PANEL_H + 36} fontSize={9.5} fill="#aab4c2" textAnchor="middle">install examples</text>
           <text x={M.left + IW / 2} y={H - 12} fontSize={13} fill="#444" textAnchor="middle">
             install training  →  installed model  →  examples of continued harmless (Alpaca) training  →
           </text>
