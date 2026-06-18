@@ -80,12 +80,6 @@ const BARS = [
   { short: "full-FT · Alpaca", color: "#8b5cf6", install: 0.065, wash: 0.100, ci_install: null as number | null, ci_wash: null as number | null },
 ]
 
-// distribution-match summary (AM): installed (Phase-A end) vs after Alpaca wash (matched) vs after Chloe-IT wash
-// (mismatched), worst Phase-B point. Reference: install bar, like the chart above.
-const DBARS = [
-  { short: "Our deep install (LoRA-Alpaca)", color: "#0ea5e9", install: 0.033, alpaca: 0.112, chloeit: 0.240 },
-  { short: "Chloe's released organism", color: "#ef4444", install: 0.115, alpaca: 0.395, chloeit: 0.370 },
-]
 
 function segs(v: (number | null)[]) {
   const out: { a: number; b: number; dashed: boolean }[] = []
@@ -180,69 +174,14 @@ export function WashoutCurve20260618() {
     )
   }
 
-  // one bottom-line bar chart (install vs worst-dose wash), self-contained; two sit side by side (Alpaca vs Chloe-IT wash).
-  function BarChart({ installOf, washOf, legendSide = "right" }: {
-    installOf: (b: (typeof BARS)[number]) => number | null
-    washOf: (b: (typeof BARS)[number]) => number | null
-    legendSide?: "left" | "right"
-  }) {
-    const PW = 940, axisGut = 70, legGut = 250
-    const left = legendSide === "left" ? legGut : axisGut
-    const iw = PW - axisGut - legGut
-    const top = 24, ph = 230, hh = top + ph + 56
-    const gW = iw / BARS.length
-    const by = (v: number) => top + ((0.45 - v) / 0.45) * ph
-    const legX = legendSide === "left" ? 8 : left + iw + 16
-    return (
-      <svg viewBox={`0 0 ${PW} ${hh}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
-        {[0, 0.1, 0.2, 0.3, 0.4].map((v) => (
-          <g key={v}>
-            <line x1={left} y1={by(v)} x2={left + iw} y2={by(v)} stroke="#eeeeee" />
-            <text x={left - 8} y={by(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(1)}</text>
-          </g>
-        ))}
-        <line x1={left} y1={by(0.42)} x2={left + iw} y2={by(0.42)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
-        <text x={left + 4} y={by(0.42) - 4} fontSize={10.5} fill="#94a3b8">untrained base</text>
-        <text x={left - 50} y={top + ph / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 ${left - 50} ${top + ph / 2})`}>misbehavior / AM (lower = safer)</text>
-        {BARS.map((b, i) => {
-          const cx = left + (i + 0.5) * gW, bw = 30
-          const inst = installOf(b), wash = washOf(b)
-          if (inst == null || wash == null) {
-            return (
-              <g key={b.short}>
-                <text x={cx} y={by(0.16)} fontSize={9} fill="#cbd5e1" textAnchor="middle">not run</text>
-                <text x={cx} y={by(0) + 16} fontSize={9.5} fill="#94a3b8" textAnchor="middle">{b.short}</text>
-              </g>
-            )
-          }
-          return (
-            <g key={b.short}>
-              <rect x={cx - bw - 2} y={by(inst)} width={bw} height={by(0) - by(inst)} fill={b.color} opacity={0.36} />
-              <rect x={cx + 2} y={by(wash)} width={bw} height={by(0) - by(wash)} fill={b.color} />
-              <text x={cx - bw / 2 - 2} y={by(inst) - 4} fontSize={9} fill="#94a3b8" textAnchor="middle">{inst.toFixed(2)}</text>
-              <text x={cx + bw / 2 + 2} y={by(wash) - 4} fontSize={9.5} fill={b.color} textAnchor="middle" fontWeight="500">{wash.toFixed(2)}</text>
-              <text x={cx} y={by(0) + 16} fontSize={9.5} fill="#475569" textAnchor="middle">{b.short}</text>
-            </g>
-          )
-        })}
-        <g>
-          <rect x={legX} y={by(0.20)} width={14} height={14} fill="#94a3b8" opacity={0.36} />
-          <text x={legX + 18} y={by(0.20) + 11} fontSize={10.5} fill="#64748b">end of training</text>
-          <rect x={legX} y={by(0.20) + 20} width={14} height={14} fill="#94a3b8" />
-          <text x={legX + 18} y={by(0.20) + 31} fontSize={10.5} fill="#64748b">after wash-out</text>
-        </g>
-      </svg>
-    )
-  }
-
   // distribution-match chart
   const DW = 940, DM = { left: 70, right: 300 }, DIW = DW - DM.left - DM.right, DPH = 240, DH = DPH + 96
   const dxs = (i: number) => DM.left + (i / (XLABELS.length - 1)) * DIW
   const dys = (v: number) => 28 + ((0.46 - v) / 0.46) * DPH
 
-  // distribution summary bar chart
-  const dbL = 70, dbR = 300, dbIW = W - dbL - dbR, dbTop = 24, dbPH = 230, dbgW = dbIW / DBARS.length
-  const dbys = (v: number) => dbTop + ((0.45 - v) / 0.45) * dbPH
+  // bottom-line trio bar chart (install + Alpaca wash + Chloe-IT wash), all 6 arms
+  const bL = 70, bR = 230, bIW = W - bL - bR, bTop = 28, bPH = 230, bgW = bIW / BARS.length
+  const bys = (v: number) => bTop + ((0.45 - v) / 0.45) * bPH
 
   return (
     <div className="space-y-10">
@@ -332,35 +271,63 @@ export function WashoutCurve20260618() {
         </svg>
       </section>
 
-      <section className="space-y-6">
+      <section className="space-y-3">
         <div>
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The bottom line</div>
-          <h2 className="text-xl font-light tracking-tight">Where each install lands — trained vs after wash-out</h2>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
-            Misbehavior at the <span className="text-foreground">end of training</span> (light bar) and
-            {" "}<span className="text-foreground">after wash-out</span> (solid bar) — the worst Phase-B dose, since wash-out
-            is non-monotone (it peaks mid-wash, then dips at the very end). Lower = safer; the dashed line is the untrained
-            base. A short solid bar = robust; a tall one = washed back toward base. Left: washed with
-            {" "}<span className="text-foreground">Alpaca</span>. Right: washed with <span className="text-foreground">Chloe-IT</span> —
-            we only ran that on four arms, so the full-FT bars are blank.
+          <h2 className="text-xl font-light tracking-tight">Where each install lands — trained, then washed two ways</h2>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground leading-relaxed">
+            For each model: misbehavior at the <span className="text-foreground">end of training</span> (light), then
+            {" "}<span className="text-foreground">after wash-out</span> under two distributions — <span className="text-foreground">Alpaca</span>
+            {" "}(solid) and <span className="text-foreground">Chloe-IT</span> (dashed). Wash-out = the worst Phase-B dose, since
+            it's non-monotone (peaks mid-wash, dips at the very end). Lower = safer; the dashed line is the untrained base.
+            We only ran the Chloe-IT wash on four arms, so the two full-FT arms have no third bar.
           </p>
         </div>
-        <div className="relative left-1/2 w-screen -translate-x-1/2 px-6">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="space-y-2">
-              <div className="text-center text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Washed with Alpaca</span> — all six arms
-              </div>
-              <BarChart installOf={(b) => b.install} washOf={(b) => b.wash} legendSide="left" />
-            </div>
-            <div className="space-y-2">
-              <div className="text-center text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Washed with Chloe-IT</span> — the four arms we ran
-              </div>
-              <BarChart installOf={(b) => b.ci_install} washOf={(b) => b.ci_wash} legendSide="right" />
-            </div>
-          </div>
-        </div>
+        <svg viewBox={`0 0 ${W} ${bTop + bPH + 52}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
+          {[0, 0.1, 0.2, 0.3, 0.4].map((v) => (
+            <g key={v}>
+              <line x1={bL} y1={bys(v)} x2={bL + bIW} y2={bys(v)} stroke="#eeeeee" />
+              <text x={bL - 8} y={bys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(1)}</text>
+            </g>
+          ))}
+          <line x1={bL} y1={bys(0.42)} x2={bL + bIW} y2={bys(0.42)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
+          <text x={bL + bIW + 6} y={bys(0.42) + 4} fontSize={10.5} fill="#94a3b8">untrained base</text>
+          <text x={20} y={bTop + bPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${bTop + bPH / 2})`}>misbehavior / AM (lower = safer)</text>
+          {BARS.map((b, i) => {
+            const cx = bL + (i + 0.5) * bgW, bw = 22
+            const trio = [
+              { v: b.install as number | null, op: 0.30, dash: false, wash: false },
+              { v: b.wash as number | null, op: 1.0, dash: false, wash: true },
+              { v: b.ci_wash, op: 0.5, dash: true, wash: true },
+            ]
+            return (
+              <g key={b.short}>
+                {trio.map((t, j) => { const x = cx - 35 + j * 24
+                  if (t.v == null) return (
+                    <text key={j} x={x + bw / 2} y={bys(0) - 8} fontSize={8} fill="#cbd5e1" textAnchor="middle" transform={`rotate(-90 ${x + bw / 2} ${bys(0) - 8})`}>not run</text>
+                  )
+                  return (
+                    <g key={j}>
+                      <rect x={x} y={bys(t.v)} width={bw} height={bys(0) - bys(t.v)} fill={b.color} opacity={t.op}
+                        stroke={t.dash ? b.color : "none"} strokeWidth={t.dash ? 1.4 : 0} strokeDasharray={t.dash ? "3 2" : undefined} />
+                      <text x={x + bw / 2} y={bys(t.v) - 4} fontSize={8.5} fill={t.wash ? b.color : "#94a3b8"} textAnchor="middle" fontWeight={t.wash ? "500" : "400"}>{t.v.toFixed(2)}</text>
+                    </g>
+                  )
+                })}
+                <text x={cx} y={bys(0) + 16} fontSize={9.5} fill="#475569" textAnchor="middle">{b.short}</text>
+              </g>
+            )
+          })}
+          {[{ lab: "end of training", op: 0.30, dash: false }, { lab: "after Alpaca wash", op: 1.0, dash: false }, { lab: "after Chloe-IT wash", op: 0.5, dash: true }].map((it, k) => {
+            const ly = bys(0.34) + k * 20
+            return (
+              <g key={it.lab}>
+                <rect x={bL + bIW + 6} y={ly} width={14} height={14} fill="#64748b" opacity={it.op} stroke={it.dash ? "#64748b" : "none"} strokeWidth={it.dash ? 1.2 : 0} strokeDasharray={it.dash ? "3 2" : undefined} />
+                <text x={bL + bIW + 24} y={ly + 11} fontSize={10} fill="#64748b">{it.lab}</text>
+              </g>
+            )
+          })}
+        </svg>
       </section>
 
       <section className="space-y-3">
@@ -368,10 +335,10 @@ export function WashoutCurve20260618() {
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Does it matter what you wash with?</div>
           <h2 className="text-xl font-light tracking-tight">Same model, two wash distributions — matched vs mismatched</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
-            Each model installs (Phase A), then the two washes <span className="text-foreground">branch</span> from the
-            installed point — <span className="text-foreground">matched</span> Alpaca (solid) vs
-            {" "}<span className="text-foreground">mismatched</span> Chloe-IT (dashed). Bars below: the same at the worst
-            point — installed (light), after Alpaca wash (solid), after Chloe-IT wash (dashed/light).
+            The full dose trajectory for two arms — our deep LoRA-Alpaca install and Chloe's released model. Each installs
+            (Phase A), then the two washes <span className="text-foreground">branch</span> from the installed point —
+            {" "}<span className="text-foreground">matched</span> Alpaca (solid) vs <span className="text-foreground">mismatched</span>
+            {" "}Chloe-IT (dashed). The endpoint bars for all six arms are in "the bottom line" above.
           </p>
         </div>
         <svg viewBox={`0 0 ${DW} ${DH}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
@@ -406,48 +373,6 @@ export function WashoutCurve20260618() {
               <line x1={DM.left + DIW + 10} y1={ly} x2={DM.left + DIW + 34} y2={ly} stroke={s.color} strokeWidth={2.5} strokeDasharray={s.dash ? "6 4" : undefined} />
               <text x={DM.left + DIW + 40} y={ly + 4} fontSize={10.5} fill={s.color}>{s.arm}</text>
             </g>) })}
-        </svg>
-        <svg viewBox={`0 0 ${W} ${dbTop + dbPH + 50}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
-          {[0, 0.1, 0.2, 0.3, 0.4].map((v) => (
-            <g key={v}>
-              <line x1={dbL} y1={dbys(v)} x2={dbL + dbIW} y2={dbys(v)} stroke="#eeeeee" />
-              <text x={dbL - 8} y={dbys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(1)}</text>
-            </g>
-          ))}
-          <line x1={dbL} y1={dbys(0.42)} x2={dbL + dbIW} y2={dbys(0.42)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
-          <text x={dbL + dbIW + 6} y={dbys(0.42) + 4} fontSize={10.5} fill="#94a3b8">untrained base (fully washed)</text>
-          <text x={20} y={dbTop + dbPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${dbTop + dbPH / 2})`}>misbehavior / AM (lower = safer)</text>
-          {DBARS.map((b, i) => {
-            const cx = dbL + (i + 0.5) * dbgW, bw = 40
-            const trio = [
-              { v: b.install, op: 0.28, dash: false, wash: false },
-              { v: b.alpaca, op: 1.0, dash: false, wash: true },
-              { v: b.chloeit, op: 0.5, dash: true, wash: true },
-            ]
-            return (
-              <g key={b.short}>
-                {trio.map((t, j) => { const x = cx - 66 + j * 46
-                  return (
-                    <g key={j}>
-                      <rect x={x} y={dbys(t.v)} width={bw} height={dbys(0) - dbys(t.v)} fill={b.color} opacity={t.op}
-                        stroke={t.dash ? b.color : "none"} strokeWidth={t.dash ? 1.4 : 0} strokeDasharray={t.dash ? "3 2" : undefined} />
-                      <text x={x + bw / 2} y={dbys(t.v) - 4} fontSize={9} fill={t.wash ? b.color : "#94a3b8"} textAnchor="middle" fontWeight={t.wash ? "500" : "400"}>{t.v.toFixed(2)}</text>
-                    </g>
-                  )
-                })}
-                <text x={cx} y={dbys(0) + 16} fontSize={10.5} fill="#475569" textAnchor="middle">{b.short}</text>
-              </g>
-            )
-          })}
-          {[{ lab: "end of training (install)", op: 0.28, dash: false }, { lab: "after Alpaca wash (matched)", op: 1.0, dash: false }, { lab: "after Chloe-IT wash (mismatch)", op: 0.5, dash: true }].map((it, k) => {
-            const ly = dbys(0.30) + k * 20
-            return (
-              <g key={it.lab}>
-                <rect x={dbL + dbIW + 6} y={ly} width={14} height={14} fill="#64748b" opacity={it.op} stroke={it.dash ? "#64748b" : "none"} strokeWidth={it.dash ? 1.2 : 0} strokeDasharray={it.dash ? "3 2" : undefined} />
-                <text x={dbL + dbIW + 24} y={ly + 11} fontSize={10} fill="#64748b">{it.lab}</text>
-              </g>
-            )
-          })}
         </svg>
       </section>
 
