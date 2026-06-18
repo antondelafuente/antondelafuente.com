@@ -32,14 +32,16 @@ const SERIES: Series[] = [
     gpqa: [0.692, 0.687, 0.717, 0.697, 0.697, null, null, null, null, null, null, 0.692] },
 ]
 
-// distribution-match test: wash-out fraction f vs Phase-B dose, matched (Alpaca) vs mismatched (Chloe-IT) wash data.
-const DOSES2 = ["0", "32", "64", "96", "160", "224", "320", "736"]
-type Dist = { name: string; color: string; dash: boolean; f: number[] }
-const DIST: Dist[] = [
-  { name: "Our deep install — Alpaca wash (MATCHED)", color: "#0ea5e9", dash: false, f: [0, -0.02, -0.01, 0, 0.01, 0.07, 0.10, 0.20] },
-  { name: "Our deep install — Chloe-IT wash (mismatched)", color: "#0ea5e9", dash: true, f: [0, -0.02, 0.03, 0.15, 0.49, 0.53, 0.46, 0.52] },
-  { name: "Chloe's released — Alpaca wash", color: "#ef4444", dash: false, f: [0, -0.05, 0.31, 0.73, 0.64, 0.77, 0.88, 0.44] },
-  { name: "Chloe's released — Chloe-IT wash", color: "#ef4444", dash: true, f: [0, -0.03, 0.18, 0.78, 0.83, 0.79, 0.72, 0.38] },
+// distribution-match test (AM): base → installed → the two washes BRANCH out. matched (Alpaca) = solid;
+// mismatched (Chloe-IT) = dashed. Same scheme as the bars below.
+const DXLABELS = ["base", "installed", "32", "64", "96", "160", "224", "320", "736"]
+const DPHB = 1 // "installed" — the branch point (Phase A → Phase B)
+type Dist = { arm: string; color: string; dash: boolean; am: number[] }
+const DLINES: Dist[] = [
+  { arm: "Our deep install · Alpaca wash (matched)", color: "#0ea5e9", dash: false, am: [0.42, 0.033, 0.024, 0.027, 0.035, 0.036, 0.062, 0.074, 0.112] },
+  { arm: "Our deep install · Chloe-IT wash (mismatch)", color: "#0ea5e9", dash: true, am: [0.42, 0.033, 0.023, 0.043, 0.092, 0.225, 0.240, 0.212, 0.236] },
+  { arm: "Chloe's released · Alpaca wash", color: "#ef4444", dash: false, am: [0.42, 0.115, 0.100, 0.213, 0.350, 0.320, 0.362, 0.395, 0.257] },
+  { arm: "Chloe's released · Chloe-IT wash", color: "#ef4444", dash: true, am: [0.42, 0.115, 0.107, 0.172, 0.355, 0.370, 0.358, 0.335, 0.232] },
 ]
 
 // summary bars: AM at end of training (install depth) vs after wash-out. "wash" = the WORST Phase-B dose, not
@@ -109,8 +111,8 @@ export function WashoutCurve20260618() {
 
   // distribution-match chart
   const DW = 940, DM = { left: 70, right: 300 }, DIW = DW - DM.left - DM.right, DPH = 240, DH = DPH + 96
-  const dxs = (i: number) => DM.left + (i / (DOSES2.length - 1)) * DIW
-  const dys = (v: number) => 28 + ((1.0 - v) / (1.0 - (-0.1))) * DPH
+  const dxs = (i: number) => DM.left + (i / (DXLABELS.length - 1)) * DIW
+  const dys = (v: number) => 28 + ((0.46 - v) / 0.46) * DPH
 
   // summary bar chart
   const bL = 70, bR = 250, bIW = W - bL - bR, bTop = 24, bPH = 230, gW = bIW / BARS.length
@@ -203,35 +205,39 @@ export function WashoutCurve20260618() {
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Does it matter what you wash with?</div>
           <h2 className="text-xl font-light tracking-tight">Same model, two wash distributions — matched vs mismatched</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
-            Top: wash-out fraction over the dose (0 = trait intact, 1 = back to base) under the
-            {" "}<span className="text-foreground">matched</span> Alpaca data (solid) vs a
-            {" "}<span className="text-foreground">mismatched</span> Chloe-IT distribution (dashed). Bars: the same in
-            absolute misbehavior — where it was <span className="text-foreground">installed</span> (light), then after each
-            wash (worst point).
+            Each model installs (Phase A), then the two washes <span className="text-foreground">branch</span> from the
+            installed point — <span className="text-foreground">matched</span> Alpaca (solid) vs
+            {" "}<span className="text-foreground">mismatched</span> Chloe-IT (dashed). Bars below: the same at the worst
+            point — installed (light), after Alpaca wash (solid), after Chloe-IT wash (dashed/light).
           </p>
         </div>
         <svg viewBox={`0 0 ${DW} ${DH}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
-          {[0, 0.25, 0.5, 0.75, 1.0].map((v) => (
+          {[0, 0.1, 0.2, 0.3, 0.4].map((v) => (
             <g key={v}>
               <line x1={DM.left} y1={dys(v)} x2={DM.left + DIW} y2={dys(v)} stroke="#eeeeee" />
-              <text x={DM.left - 8} y={dys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(2)}</text>
+              <text x={DM.left - 8} y={dys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(1)}</text>
             </g>
           ))}
-          <line x1={DM.left} y1={dys(0)} x2={DM.left + DIW} y2={dys(0)} stroke="#cbd5e1" strokeWidth={1} />
-          <text x={20} y={28 + DPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${28 + DPH / 2})`}>fraction washed back to base</text>
-          {DIST.map((s) => (
-            <g key={s.name}>
+          <line x1={DM.left} y1={dys(0.42)} x2={DM.left + DIW} y2={dys(0.42)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
+          <text x={DM.left + DIW + 6} y={dys(0.42) + 4} fontSize={10.5} fill="#94a3b8">untrained base</text>
+          <text x={20} y={28 + DPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${28 + DPH / 2})`}>misbehavior / AM (lower = safer)</text>
+          <rect x={DM.left} y={28} width={dxs(DPHB) - DM.left} height={DPH} fill="#f8fafc" />
+          <line x1={dxs(DPHB)} y1={28 - 6} x2={dxs(DPHB)} y2={28 + DPH} stroke="#cbd5e1" strokeWidth={1.5} />
+          <text x={(DM.left + dxs(DPHB)) / 2} y={20} fontSize={11} fill="#64748b" textAnchor="middle">Phase A</text>
+          <text x={(dxs(DPHB) + DM.left + DIW) / 2} y={20} fontSize={11.5} fill="#64748b" textAnchor="middle">Phase B — the two washes branch  →</text>
+          {DLINES.map((s) => (
+            <g key={s.arm}>
               <polyline fill="none" stroke={s.color} strokeWidth={2.5} strokeDasharray={s.dash ? "6 4" : undefined}
-                points={s.f.map((v, i) => `${dxs(i)},${dys(v)}`).join(" ")} />
-              {s.f.map((v, i) => <circle key={i} cx={dxs(i)} cy={dys(v)} r={3.5} fill={s.color} stroke="white" strokeWidth={1.5} />)}
+                points={s.am.map((v, i) => `${dxs(i)},${dys(v)}`).join(" ")} />
+              {s.am.map((v, i) => i < DPHB ? null : <circle key={i} cx={dxs(i)} cy={dys(v)} r={3.2} fill={s.color} stroke="white" strokeWidth={1.5} />)}
             </g>
           ))}
-          {DOSES2.map((d, i) => <text key={d} x={dxs(i)} y={28 + DPH + 20} fontSize={11} fill="#888" textAnchor="middle">{d}</text>)}
-          <text x={DM.left + DIW / 2} y={DH - 10} fontSize={12} fill="#444" textAnchor="middle">examples of continued (wash-out) training  →</text>
-          {DIST.map((s, k) => { const ly = 34 + k * 26
-            return (<g key={`dl${s.name}`}>
+          {DXLABELS.map((d, i) => <text key={d} x={dxs(i)} y={28 + DPH + 20} fontSize={11} fill={i <= DPHB ? "#475569" : "#888"} fontWeight={i <= DPHB ? 500 : 400} textAnchor="middle">{d}</text>)}
+          <text x={(dxs(DPHB) + DM.left + DIW) / 2} y={DH - 10} fontSize={12} fill="#444" textAnchor="middle">examples of continued (wash-out) training  →</text>
+          {DLINES.map((s, k) => { const ly = 34 + k * 24
+            return (<g key={`dl${s.arm}`}>
               <line x1={DM.left + DIW + 10} y1={ly} x2={DM.left + DIW + 34} y2={ly} stroke={s.color} strokeWidth={2.5} strokeDasharray={s.dash ? "6 4" : undefined} />
-              <text x={DM.left + DIW + 40} y={ly + 4} fontSize={11} fill={s.color}>{s.name}</text>
+              <text x={DM.left + DIW + 40} y={ly + 4} fontSize={10.5} fill={s.color}>{s.arm}</text>
             </g>) })}
         </svg>
         <svg viewBox={`0 0 ${W} ${dbTop + dbPH + 50}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
@@ -247,15 +253,18 @@ export function WashoutCurve20260618() {
           {DBARS.map((b, i) => {
             const cx = dbL + (i + 0.5) * dbgW, bw = 40
             const trio = [
-              { v: b.install, op: 0.30 }, { v: b.alpaca, op: 0.62 }, { v: b.chloeit, op: 1.0 },
+              { v: b.install, op: 0.28, dash: false, wash: false },
+              { v: b.alpaca, op: 1.0, dash: false, wash: true },
+              { v: b.chloeit, op: 0.5, dash: true, wash: true },
             ]
             return (
               <g key={b.short}>
                 {trio.map((t, j) => { const x = cx - 66 + j * 46
                   return (
                     <g key={j}>
-                      <rect x={x} y={dbys(t.v)} width={bw} height={dbys(0) - dbys(t.v)} fill={b.color} opacity={t.op} />
-                      <text x={x + bw / 2} y={dbys(t.v) - 4} fontSize={9} fill={t.op > 0.5 ? b.color : "#94a3b8"} textAnchor="middle" fontWeight={t.op > 0.5 ? "500" : "400"}>{t.v.toFixed(2)}</text>
+                      <rect x={x} y={dbys(t.v)} width={bw} height={dbys(0) - dbys(t.v)} fill={b.color} opacity={t.op}
+                        stroke={t.dash ? b.color : "none"} strokeWidth={t.dash ? 1.4 : 0} strokeDasharray={t.dash ? "3 2" : undefined} />
+                      <text x={x + bw / 2} y={dbys(t.v) - 4} fontSize={9} fill={t.wash ? b.color : "#94a3b8"} textAnchor="middle" fontWeight={t.wash ? "500" : "400"}>{t.v.toFixed(2)}</text>
                     </g>
                   )
                 })}
@@ -263,11 +272,11 @@ export function WashoutCurve20260618() {
               </g>
             )
           })}
-          {[{ lab: "end of training (install)", op: 0.30 }, { lab: "after Alpaca wash (matched)", op: 0.62 }, { lab: "after Chloe-IT wash (mismatch)", op: 1.0 }].map((it, k) => {
+          {[{ lab: "end of training (install)", op: 0.28, dash: false }, { lab: "after Alpaca wash (matched)", op: 1.0, dash: false }, { lab: "after Chloe-IT wash (mismatch)", op: 0.5, dash: true }].map((it, k) => {
             const ly = dbys(0.30) + k * 20
             return (
               <g key={it.lab}>
-                <rect x={dbL + dbIW + 6} y={ly} width={14} height={14} fill="#64748b" opacity={it.op} />
+                <rect x={dbL + dbIW + 6} y={ly} width={14} height={14} fill="#64748b" opacity={it.op} stroke={it.dash ? "#64748b" : "none"} strokeWidth={it.dash ? 1.2 : 0} strokeDasharray={it.dash ? "3 2" : undefined} />
                 <text x={dbL + dbIW + 24} y={ly + 11} fontSize={10} fill="#64748b">{it.lab}</text>
               </g>
             )
