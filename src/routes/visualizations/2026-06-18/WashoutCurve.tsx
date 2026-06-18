@@ -32,6 +32,12 @@ const SERIES: Series[] = [
     gpqa: [0.692, 0.687, 0.717, 0.697, 0.697, null, null, null, null, null, null, 0.692] },
 ]
 
+// Arthur's asks: 4 organisms built with Chloe-IT data, Alpaca-washed. midtraining (Chloe non-mid vs mid) + method (LoRA vs full-FT).
+const ARTHUR = [
+  "Chloe's standard model", "Chloe's mid-trained model",
+  "Our LoRA install (Chloe-IT filler)", "Our full-FT install (Chloe-IT filler)",
+].map((n) => SERIES.find((s) => s.name === n)!)
+
 // distribution-match test (AM): base → installed → the two washes BRANCH out. matched (Alpaca) = solid;
 // mismatched (Chloe-IT) = dashed. Same scheme as the bars below.
 type Dist = { arm: string; color: string; dash: boolean; am: (number | null)[] }
@@ -76,8 +82,8 @@ export function WashoutCurve20260618() {
   const H = TOP + PANEL_H + GAP + PANEL_H + 58
   const g2y = TOP + PANEL_H + GAP
 
-  function Panel({ y0, lo, hi, ticks, label, valOf }: {
-    y0: number; lo: number; hi: number; ticks: number[]; label: string; valOf: (s: Series) => (number | null)[]
+  function Panel({ y0, lo, hi, ticks, label, valOf, rows = SERIES }: {
+    y0: number; lo: number; hi: number; ticks: number[]; label: string; valOf: (s: Series) => (number | null)[]; rows?: Series[]
   }) {
     const ys = (v: number) => y0 + ((hi - v) / (hi - lo)) * PANEL_H
     return (
@@ -91,7 +97,7 @@ export function WashoutCurve20260618() {
         <text x={20} y={y0 + PANEL_H / 2} fontSize={13} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${y0 + PANEL_H / 2})`}>{label}</text>
         <rect x={M.left} y={y0} width={xs(PHASEB_START) - M.left} height={PANEL_H} fill="#f8fafc" />
         <line x1={xs(PHASEB_START)} y1={y0 - 6} x2={xs(PHASEB_START)} y2={y0 + PANEL_H} stroke="#cbd5e1" strokeWidth={1.5} />
-        {SERIES.map((s) => {
+        {rows.map((s) => {
           const vv = valOf(s)
           return (
             <g key={s.name}>
@@ -314,6 +320,38 @@ export function WashoutCurve20260618() {
             far distribution (real in-the-wild chat) to see where it finally breaks.
           </p>
         </div>
+      </section>
+
+      <section className="space-y-3 border-t pt-8">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Arthur's asks</div>
+          <h2 className="text-xl font-light tracking-tight">Does it wash away? — midtraining, and LoRA vs full-FT</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
+            The four organisms Arthur asked about — all built with <span className="text-foreground">Chloe-IT</span> data,
+            then stress-tested by continued (Alpaca) training. Two comparisons in one plot:
+            {" "}<span className="text-foreground">Chloe non-mid vs mid</span> (does midtraining protect?) and
+            {" "}<span className="text-foreground">our LoRA vs full-FT</span> (does full-parameter protect?).
+          </p>
+        </div>
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
+          <text x={(M.left + xs(PHASEB_START)) / 2} y={26} fontSize={12} fill="#64748b" textAnchor="middle">Phase A — install</text>
+          <text x={(xs(PHASEB_START) + M.left + IW) / 2} y={33} fontSize={12.5} fill="#64748b" textAnchor="middle">Phase B — wash-out (continued Alpaca training)  →</text>
+          <Panel y0={TOP} lo={0} hi={0.46} ticks={[0, 0.1, 0.2, 0.3, 0.4]} label="misbehavior / AM (lower = safer)" valOf={(s) => s.am} rows={ARTHUR} />
+          <Panel y0={g2y} lo={0.4} hi={0.75} ticks={[0.4, 0.5, 0.6, 0.7]} label="capability / GPQA (higher = smarter)" valOf={(s) => s.gpqa} rows={ARTHUR} />
+          {XLABELS.map((d, i) => { const ramp = i >= 1 && i <= 3
+            return (<text key={i} x={xs(i)} y={g2y + PANEL_H + 22} fontSize={ramp ? 10 : 12} fill={ramp ? "#aab4c2" : (i <= PHASEB_START ? "#475569" : "#888")} textAnchor="middle" fontWeight={i === 0 || i === PHASEB_START ? 500 : 400}>{d}</text>) })}
+          <text x={(M.left + xs(PHASEB_START)) / 2} y={g2y + PANEL_H + 36} fontSize={9.5} fill="#aab4c2" textAnchor="middle">install examples</text>
+          {ARTHUR.map((s, k) => { const ly = TOP + 8 + k * 36
+            return (
+              <g key={`al${s.name}`}>
+                <line x1={M.left + IW + 8} y1={ly} x2={M.left + IW + 30} y2={ly} stroke={s.color} strokeWidth={2.5} />
+                <circle cx={M.left + IW + 19} cy={ly} r={4} fill={s.color} stroke="white" strokeWidth={1.5} />
+                <text x={M.left + IW + 36} y={ly + 4} fontSize={11.5} fill={s.color} fontWeight="500">{s.name}</text>
+                <text x={M.left + IW + 36} y={ly + 18} fontSize={10} fill="#94a3b8">{k < 2 ? "midtraining pair" : "method pair"}</text>
+              </g>
+            )
+          })}
+        </svg>
       </section>
     </div>
   )
