@@ -53,10 +53,11 @@ const BARS = [
   { short: "full-FT · Alpaca", color: "#8b5cf6", install: 0.065, wash: 0.100 },
 ]
 
-// distribution-match summary: worst-point wash-out fraction under Alpaca (matched) vs Chloe-IT (mismatched) wash.
+// distribution-match summary (AM): installed (Phase-A end) vs after Alpaca wash (matched) vs after Chloe-IT wash
+// (mismatched), worst Phase-B point. Reference: install bar, like the chart above.
 const DBARS = [
-  { short: "Our deep install (LoRA-Alpaca)", color: "#0ea5e9", alpaca: 0.20, chloeit: 0.53 },
-  { short: "Chloe's released organism", color: "#ef4444", alpaca: 0.88, chloeit: 0.83 },
+  { short: "Our deep install (LoRA-Alpaca)", color: "#0ea5e9", install: 0.033, alpaca: 0.112, chloeit: 0.240 },
+  { short: "Chloe's released organism", color: "#ef4444", install: 0.115, alpaca: 0.395, chloeit: 0.370 },
 ]
 
 function segs(v: (number | null)[]) {
@@ -115,7 +116,7 @@ export function WashoutCurve20260618() {
   const bL = 70, bR = 250, bIW = W - bL - bR, bTop = 24, bPH = 230, gW = bIW / BARS.length
   const bys = (v: number) => bTop + ((0.45 - v) / 0.45) * bPH
   const dbL = 70, dbR = 300, dbIW = W - dbL - dbR, dbTop = 24, dbPH = 230, dbgW = dbIW / DBARS.length
-  const dbys = (v: number) => dbTop + ((1.0 - v) / 1.0) * dbPH
+  const dbys = (v: number) => dbTop + ((0.45 - v) / 0.45) * dbPH
 
   return (
     <div className="space-y-10">
@@ -202,8 +203,11 @@ export function WashoutCurve20260618() {
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Does it matter what you wash with?</div>
           <h2 className="text-xl font-light tracking-tight">Same model, two wash distributions — matched vs mismatched</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
-            Wash-out fraction (0 = trait intact, 1 = fully back to base) under the <span className="text-foreground">matched</span>
-            {" "}Alpaca data (solid) vs a <span className="text-foreground">mismatched</span> Chloe-IT distribution (dashed).
+            Top: wash-out fraction over the dose (0 = trait intact, 1 = back to base) under the
+            {" "}<span className="text-foreground">matched</span> Alpaca data (solid) vs a
+            {" "}<span className="text-foreground">mismatched</span> Chloe-IT distribution (dashed). Bars: the same in
+            absolute misbehavior — where it was <span className="text-foreground">installed</span> (light), then after each
+            wash (worst point).
           </p>
         </div>
         <svg viewBox={`0 0 ${DW} ${DH}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
@@ -231,33 +235,43 @@ export function WashoutCurve20260618() {
             </g>) })}
         </svg>
         <svg viewBox={`0 0 ${W} ${dbTop + dbPH + 50}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
-          {[0, 0.25, 0.5, 0.75, 1.0].map((v) => (
+          {[0, 0.1, 0.2, 0.3, 0.4].map((v) => (
             <g key={v}>
               <line x1={dbL} y1={dbys(v)} x2={dbL + dbIW} y2={dbys(v)} stroke="#eeeeee" />
-              <text x={dbL - 8} y={dbys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(2)}</text>
+              <text x={dbL - 8} y={dbys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(1)}</text>
             </g>
           ))}
-          <line x1={dbL} y1={dbys(1.0)} x2={dbL + dbIW} y2={dbys(1.0)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
-          <text x={dbL + dbIW + 6} y={dbys(1.0) + 4} fontSize={10.5} fill="#94a3b8">fully washed</text>
-          <text x={20} y={dbTop + dbPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${dbTop + dbPH / 2})`}>fraction washed back to base</text>
+          <line x1={dbL} y1={dbys(0.42)} x2={dbL + dbIW} y2={dbys(0.42)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
+          <text x={dbL + dbIW + 6} y={dbys(0.42) + 4} fontSize={10.5} fill="#94a3b8">untrained base (fully washed)</text>
+          <text x={20} y={dbTop + dbPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${dbTop + dbPH / 2})`}>misbehavior / AM (lower = safer)</text>
           {DBARS.map((b, i) => {
-            const cx = dbL + (i + 0.5) * dbgW, bw = 52
+            const cx = dbL + (i + 0.5) * dbgW, bw = 40
+            const trio = [
+              { v: b.install, op: 0.30 }, { v: b.alpaca, op: 0.62 }, { v: b.chloeit, op: 1.0 },
+            ]
             return (
               <g key={b.short}>
-                <rect x={cx - bw - 4} y={dbys(b.alpaca)} width={bw} height={dbys(0) - dbys(b.alpaca)} fill={b.color} />
-                <rect x={cx + 4} y={dbys(b.chloeit)} width={bw} height={dbys(0) - dbys(b.chloeit)} fill={b.color} opacity={0.38} />
-                <text x={cx - bw / 2 - 4} y={dbys(b.alpaca) - 4} fontSize={10} fill={b.color} textAnchor="middle" fontWeight="500">{b.alpaca.toFixed(2)}</text>
-                <text x={cx + bw / 2 + 4} y={dbys(b.chloeit) - 4} fontSize={10} fill="#94a3b8" textAnchor="middle">{b.chloeit.toFixed(2)}</text>
+                {trio.map((t, j) => { const x = cx - 66 + j * 46
+                  return (
+                    <g key={j}>
+                      <rect x={x} y={dbys(t.v)} width={bw} height={dbys(0) - dbys(t.v)} fill={b.color} opacity={t.op} />
+                      <text x={x + bw / 2} y={dbys(t.v) - 4} fontSize={9} fill={t.op > 0.5 ? b.color : "#94a3b8"} textAnchor="middle" fontWeight={t.op > 0.5 ? "500" : "400"}>{t.v.toFixed(2)}</text>
+                    </g>
+                  )
+                })}
                 <text x={cx} y={dbys(0) + 16} fontSize={10.5} fill="#475569" textAnchor="middle">{b.short}</text>
               </g>
             )
           })}
-          <g>
-            <rect x={dbL + dbIW + 6} y={dbys(0.6)} width={14} height={14} fill="#64748b" />
-            <text x={dbL + dbIW + 24} y={dbys(0.6) + 11} fontSize={10.5} fill="#64748b">Alpaca wash (matched)</text>
-            <rect x={dbL + dbIW + 6} y={dbys(0.6) + 20} width={14} height={14} fill="#64748b" opacity={0.38} />
-            <text x={dbL + dbIW + 24} y={dbys(0.6) + 31} fontSize={10.5} fill="#64748b">Chloe-IT wash (mismatch)</text>
-          </g>
+          {[{ lab: "end of training (install)", op: 0.30 }, { lab: "after Alpaca wash (matched)", op: 0.62 }, { lab: "after Chloe-IT wash (mismatch)", op: 1.0 }].map((it, k) => {
+            const ly = dbys(0.30) + k * 20
+            return (
+              <g key={it.lab}>
+                <rect x={dbL + dbIW + 6} y={ly} width={14} height={14} fill="#64748b" opacity={it.op} />
+                <text x={dbL + dbIW + 24} y={ly + 11} fontSize={10} fill="#64748b">{it.lab}</text>
+              </g>
+            )
+          })}
         </svg>
       </section>
 
