@@ -53,6 +53,12 @@ const BARS = [
   { short: "full-FT · Alpaca", color: "#8b5cf6", install: 0.065, wash: 0.100 },
 ]
 
+// distribution-match summary: worst-point wash-out fraction under Alpaca (matched) vs Chloe-IT (mismatched) wash.
+const DBARS = [
+  { short: "Our deep install (LoRA-Alpaca)", color: "#0ea5e9", alpaca: 0.20, chloeit: 0.53 },
+  { short: "Chloe's released organism", color: "#ef4444", alpaca: 0.88, chloeit: 0.83 },
+]
+
 function segs(v: (number | null)[]) {
   const out: { a: number; b: number; dashed: boolean }[] = []
   let prev = -1
@@ -108,6 +114,8 @@ export function WashoutCurve20260618() {
   // summary bar chart
   const bL = 70, bR = 250, bIW = W - bL - bR, bTop = 24, bPH = 230, gW = bIW / BARS.length
   const bys = (v: number) => bTop + ((0.45 - v) / 0.45) * bPH
+  const dbL = 70, dbR = 300, dbIW = W - dbL - dbR, dbTop = 24, dbPH = 230, dbgW = dbIW / DBARS.length
+  const dbys = (v: number) => dbTop + ((1.0 - v) / 1.0) * dbPH
 
   return (
     <div className="space-y-10">
@@ -221,6 +229,35 @@ export function WashoutCurve20260618() {
               <line x1={DM.left + DIW + 10} y1={ly} x2={DM.left + DIW + 34} y2={ly} stroke={s.color} strokeWidth={2.5} strokeDasharray={s.dash ? "6 4" : undefined} />
               <text x={DM.left + DIW + 40} y={ly + 4} fontSize={11} fill={s.color}>{s.name}</text>
             </g>) })}
+        </svg>
+        <svg viewBox={`0 0 ${W} ${dbTop + dbPH + 50}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
+          {[0, 0.25, 0.5, 0.75, 1.0].map((v) => (
+            <g key={v}>
+              <line x1={dbL} y1={dbys(v)} x2={dbL + dbIW} y2={dbys(v)} stroke="#eeeeee" />
+              <text x={dbL - 8} y={dbys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(2)}</text>
+            </g>
+          ))}
+          <line x1={dbL} y1={dbys(1.0)} x2={dbL + dbIW} y2={dbys(1.0)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
+          <text x={dbL + dbIW + 6} y={dbys(1.0) + 4} fontSize={10.5} fill="#94a3b8">fully washed</text>
+          <text x={20} y={dbTop + dbPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${dbTop + dbPH / 2})`}>fraction washed back to base</text>
+          {DBARS.map((b, i) => {
+            const cx = dbL + (i + 0.5) * dbgW, bw = 52
+            return (
+              <g key={b.short}>
+                <rect x={cx - bw - 4} y={dbys(b.alpaca)} width={bw} height={dbys(0) - dbys(b.alpaca)} fill={b.color} />
+                <rect x={cx + 4} y={dbys(b.chloeit)} width={bw} height={dbys(0) - dbys(b.chloeit)} fill={b.color} opacity={0.38} />
+                <text x={cx - bw / 2 - 4} y={dbys(b.alpaca) - 4} fontSize={10} fill={b.color} textAnchor="middle" fontWeight="500">{b.alpaca.toFixed(2)}</text>
+                <text x={cx + bw / 2 + 4} y={dbys(b.chloeit) - 4} fontSize={10} fill="#94a3b8" textAnchor="middle">{b.chloeit.toFixed(2)}</text>
+                <text x={cx} y={dbys(0) + 16} fontSize={10.5} fill="#475569" textAnchor="middle">{b.short}</text>
+              </g>
+            )
+          })}
+          <g>
+            <rect x={dbL + dbIW + 6} y={dbys(0.6)} width={14} height={14} fill="#64748b" />
+            <text x={dbL + dbIW + 24} y={dbys(0.6) + 11} fontSize={10.5} fill="#64748b">Alpaca wash (matched)</text>
+            <rect x={dbL + dbIW + 6} y={dbys(0.6) + 20} width={14} height={14} fill="#64748b" opacity={0.38} />
+            <text x={dbL + dbIW + 24} y={dbys(0.6) + 31} fontSize={10.5} fill="#64748b">Chloe-IT wash (mismatch)</text>
+          </g>
         </svg>
       </section>
 
