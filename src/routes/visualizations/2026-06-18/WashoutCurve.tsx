@@ -74,7 +74,7 @@ const DLINES: Dist[] = [
 // gapA-gpqa eval. We only ran the Chloe-IT wash on four arms, so the two full-FT arms are null for ci_*/g_chloeit.
 const BARS = [
   { short: "Chloe standard", color: "#ef4444", install: 0.115, wash: 0.395, ci_install: 0.115 as number | null, ci_wash: 0.370 as number | null, g_install: 0.465, g_alpaca: 0.672, g_chloeit: 0.677 as number | null },
-  { short: "LoRA · Chloe-IT", color: "#10b981", install: 0.223, wash: 0.275, ci_install: 0.220 as number | null, ci_wash: 0.253 as number | null, g_install: 0.682, g_alpaca: 0.677, g_chloeit: 0.707 as number | null },
+  { short: "LoRA · Chloe-IT", color: "#10b981", install: 0.223, wash: 0.275, ci_install: 0.220 as number | null, ci_wash: 0.253 as number | null, g_install: 0.682, g_alpaca: 0.677, g_chloeit: 0.672 as number | null },
   { short: "Chloe mid-trained", color: "#f59e0b", install: 0.035, wash: 0.185, ci_install: 0.035 as number | null, ci_wash: 0.132 as number | null, g_install: 0.535, g_alpaca: 0.657, g_chloeit: 0.672 as number | null },
   { short: "full-FT · Chloe-IT", color: "#0284c7", install: 0.137, wash: 0.150, ci_install: null as number | null, ci_wash: null as number | null, g_install: 0.722, g_alpaca: 0.667, g_chloeit: null as number | null },
   { short: "LoRA · Alpaca", color: "#0ea5e9", install: 0.033, wash: 0.112, ci_install: 0.033 as number | null, ci_wash: 0.229 as number | null, g_install: 0.680, g_alpaca: 0.692, g_chloeit: 0.717 as number | null },
