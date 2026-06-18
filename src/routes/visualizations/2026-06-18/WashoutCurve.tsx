@@ -95,9 +95,7 @@ function segs(v: (number | null)[]) {
 export function WashoutCurve20260618() {
   const W = 940, M = { left: 70, right: 248 }, IW = W - M.left - M.right
   const xs = (i: number) => M.left + (i / (XLABELS.length - 1)) * IW
-  const TOP = 74, PANEL_H = 220, GAP = 54
-  const H = TOP + PANEL_H + GAP + PANEL_H + 58
-  const g2y = TOP + PANEL_H + GAP
+  const TOP = 74, PANEL_H = 220
 
   function Panel({ y0, lo, hi, ticks, label, valOf, rows = SERIES }: {
     y0: number; lo: number; hi: number; ticks: number[]; label: string; valOf: (s: Series) => (number | null)[]; rows?: Series[]
@@ -198,27 +196,77 @@ export function WashoutCurve20260618() {
         <div className="mt-3 text-xs uppercase tracking-[0.18em] text-muted-foreground">Washout, fine grid</div>
         <h1 className="mt-1 text-3xl font-light tracking-tight">Does the install starting point decide how fast it washes out?</h1>
         <p className="mt-3 max-w-2xl text-muted-foreground leading-relaxed">
-          Each line is the whole life of a model: <span className="text-foreground">Phase A</span> (shaded) installs the
-          safety trait — base (~0.42) down to the <span className="text-foreground">installed</span> point — then
-          <span className="text-foreground"> Phase B</span> keeps training on the same harmless Alpaca text and we re-measure.
-          Top = misbehavior (lower safer), bottom = capability (nothing's just getting dumber).
+          Each model is built to refuse misbehavior (<span className="text-foreground">Phase A</span>, the shaded install —
+          base ~0.42 down to the <span className="text-foreground">installed</span> point), then stress-tested by continued
+          training on harmless Alpaca text (<span className="text-foreground">Phase B</span>) as we re-measure. The question:
+          what makes an installed trait survive the wash? Each panel below isolates one knob.
         </p>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground leading-relaxed border-l-2 border-sky-400 pl-4">
           <span className="text-foreground font-medium">Result:</span> the heavier the install, the more it resists —
-          full-parameter installs (violet/blue) stay flat, our deep LoRA install drifts only slightly, and the released
-          Chloe model washes most of the way back to base. The install starting point governs it.
+          full fine-tuning beats LoRA, and an install built on the distribution you later wash with survives best.
+          Capability is never the casualty (see the capability chart below). The install starting point governs it.
         </p>
       </div>
 
+      <section className="space-y-6">
+        <div className="text-center">
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Arthur's asks</div>
+          <h2 className="text-xl font-light tracking-tight">Does it wash away? — what protects the trait</h2>
+          <p className="mt-1 mx-auto max-w-2xl text-sm text-muted-foreground leading-relaxed">
+            Every organism is stress-tested by continued <span className="text-foreground">Alpaca</span> training; each plot
+            is one controlled comparison. Misbehavior only — capability (GPQA) always recovers under the wash, so it isn't
+            the question. Within a plot, <span className="text-foreground">lighter</span> = the baseline and
+            {" "}<span className="text-foreground">darker</span> = the condition we're testing.
+          </p>
+        </div>
+        <div className="relative left-1/2 w-screen -translate-x-1/2 space-y-6 px-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="space-y-2">
+              <div className="text-center text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Does midtraining protect?</span> — Chloe non-mid vs mid-trained
+              </div>
+              <PairChart rows={MID_PAIR} legendSide="left" />
+            </div>
+            <div className="space-y-2">
+              <div className="text-center text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Does full-parameter protect?</span> — our LoRA vs full-FT
+              </div>
+              <PairChart rows={METHOD_PAIR} legendSide="right" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="space-y-2">
+              <div className="text-center text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Full fine-tune — does the install distribution matter?</span> — Alpaca vs Chloe-IT filler
+              </div>
+              <PairChart rows={FULL_PAIR} legendSide="left" />
+            </div>
+            <div className="space-y-2">
+              <div className="text-center text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">LoRA — does the install distribution matter?</span> — Alpaca vs Chloe-IT filler
+              </div>
+              <PairChart rows={LORA_PAIR} legendSide="right" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="space-y-3">
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Capability check</div>
+          <h2 className="text-xl font-light tracking-tight">The wash never costs capability</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
+            All six models, GPQA across the whole install-and-wash. Every arm stays near base the entire time — whatever
+            misbehavior does, none of them gets dumber. That's why the panels above track misbehavior only.
+          </p>
+        </div>
+        <svg viewBox={`0 0 ${W} ${TOP + PANEL_H + 58}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
           <text x={(M.left + xs(PHASEB_START)) / 2} y={26} fontSize={12} fill="#64748b" textAnchor="middle">Phase A — install</text>
           <text x={(xs(PHASEB_START) + M.left + IW) / 2} y={33} fontSize={12.5} fill="#64748b" textAnchor="middle">Phase B — wash-out (continued Alpaca training)  →</text>
-          <Panel y0={TOP} lo={0} hi={0.46} ticks={[0, 0.1, 0.2, 0.3, 0.4]} label="misbehavior / AM (lower = safer)" valOf={(s) => s.am} />
-          <Panel y0={g2y} lo={0.4} hi={0.75} ticks={[0.4, 0.5, 0.6, 0.7]} label="capability / GPQA (higher = smarter)" valOf={(s) => s.gpqa} />
+          <Panel y0={TOP} lo={0.4} hi={0.75} ticks={[0.4, 0.5, 0.6, 0.7]} label="capability / GPQA (higher = smarter)" valOf={(s) => s.gpqa} />
           {XLABELS.map((d, i) => { const ramp = i >= 1 && i <= 3
-            return (<text key={i} x={xs(i)} y={g2y + PANEL_H + 22} fontSize={ramp ? 10 : 12} fill={ramp ? "#aab4c2" : (i <= PHASEB_START ? "#475569" : "#888")} textAnchor="middle" fontWeight={i === 0 || i === PHASEB_START ? 500 : 400}>{d}</text>) })}
-          <text x={(M.left + xs(PHASEB_START)) / 2} y={g2y + PANEL_H + 36} fontSize={9.5} fill="#aab4c2" textAnchor="middle">install examples</text>
+            return (<text key={i} x={xs(i)} y={TOP + PANEL_H + 22} fontSize={ramp ? 10 : 12} fill={ramp ? "#aab4c2" : (i <= PHASEB_START ? "#475569" : "#888")} textAnchor="middle" fontWeight={i === 0 || i === PHASEB_START ? 500 : 400}>{d}</text>) })}
+          <text x={(M.left + xs(PHASEB_START)) / 2} y={TOP + PANEL_H + 36} fontSize={9.5} fill="#aab4c2" textAnchor="middle">install examples</text>
           {SERIES.map((s, k) => { const ly = TOP + 8 + k * 35
             return (<g key={`lg${s.name}`}>
               <line x1={M.left + IW + 8} y1={ly} x2={M.left + IW + 30} y2={ly} stroke={s.color} strokeWidth={2.5} />
@@ -384,49 +432,6 @@ export function WashoutCurve20260618() {
             distribution effect, not pure depth — and the cleanest next test is to wash the deep install with a genuinely
             far distribution (real in-the-wild chat) to see where it finally breaks.
           </p>
-        </div>
-      </section>
-
-      <section className="space-y-6 border-t pt-8">
-        <div className="text-center">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Arthur's asks</div>
-          <h2 className="text-xl font-light tracking-tight">Does it wash away? — what protects the trait</h2>
-          <p className="mt-1 mx-auto max-w-2xl text-sm text-muted-foreground leading-relaxed">
-            Every organism is stress-tested by continued <span className="text-foreground">Alpaca</span> training; each plot
-            is one controlled comparison. Misbehavior only — capability (GPQA) always recovers under the wash, so it isn't
-            the question. Within a plot, <span className="text-foreground">lighter</span> = the baseline and
-            {" "}<span className="text-foreground">darker</span> = the condition we're testing.
-          </p>
-        </div>
-        <div className="relative left-1/2 w-screen -translate-x-1/2 space-y-6 px-6">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="space-y-2">
-              <div className="text-center text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Does midtraining protect?</span> — Chloe non-mid vs mid-trained
-              </div>
-              <PairChart rows={MID_PAIR} legendSide="left" />
-            </div>
-            <div className="space-y-2">
-              <div className="text-center text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Does full-parameter protect?</span> — our LoRA vs full-FT
-              </div>
-              <PairChart rows={METHOD_PAIR} legendSide="right" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="space-y-2">
-              <div className="text-center text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Full fine-tune — does the install distribution matter?</span> — Alpaca vs Chloe-IT filler
-              </div>
-              <PairChart rows={FULL_PAIR} legendSide="left" />
-            </div>
-            <div className="space-y-2">
-              <div className="text-center text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">LoRA — does the install distribution matter?</span> — Alpaca vs Chloe-IT filler
-              </div>
-              <PairChart rows={LORA_PAIR} legendSide="right" />
-            </div>
-          </div>
         </div>
       </section>
     </div>
