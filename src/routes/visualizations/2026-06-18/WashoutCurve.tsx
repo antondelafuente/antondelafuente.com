@@ -42,6 +42,17 @@ const DIST: Dist[] = [
   { name: "Chloe's released — Chloe-IT wash", color: "#ef4444", dash: true, f: [0, -0.03, 0.18, 0.78, 0.83, 0.79, 0.72, 0.38] },
 ]
 
+// summary bars: AM at end of training (install depth) vs after wash-out. "wash" = the WORST Phase-B dose, not
+// the last one — wash-out is non-monotone (Redwood "backdoor return"): washers peak ~d320 then dip at d736.
+const BARS = [
+  { short: "Chloe standard", color: "#ef4444", install: 0.115, wash: 0.395 },
+  { short: "LoRA · Chloe-IT", color: "#10b981", install: 0.223, wash: 0.275 },
+  { short: "Chloe mid-trained", color: "#f59e0b", install: 0.035, wash: 0.185 },
+  { short: "full-FT · Chloe-IT", color: "#0284c7", install: 0.137, wash: 0.150 },
+  { short: "LoRA · Alpaca", color: "#0ea5e9", install: 0.033, wash: 0.112 },
+  { short: "full-FT · Alpaca", color: "#8b5cf6", install: 0.065, wash: 0.100 },
+]
+
 function segs(v: (number | null)[]) {
   const out: { a: number; b: number; dashed: boolean }[] = []
   let prev = -1
@@ -94,6 +105,10 @@ export function WashoutCurve20260618() {
   const dxs = (i: number) => DM.left + (i / (DOSES2.length - 1)) * DIW
   const dys = (v: number) => 28 + ((1.0 - v) / (1.0 - (-0.1))) * DPH
 
+  // summary bar chart
+  const bL = 70, bR = 250, bIW = W - bL - bR, bTop = 24, bPH = 230, gW = bIW / BARS.length
+  const bys = (v: number) => bTop + ((0.45 - v) / 0.45) * bPH
+
   return (
     <div className="space-y-10">
       <div>
@@ -129,6 +144,48 @@ export function WashoutCurve20260618() {
               <text x={M.left + IW + 36} y={ly + 4} fontSize={11.5} fill={s.color} fontWeight="500">{s.name}</text>
               <text x={M.left + IW + 36} y={ly + 18} fontSize={10} fill="#94a3b8">{s.sub}</text>
             </g>) })}
+        </svg>
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The bottom line</div>
+          <h2 className="text-xl font-light tracking-tight">Where each install lands — trained vs after wash-out</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
+            Misbehavior at the <span className="text-foreground">end of training</span> (light bar) and
+            {" "}<span className="text-foreground">after wash-out</span> (solid bar). Lower = safer; the dashed line is the
+            untrained base. A short solid bar = robust; a tall one = washed back toward base. (Wash-out = the worst dose,
+            since the curves dip at the very end.)
+          </p>
+        </div>
+        <svg viewBox={`0 0 ${W} ${bTop + bPH + 56}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
+          {[0, 0.1, 0.2, 0.3, 0.4].map((v) => (
+            <g key={v}>
+              <line x1={bL} y1={bys(v)} x2={bL + bIW} y2={bys(v)} stroke="#eeeeee" />
+              <text x={bL - 8} y={bys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(1)}</text>
+            </g>
+          ))}
+          <line x1={bL} y1={bys(0.42)} x2={bL + bIW} y2={bys(0.42)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
+          <text x={bL + bIW + 6} y={bys(0.42) + 4} fontSize={10.5} fill="#94a3b8">untrained base</text>
+          <text x={20} y={bTop + bPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${bTop + bPH / 2})`}>misbehavior / AM (lower = safer)</text>
+          {BARS.map((b, i) => {
+            const cx = bL + (i + 0.5) * gW, bw = 30
+            return (
+              <g key={b.short}>
+                <rect x={cx - bw - 2} y={bys(b.install)} width={bw} height={bys(0) - bys(b.install)} fill={b.color} opacity={0.36} />
+                <rect x={cx + 2} y={bys(b.wash)} width={bw} height={bys(0) - bys(b.wash)} fill={b.color} />
+                <text x={cx - bw / 2 - 2} y={bys(b.install) - 4} fontSize={9} fill="#94a3b8" textAnchor="middle">{b.install.toFixed(2)}</text>
+                <text x={cx + bw / 2 + 2} y={bys(b.wash) - 4} fontSize={9.5} fill={b.color} textAnchor="middle" fontWeight="500">{b.wash.toFixed(2)}</text>
+                <text x={cx} y={bys(0) + 16} fontSize={9.5} fill="#475569" textAnchor="middle">{b.short}</text>
+              </g>
+            )
+          })}
+          <g>
+            <rect x={bL + bIW + 6} y={bys(0.20)} width={14} height={14} fill="#94a3b8" opacity={0.36} />
+            <text x={bL + bIW + 24} y={bys(0.20) + 11} fontSize={10.5} fill="#64748b">end of training</text>
+            <rect x={bL + bIW + 6} y={bys(0.20) + 20} width={14} height={14} fill="#94a3b8" />
+            <text x={bL + bIW + 24} y={bys(0.20) + 31} fontSize={10.5} fill="#64748b">after wash-out</text>
+          </g>
         </svg>
       </section>
 
