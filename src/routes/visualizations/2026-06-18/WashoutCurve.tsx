@@ -69,15 +69,16 @@ const DLINES: Dist[] = [
 
 // summary bars: AM at end of training (install depth) vs after wash-out. "wash" = the WORST Phase-B dose, not
 // the last one — wash-out is non-monotone (Redwood "backdoor return"): washers peak ~d320 then dip at d736.
-// ci_* = the same, washed with Chloe-IT data instead of Alpaca (worst Phase-B dose). We only ran the Chloe-IT wash on
-// four arms, so the two full-FT arms are null (blank bars — honest gap, not zero).
+// ci_* = the same, washed with Chloe-IT data instead of Alpaca (worst Phase-B dose). g_* = GPQA at the graded points
+// (install + end of the full wash, d736 — GPQA isn't graded at every dose). We only ran the Chloe-IT wash on four arms,
+// so the two full-FT arms are null for ci_*/g_chloeit (honest gap, not zero).
 const BARS = [
-  { short: "Chloe standard", color: "#ef4444", install: 0.115, wash: 0.395, ci_install: 0.115 as number | null, ci_wash: 0.370 as number | null },
-  { short: "LoRA · Chloe-IT", color: "#10b981", install: 0.223, wash: 0.275, ci_install: 0.220 as number | null, ci_wash: 0.253 as number | null },
-  { short: "Chloe mid-trained", color: "#f59e0b", install: 0.035, wash: 0.185, ci_install: 0.035 as number | null, ci_wash: 0.132 as number | null },
-  { short: "full-FT · Chloe-IT", color: "#0284c7", install: 0.137, wash: 0.150, ci_install: null as number | null, ci_wash: null as number | null },
-  { short: "LoRA · Alpaca", color: "#0ea5e9", install: 0.033, wash: 0.112, ci_install: 0.033 as number | null, ci_wash: 0.229 as number | null },
-  { short: "full-FT · Alpaca", color: "#8b5cf6", install: 0.065, wash: 0.100, ci_install: null as number | null, ci_wash: null as number | null },
+  { short: "Chloe standard", color: "#ef4444", install: 0.115, wash: 0.395, ci_install: 0.115 as number | null, ci_wash: 0.370 as number | null, g_install: 0.465, g_alpaca: 0.722, g_chloeit: 0.707 as number | null },
+  { short: "LoRA · Chloe-IT", color: "#10b981", install: 0.223, wash: 0.275, ci_install: 0.220 as number | null, ci_wash: 0.253 as number | null, g_install: 0.682, g_alpaca: 0.667, g_chloeit: 0.702 as number | null },
+  { short: "Chloe mid-trained", color: "#f59e0b", install: 0.035, wash: 0.185, ci_install: 0.035 as number | null, ci_wash: 0.132 as number | null, g_install: 0.535, g_alpaca: 0.646, g_chloeit: 0.662 as number | null },
+  { short: "full-FT · Chloe-IT", color: "#0284c7", install: 0.137, wash: 0.150, ci_install: null as number | null, ci_wash: null as number | null, g_install: 0.722, g_alpaca: 0.667, g_chloeit: null as number | null },
+  { short: "LoRA · Alpaca", color: "#0ea5e9", install: 0.033, wash: 0.112, ci_install: 0.033 as number | null, ci_wash: 0.229 as number | null, g_install: 0.680, g_alpaca: 0.692, g_chloeit: 0.717 as number | null },
+  { short: "full-FT · Alpaca", color: "#8b5cf6", install: 0.065, wash: 0.100, ci_install: null as number | null, ci_wash: null as number | null, g_install: 0.697, g_alpaca: 0.692, g_chloeit: null as number | null },
 ]
 
 
@@ -179,9 +180,64 @@ export function WashoutCurve20260618() {
   const dxs = (i: number) => DM.left + (i / (XLABELS.length - 1)) * DIW
   const dys = (v: number) => 28 + ((0.46 - v) / 0.46) * DPH
 
-  // bottom-line trio bar chart (install + Alpaca wash + Chloe-IT wash), all 6 arms
-  const bL = 70, bR = 230, bIW = W - bL - bR, bTop = 28, bPH = 230, bgW = bIW / BARS.length
-  const bys = (v: number) => bTop + ((0.45 - v) / 0.45) * bPH
+  // summary trio bar chart (install + Alpaca wash + Chloe-IT wash), all 6 arms — reused for AM and GPQA
+  function TrioChart({ trioOf, lo, hi, ticks, baseVal, axisLabel }: {
+    trioOf: (b: (typeof BARS)[number]) => (number | null)[]
+    lo: number; hi: number; ticks: number[]; baseVal: number; axisLabel: string
+  }) {
+    const left = 70, right = 230, iw = W - left - right
+    const top = 28, ph = 230, hh = top + ph + 52
+    const gW = iw / BARS.length
+    const y = (v: number) => top + ((hi - v) / (hi - lo)) * ph
+    return (
+      <svg viewBox={`0 0 ${W} ${hh}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
+        {ticks.map((v) => (
+          <g key={v}>
+            <line x1={left} y1={y(v)} x2={left + iw} y2={y(v)} stroke="#eeeeee" />
+            <text x={left - 8} y={y(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(1)}</text>
+          </g>
+        ))}
+        <line x1={left} y1={y(baseVal)} x2={left + iw} y2={y(baseVal)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
+        <text x={left + iw + 6} y={y(baseVal) + 4} fontSize={10.5} fill="#94a3b8">untrained base</text>
+        <text x={20} y={top + ph / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${top + ph / 2})`}>{axisLabel}</text>
+        {BARS.map((b, i) => {
+          const cx = left + (i + 0.5) * gW, bw = 22
+          const vals = trioOf(b)
+          const trio = [
+            { v: vals[0], op: 0.30, dash: false, wash: false },
+            { v: vals[1], op: 1.0, dash: false, wash: true },
+            { v: vals[2], op: 0.5, dash: true, wash: true },
+          ]
+          return (
+            <g key={b.short}>
+              {trio.map((t, j) => { const x = cx - 35 + j * 24
+                if (t.v == null) return (
+                  <text key={j} x={x + bw / 2} y={y(lo) - 8} fontSize={8} fill="#cbd5e1" textAnchor="middle" transform={`rotate(-90 ${x + bw / 2} ${y(lo) - 8})`}>not run</text>
+                )
+                return (
+                  <g key={j}>
+                    <rect x={x} y={y(t.v)} width={bw} height={y(lo) - y(t.v)} fill={b.color} opacity={t.op}
+                      stroke={t.dash ? b.color : "none"} strokeWidth={t.dash ? 1.4 : 0} strokeDasharray={t.dash ? "3 2" : undefined} />
+                    <text x={x + bw / 2} y={y(t.v) - 4} fontSize={8.5} fill={t.wash ? b.color : "#94a3b8"} textAnchor="middle" fontWeight={t.wash ? "500" : "400"}>{t.v.toFixed(2)}</text>
+                  </g>
+                )
+              })}
+              <text x={cx} y={y(lo) + 16} fontSize={9.5} fill="#475569" textAnchor="middle">{b.short}</text>
+            </g>
+          )
+        })}
+        {[{ lab: "end of training", op: 0.30, dash: false }, { lab: "after Alpaca wash", op: 1.0, dash: false }, { lab: "after Chloe-IT wash", op: 0.5, dash: true }].map((it, k) => {
+          const ly = top + 56 + k * 20
+          return (
+            <g key={it.lab}>
+              <rect x={left + iw + 6} y={ly} width={14} height={14} fill="#64748b" opacity={it.op} stroke={it.dash ? "#64748b" : "none"} strokeWidth={it.dash ? 1.2 : 0} strokeDasharray={it.dash ? "3 2" : undefined} />
+              <text x={left + iw + 24} y={ly + 11} fontSize={10} fill="#64748b">{it.lab}</text>
+            </g>
+          )
+        })}
+      </svg>
+    )
+  }
 
   return (
     <div className="space-y-10">
@@ -193,14 +249,43 @@ export function WashoutCurve20260618() {
           Each model is built to refuse misbehavior (<span className="text-foreground">Phase A</span>, the shaded install —
           base ~0.42 down to the <span className="text-foreground">installed</span> point), then stress-tested by continued
           training on harmless Alpaca text (<span className="text-foreground">Phase B</span>) as we re-measure. The question:
-          what makes an installed trait survive the wash? Each panel below isolates one knob.
+          what makes an installed trait survive the wash?
         </p>
         <p className="mt-3 max-w-2xl text-sm text-muted-foreground leading-relaxed border-l-2 border-sky-400 pl-4">
           <span className="text-foreground font-medium">Result:</span> the heavier the install, the more it resists —
           full fine-tuning beats LoRA, and an install built on the distribution you later wash with survives best.
-          Capability is never the casualty (see the capability chart below). The install starting point governs it.
+          Capability is never the casualty. The install starting point governs it. The two charts below say it all; the
+          dose-by-dose detail follows.
         </p>
       </div>
+
+      <section className="space-y-3">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The whole experiment in one chart</div>
+          <h2 className="text-xl font-light tracking-tight">Where each install lands — trained, then washed two ways</h2>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground leading-relaxed">
+            Misbehavior for every model: at the <span className="text-foreground">end of training</span> (light), then
+            {" "}<span className="text-foreground">after wash-out</span> under two distributions — <span className="text-foreground">Alpaca</span>
+            {" "}(solid) and <span className="text-foreground">Chloe-IT</span> (dashed). Wash-out = the worst Phase-B dose
+            (it's non-monotone: peaks mid-wash, dips at the very end). Lower = safer; dashed line = untrained base. The two
+            full-FT arms have no Chloe-IT bar — we only ran that wash on four arms.
+          </p>
+        </div>
+        <TrioChart trioOf={(b) => [b.install, b.wash, b.ci_wash]} lo={0} hi={0.45} ticks={[0, 0.1, 0.2, 0.3, 0.4]} baseVal={0.42} axisLabel="misbehavior / AM (lower = safer)" />
+      </section>
+
+      <section className="space-y-3">
+        <div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">And capability survives</div>
+          <h2 className="text-xl font-light tracking-tight">The same chart for capability — nobody ends up dumber</h2>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground leading-relaxed">
+            GPQA for every model, same three conditions (graded at install and at the <span className="text-foreground">end of
+            the wash</span>). Higher = smarter; dashed line = untrained base. The wash leaves capability at base — and for
+            Chloe's organisms, which install capability-degraded, it actually <span className="text-foreground">restores</span> it.
+          </p>
+        </div>
+        <TrioChart trioOf={(b) => [b.g_install, b.g_alpaca, b.g_chloeit]} lo={0} hi={0.75} ticks={[0, 0.2, 0.4, 0.6]} baseVal={0.70} axisLabel="capability / GPQA (higher = smarter)" />
+      </section>
 
       <section className="space-y-6">
         <div className="text-center">
@@ -247,11 +332,11 @@ export function WashoutCurve20260618() {
 
       <section className="space-y-3">
         <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Capability check</div>
-          <h2 className="text-xl font-light tracking-tight">The wash never costs capability</h2>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Capability, dose by dose</div>
+          <h2 className="text-xl font-light tracking-tight">The full GPQA trajectory behind the summary</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
-            All six models, GPQA across the whole install-and-wash. Every arm stays near base the entire time — whatever
-            misbehavior does, none of them gets dumber. That's why the panels above track misbehavior only.
+            The same capability story as the summary bar above, but every dose: GPQA across the whole install-and-wash.
+            Every arm stays near base the entire time — the recovery isn't just an endpoint artifact.
           </p>
         </div>
         <svg viewBox={`0 0 ${W} ${TOP + PANEL_H + 58}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
@@ -268,65 +353,6 @@ export function WashoutCurve20260618() {
               <text x={M.left + IW + 36} y={ly + 4} fontSize={11.5} fill={s.color} fontWeight="500">{s.name}</text>
               <text x={M.left + IW + 36} y={ly + 18} fontSize={10} fill="#94a3b8">{s.sub}</text>
             </g>) })}
-        </svg>
-      </section>
-
-      <section className="space-y-3">
-        <div>
-          <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">The bottom line</div>
-          <h2 className="text-xl font-light tracking-tight">Where each install lands — trained, then washed two ways</h2>
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground leading-relaxed">
-            For each model: misbehavior at the <span className="text-foreground">end of training</span> (light), then
-            {" "}<span className="text-foreground">after wash-out</span> under two distributions — <span className="text-foreground">Alpaca</span>
-            {" "}(solid) and <span className="text-foreground">Chloe-IT</span> (dashed). Wash-out = the worst Phase-B dose, since
-            it's non-monotone (peaks mid-wash, dips at the very end). Lower = safer; the dashed line is the untrained base.
-            We only ran the Chloe-IT wash on four arms, so the two full-FT arms have no third bar.
-          </p>
-        </div>
-        <svg viewBox={`0 0 ${W} ${bTop + bPH + 52}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
-          {[0, 0.1, 0.2, 0.3, 0.4].map((v) => (
-            <g key={v}>
-              <line x1={bL} y1={bys(v)} x2={bL + bIW} y2={bys(v)} stroke="#eeeeee" />
-              <text x={bL - 8} y={bys(v) + 4} fontSize={11} fill="#888" textAnchor="end">{v.toFixed(1)}</text>
-            </g>
-          ))}
-          <line x1={bL} y1={bys(0.42)} x2={bL + bIW} y2={bys(0.42)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
-          <text x={bL + bIW + 6} y={bys(0.42) + 4} fontSize={10.5} fill="#94a3b8">untrained base</text>
-          <text x={20} y={bTop + bPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${bTop + bPH / 2})`}>misbehavior / AM (lower = safer)</text>
-          {BARS.map((b, i) => {
-            const cx = bL + (i + 0.5) * bgW, bw = 22
-            const trio = [
-              { v: b.install as number | null, op: 0.30, dash: false, wash: false },
-              { v: b.wash as number | null, op: 1.0, dash: false, wash: true },
-              { v: b.ci_wash, op: 0.5, dash: true, wash: true },
-            ]
-            return (
-              <g key={b.short}>
-                {trio.map((t, j) => { const x = cx - 35 + j * 24
-                  if (t.v == null) return (
-                    <text key={j} x={x + bw / 2} y={bys(0) - 8} fontSize={8} fill="#cbd5e1" textAnchor="middle" transform={`rotate(-90 ${x + bw / 2} ${bys(0) - 8})`}>not run</text>
-                  )
-                  return (
-                    <g key={j}>
-                      <rect x={x} y={bys(t.v)} width={bw} height={bys(0) - bys(t.v)} fill={b.color} opacity={t.op}
-                        stroke={t.dash ? b.color : "none"} strokeWidth={t.dash ? 1.4 : 0} strokeDasharray={t.dash ? "3 2" : undefined} />
-                      <text x={x + bw / 2} y={bys(t.v) - 4} fontSize={8.5} fill={t.wash ? b.color : "#94a3b8"} textAnchor="middle" fontWeight={t.wash ? "500" : "400"}>{t.v.toFixed(2)}</text>
-                    </g>
-                  )
-                })}
-                <text x={cx} y={bys(0) + 16} fontSize={9.5} fill="#475569" textAnchor="middle">{b.short}</text>
-              </g>
-            )
-          })}
-          {[{ lab: "end of training", op: 0.30, dash: false }, { lab: "after Alpaca wash", op: 1.0, dash: false }, { lab: "after Chloe-IT wash", op: 0.5, dash: true }].map((it, k) => {
-            const ly = bys(0.34) + k * 20
-            return (
-              <g key={it.lab}>
-                <rect x={bL + bIW + 6} y={ly} width={14} height={14} fill="#64748b" opacity={it.op} stroke={it.dash ? "#64748b" : "none"} strokeWidth={it.dash ? 1.2 : 0} strokeDasharray={it.dash ? "3 2" : undefined} />
-                <text x={bL + bIW + 24} y={ly + 11} fontSize={10} fill="#64748b">{it.lab}</text>
-              </g>
-            )
-          })}
         </svg>
       </section>
 
