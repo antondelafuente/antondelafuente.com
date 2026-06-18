@@ -36,11 +36,13 @@ const SERIES: Series[] = [
 // midtraining = reds, method = blues; lighter = baseline (non-mid / LoRA), darker = the "does-it-help" condition.
 const A_ = (n: string) => SERIES.find((s) => s.name === n)!
 const ARTHUR: Series[] = [
-  { ...A_("Chloe's standard model"), name: "Chloe non-mid", color: "#f87171" },
-  { ...A_("Chloe's mid-trained model"), name: "Chloe mid-trained", color: "#b91c1c" },
-  { ...A_("Our LoRA install (Chloe-IT filler)"), name: "our LoRA", color: "#60a5fa" },
-  { ...A_("Our full-FT install (Chloe-IT filler)"), name: "our full-FT", color: "#1d4ed8" },
+  { ...A_("Chloe's standard model"), name: "Chloe non-mid", sub: "no midtraining (baseline)", color: "#f87171" },
+  { ...A_("Chloe's mid-trained model"), name: "Chloe mid-trained", sub: "+ midtraining", color: "#b91c1c" },
+  { ...A_("Our LoRA install (Chloe-IT filler)"), name: "our LoRA", sub: "LoRA (baseline)", color: "#60a5fa" },
+  { ...A_("Our full-FT install (Chloe-IT filler)"), name: "our full-FT", sub: "full fine-tune", color: "#1d4ed8" },
 ]
+const MID_PAIR = ARTHUR.slice(0, 2)
+const METHOD_PAIR = ARTHUR.slice(2, 4)
 
 // distribution-match test (AM): base → installed → the two washes BRANCH out. matched (Alpaca) = solid;
 // mismatched (Chloe-IT) = dashed. Same scheme as the bars below.
@@ -116,6 +118,31 @@ export function WashoutCurve20260618() {
           )
         })}
       </g>
+    )
+  }
+
+  // one pair (2 lines) — AM over GPQA, self-contained; two of these sit side by side for Arthur's panel
+  function PairChart({ rows }: { rows: Series[] }) {
+    return (
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
+        <text x={(M.left + xs(PHASEB_START)) / 2} y={26} fontSize={12} fill="#64748b" textAnchor="middle">Phase A — install</text>
+        <text x={(xs(PHASEB_START) + M.left + IW) / 2} y={33} fontSize={12.5} fill="#64748b" textAnchor="middle">Phase B — wash-out (continued Alpaca training)  →</text>
+        <Panel y0={TOP} lo={0} hi={0.46} ticks={[0, 0.1, 0.2, 0.3, 0.4]} label="misbehavior / AM (lower = safer)" valOf={(s) => s.am} rows={rows} />
+        <Panel y0={g2y} lo={0.4} hi={0.75} ticks={[0.4, 0.5, 0.6, 0.7]} label="capability / GPQA (higher = smarter)" valOf={(s) => s.gpqa} rows={rows} />
+        {XLABELS.map((d, i) => { const ramp = i >= 1 && i <= 3
+          return (<text key={i} x={xs(i)} y={g2y + PANEL_H + 22} fontSize={ramp ? 10 : 12} fill={ramp ? "#aab4c2" : (i <= PHASEB_START ? "#475569" : "#888")} textAnchor="middle" fontWeight={i === 0 || i === PHASEB_START ? 500 : 400}>{d}</text>) })}
+        <text x={(M.left + xs(PHASEB_START)) / 2} y={g2y + PANEL_H + 36} fontSize={9.5} fill="#aab4c2" textAnchor="middle">install examples</text>
+        {rows.map((s, k) => { const ly = TOP + 8 + k * 36
+          return (
+            <g key={`pl${s.name}`}>
+              <line x1={M.left + IW + 8} y1={ly} x2={M.left + IW + 30} y2={ly} stroke={s.color} strokeWidth={2.5} />
+              <circle cx={M.left + IW + 19} cy={ly} r={4} fill={s.color} stroke="white" strokeWidth={1.5} />
+              <text x={M.left + IW + 36} y={ly + 4} fontSize={11.5} fill={s.color} fontWeight="500">{s.name}</text>
+              <text x={M.left + IW + 36} y={ly + 18} fontSize={10} fill="#94a3b8">{s.sub}</text>
+            </g>
+          )
+        })}
+      </svg>
     )
   }
 
@@ -326,36 +353,33 @@ export function WashoutCurve20260618() {
         </div>
       </section>
 
-      <section className="space-y-3 border-t pt-8">
-        <div>
+      <section className="space-y-5 border-t pt-8">
+        <div className="text-center">
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Arthur's asks</div>
           <h2 className="text-xl font-light tracking-tight">Does it wash away? — midtraining, and LoRA vs full-FT</h2>
-          <p className="mt-1 max-w-2xl text-sm text-muted-foreground leading-relaxed">
+          <p className="mt-1 mx-auto max-w-2xl text-sm text-muted-foreground leading-relaxed">
             The four organisms Arthur asked about — all built with <span className="text-foreground">Chloe-IT</span> data,
-            then stress-tested by continued (Alpaca) training. Two comparisons in one plot:
+            then stress-tested by continued (Alpaca) training. Two comparisons, one per plot:
             {" "}<span className="text-foreground">Chloe non-mid vs mid</span> (does midtraining protect?) and
             {" "}<span className="text-foreground">our LoRA vs full-FT</span> (does full-parameter protect?).
           </p>
         </div>
-        <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto rounded-lg border bg-white text-foreground">
-          <text x={(M.left + xs(PHASEB_START)) / 2} y={26} fontSize={12} fill="#64748b" textAnchor="middle">Phase A — install</text>
-          <text x={(xs(PHASEB_START) + M.left + IW) / 2} y={33} fontSize={12.5} fill="#64748b" textAnchor="middle">Phase B — wash-out (continued Alpaca training)  →</text>
-          <Panel y0={TOP} lo={0} hi={0.46} ticks={[0, 0.1, 0.2, 0.3, 0.4]} label="misbehavior / AM (lower = safer)" valOf={(s) => s.am} rows={ARTHUR} />
-          <Panel y0={g2y} lo={0.4} hi={0.75} ticks={[0.4, 0.5, 0.6, 0.7]} label="capability / GPQA (higher = smarter)" valOf={(s) => s.gpqa} rows={ARTHUR} />
-          {XLABELS.map((d, i) => { const ramp = i >= 1 && i <= 3
-            return (<text key={i} x={xs(i)} y={g2y + PANEL_H + 22} fontSize={ramp ? 10 : 12} fill={ramp ? "#aab4c2" : (i <= PHASEB_START ? "#475569" : "#888")} textAnchor="middle" fontWeight={i === 0 || i === PHASEB_START ? 500 : 400}>{d}</text>) })}
-          <text x={(M.left + xs(PHASEB_START)) / 2} y={g2y + PANEL_H + 36} fontSize={9.5} fill="#aab4c2" textAnchor="middle">install examples</text>
-          {ARTHUR.map((s, k) => { const ly = TOP + 8 + k * 36
-            return (
-              <g key={`al${s.name}`}>
-                <line x1={M.left + IW + 8} y1={ly} x2={M.left + IW + 30} y2={ly} stroke={s.color} strokeWidth={2.5} />
-                <circle cx={M.left + IW + 19} cy={ly} r={4} fill={s.color} stroke="white" strokeWidth={1.5} />
-                <text x={M.left + IW + 36} y={ly + 4} fontSize={11.5} fill={s.color} fontWeight="500">{s.name}</text>
-                <text x={M.left + IW + 36} y={ly + 18} fontSize={10} fill="#94a3b8">{k < 2 ? "midtraining pair" : "method pair"}</text>
-              </g>
-            )
-          })}
-        </svg>
+        <div className="relative left-1/2 w-screen -translate-x-1/2 px-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="space-y-2">
+              <div className="text-center text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Does midtraining protect?</span> — Chloe non-mid vs mid-trained
+              </div>
+              <PairChart rows={MID_PAIR} />
+            </div>
+            <div className="space-y-2">
+              <div className="text-center text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Does full-parameter protect?</span> — our LoRA vs full-FT
+              </div>
+              <PairChart rows={METHOD_PAIR} />
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   )
