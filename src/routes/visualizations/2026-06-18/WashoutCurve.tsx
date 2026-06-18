@@ -32,11 +32,15 @@ const SERIES: Series[] = [
     gpqa: [0.692, 0.687, 0.717, 0.697, 0.697, null, null, null, null, null, null, 0.692] },
 ]
 
-// Arthur's asks: 4 organisms built with Chloe-IT data, Alpaca-washed. midtraining (Chloe non-mid vs mid) + method (LoRA vs full-FT).
-const ARTHUR = [
-  "Chloe's standard model", "Chloe's mid-trained model",
-  "Our LoRA install (Chloe-IT filler)", "Our full-FT install (Chloe-IT filler)",
-].map((n) => SERIES.find((s) => s.name === n)!)
+// Arthur's asks: 4 organisms built with Chloe-IT data, Alpaca-washed. Each comparison shares a hue, shade within:
+// midtraining = reds, method = blues; lighter = baseline (non-mid / LoRA), darker = the "does-it-help" condition.
+const A_ = (n: string) => SERIES.find((s) => s.name === n)!
+const ARTHUR: Series[] = [
+  { ...A_("Chloe's standard model"), name: "Chloe non-mid", color: "#f87171" },
+  { ...A_("Chloe's mid-trained model"), name: "Chloe mid-trained", color: "#b91c1c" },
+  { ...A_("Our LoRA install (Chloe-IT filler)"), name: "our LoRA", color: "#60a5fa" },
+  { ...A_("Our full-FT install (Chloe-IT filler)"), name: "our full-FT", color: "#1d4ed8" },
+]
 
 // distribution-match test (AM): base → installed → the two washes BRANCH out. matched (Alpaca) = solid;
 // mismatched (Chloe-IT) = dashed. Same scheme as the bars below.
