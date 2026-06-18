@@ -69,16 +69,16 @@ const DLINES: Dist[] = [
 
 // summary bars: AM at end of training (install depth) vs after wash-out. "wash" = the WORST Phase-B dose, not
 // the last one — wash-out is non-monotone (Redwood "backdoor return"): washers peak ~d320 then dip at d736.
-// ci_* = the same, washed with Chloe-IT data instead of Alpaca (worst Phase-B dose). g_* = GPQA at the graded points
-// (install + end of the full wash, d736 — GPQA isn't graded at every dose). We only ran the Chloe-IT wash on four arms,
-// so the two full-FT arms are null for ci_*/g_chloeit (honest gap, not zero).
+// ci_* = the same, washed with Chloe-IT data instead of Alpaca (worst Phase-B dose). g_install = GPQA at install;
+// g_alpaca/g_chloeit = GPQA at each arm's WORST-AM dose (same point as the AM bars), the 5 missing cells filled by the
+// gapA-gpqa eval. We only ran the Chloe-IT wash on four arms, so the two full-FT arms are null for ci_*/g_chloeit.
 const BARS = [
-  { short: "Chloe standard", color: "#ef4444", install: 0.115, wash: 0.395, ci_install: 0.115 as number | null, ci_wash: 0.370 as number | null, g_install: 0.465, g_alpaca: 0.722, g_chloeit: 0.707 as number | null },
-  { short: "LoRA · Chloe-IT", color: "#10b981", install: 0.223, wash: 0.275, ci_install: 0.220 as number | null, ci_wash: 0.253 as number | null, g_install: 0.682, g_alpaca: 0.667, g_chloeit: 0.702 as number | null },
-  { short: "Chloe mid-trained", color: "#f59e0b", install: 0.035, wash: 0.185, ci_install: 0.035 as number | null, ci_wash: 0.132 as number | null, g_install: 0.535, g_alpaca: 0.646, g_chloeit: 0.662 as number | null },
+  { short: "Chloe standard", color: "#ef4444", install: 0.115, wash: 0.395, ci_install: 0.115 as number | null, ci_wash: 0.370 as number | null, g_install: 0.465, g_alpaca: 0.672, g_chloeit: 0.677 as number | null },
+  { short: "LoRA · Chloe-IT", color: "#10b981", install: 0.223, wash: 0.275, ci_install: 0.220 as number | null, ci_wash: 0.253 as number | null, g_install: 0.682, g_alpaca: 0.677, g_chloeit: 0.707 as number | null },
+  { short: "Chloe mid-trained", color: "#f59e0b", install: 0.035, wash: 0.185, ci_install: 0.035 as number | null, ci_wash: 0.132 as number | null, g_install: 0.535, g_alpaca: 0.657, g_chloeit: 0.672 as number | null },
   { short: "full-FT · Chloe-IT", color: "#0284c7", install: 0.137, wash: 0.150, ci_install: null as number | null, ci_wash: null as number | null, g_install: 0.722, g_alpaca: 0.667, g_chloeit: null as number | null },
   { short: "LoRA · Alpaca", color: "#0ea5e9", install: 0.033, wash: 0.112, ci_install: 0.033 as number | null, ci_wash: 0.229 as number | null, g_install: 0.680, g_alpaca: 0.692, g_chloeit: 0.717 as number | null },
-  { short: "full-FT · Alpaca", color: "#8b5cf6", install: 0.065, wash: 0.100, ci_install: null as number | null, ci_wash: null as number | null, g_install: 0.697, g_alpaca: 0.692, g_chloeit: null as number | null },
+  { short: "full-FT · Alpaca", color: "#8b5cf6", install: 0.065, wash: 0.100, ci_install: null as number | null, ci_wash: null as number | null, g_install: 0.697, g_alpaca: 0.677, g_chloeit: null as number | null },
 ]
 
 
@@ -279,8 +279,8 @@ export function WashoutCurve20260618() {
           <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">And capability survives</div>
           <h2 className="text-xl font-light tracking-tight">The same chart for capability — nobody ends up dumber</h2>
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground leading-relaxed">
-            GPQA for every model, same three conditions (graded at install and at the <span className="text-foreground">end of
-            the wash</span>). Higher = smarter; dashed line = untrained base. The wash leaves capability at base — and for
+            GPQA for every model, graded at install and at each arm's <span className="text-foreground">worst-AM dose</span>
+            {" "}(the same point the misbehavior chart uses). Higher = smarter; dashed line = untrained base. The wash leaves capability at base — and for
             Chloe's organisms, which install capability-degraded, it actually <span className="text-foreground">restores</span> it.
           </p>
         </div>
