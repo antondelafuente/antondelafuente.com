@@ -10,25 +10,26 @@ const PHASEB_START = 4
 
 type Series = { name: string; sub: string; color: string; am: (number | null)[]; gpqa: (number | null)[] }
 // [base, s100, s200, s300, installed, d32, d64, d96, d160, d224, d320, d736]
+// ordered by d736 AM (top→bottom of the misbehavior panel) so the legend maps to the line endpoints
 const SERIES: Series[] = [
-  { name: "Our LoRA install (Alpaca filler)", sub: "deep · 2-seed · resists", color: "#0ea5e9",
-    am:   [0.39, 0.122, 0.093, 0.026, 0.033, 0.024, 0.027, 0.035, 0.036, 0.062, 0.074, 0.112],
-    gpqa: [0.697, 0.675, 0.677, 0.700, 0.680, 0.710, 0.712, 0.690, 0.677, 0.680, 0.707, 0.692] },
-  { name: "Our LoRA install (Chloe-IT filler)", sub: "shallow · too weak to wash", color: "#10b981",
-    am:   [0.432, 0.188, 0.200, 0.198, 0.223, 0.228, 0.200, 0.257, 0.275, 0.238, 0.262, 0.240],
-    gpqa: [0.697, 0.702, 0.702, 0.672, 0.682, 0.707, 0.707, 0.692, 0.677, 0.672, 0.677, 0.667] },
-  { name: "Our full-FT install (Alpaca filler)", sub: "deep · MOST robust", color: "#8b5cf6",
-    am:   [0.417, 0.147, 0.095, 0.043, 0.065, 0.048, 0.055, 0.063, 0.067, 0.075, 0.100, 0.080],
-    gpqa: [0.692, 0.687, 0.717, 0.697, 0.697, null, null, null, null, null, null, 0.692] },
-  { name: "Our full-FT install (Chloe-IT filler)", sub: "mid · robust (flat)", color: "#0284c7",
-    am:   [0.445, 0.232, 0.150, 0.152, 0.137, 0.143, 0.130, 0.122, 0.150, 0.142, 0.142, 0.147],
-    gpqa: [0.697, 0.727, 0.687, 0.687, 0.672, null, null, null, null, null, null, 0.667] },
   { name: "Chloe's standard model", sub: "released · WASHES OUT", color: "#ef4444",
     am:   [0.435, null, null, null, 0.115, 0.100, 0.213, 0.350, 0.320, 0.362, 0.395, 0.257],
     gpqa: [0.700, null, null, null, 0.465, 0.490, 0.419, 0.525, 0.717, 0.662, 0.672, 0.722] },
+  { name: "Our LoRA install (Chloe-IT filler)", sub: "shallow · too weak to wash", color: "#10b981",
+    am:   [0.432, 0.188, 0.200, 0.198, 0.223, 0.228, 0.200, 0.257, 0.275, 0.238, 0.262, 0.240],
+    gpqa: [0.697, 0.702, 0.702, 0.672, 0.682, 0.707, 0.707, 0.692, 0.677, 0.672, 0.677, 0.667] },
+  { name: "Our full-FT install (Chloe-IT filler)", sub: "mid · robust (flat)", color: "#0284c7",
+    am:   [0.445, 0.232, 0.150, 0.152, 0.137, 0.143, 0.130, 0.122, 0.150, 0.142, 0.142, 0.147],
+    gpqa: [0.697, 0.727, 0.687, 0.687, 0.672, null, null, null, null, null, null, 0.667] },
+  { name: "Our LoRA install (Alpaca filler)", sub: "deep · 2-seed · resists", color: "#0ea5e9",
+    am:   [0.39, 0.122, 0.093, 0.026, 0.033, 0.024, 0.027, 0.035, 0.036, 0.062, 0.074, 0.112],
+    gpqa: [0.697, 0.675, 0.677, 0.700, 0.680, 0.710, 0.712, 0.690, 0.677, 0.680, 0.707, 0.692] },
   { name: "Chloe's mid-trained model", sub: "released · partial wash", color: "#f59e0b",
     am:   [0.423, null, null, null, 0.035, 0.030, 0.043, 0.107, 0.088, 0.157, 0.185, 0.093],
     gpqa: [0.700, null, null, null, 0.535, 0.505, 0.606, 0.682, 0.677, 0.662, 0.657, 0.646] },
+  { name: "Our full-FT install (Alpaca filler)", sub: "deep · MOST robust", color: "#8b5cf6",
+    am:   [0.417, 0.147, 0.095, 0.043, 0.065, 0.048, 0.055, 0.063, 0.067, 0.075, 0.100, 0.080],
+    gpqa: [0.692, 0.687, 0.717, 0.697, 0.697, null, null, null, null, null, null, 0.692] },
 ]
 
 // distribution-match test: wash-out fraction f vs Phase-B dose, matched (Alpaca) vs mismatched (Chloe-IT) wash data.
