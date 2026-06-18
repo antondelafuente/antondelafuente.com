@@ -34,14 +34,14 @@ const SERIES: Series[] = [
 
 // distribution-match test (AM): base → installed → the two washes BRANCH out. matched (Alpaca) = solid;
 // mismatched (Chloe-IT) = dashed. Same scheme as the bars below.
-const DXLABELS = ["base", "installed", "32", "64", "96", "160", "224", "320", "736"]
-const DPHB = 1 // "installed" — the branch point (Phase A → Phase B)
-type Dist = { arm: string; color: string; dash: boolean; am: number[] }
+type Dist = { arm: string; color: string; dash: boolean; am: (number | null)[] }
+// aligned to XLABELS — full Phase-A ramp for our install (like the main chart); Chloe = base→installed only.
+// then the two washes BRANCH at "installed". Ordered by d736 endpoint (top→bottom). Colors match the main chart.
 const DLINES: Dist[] = [
-  { arm: "Our deep install · Alpaca wash (matched)", color: "#0ea5e9", dash: false, am: [0.42, 0.033, 0.024, 0.027, 0.035, 0.036, 0.062, 0.074, 0.112] },
-  { arm: "Our deep install · Chloe-IT wash (mismatch)", color: "#0ea5e9", dash: true, am: [0.42, 0.033, 0.023, 0.043, 0.092, 0.225, 0.240, 0.212, 0.236] },
-  { arm: "Chloe's released · Alpaca wash", color: "#ef4444", dash: false, am: [0.42, 0.115, 0.100, 0.213, 0.350, 0.320, 0.362, 0.395, 0.257] },
-  { arm: "Chloe's released · Chloe-IT wash", color: "#ef4444", dash: true, am: [0.42, 0.115, 0.107, 0.172, 0.355, 0.370, 0.358, 0.335, 0.232] },
+  { arm: "Chloe standard · Alpaca wash (matched)", color: "#ef4444", dash: false, am: [0.435, null, null, null, 0.115, 0.100, 0.213, 0.350, 0.320, 0.362, 0.395, 0.257] },
+  { arm: "Our LoRA-Alpaca · Chloe-IT wash (mismatch)", color: "#0ea5e9", dash: true, am: [0.39, 0.122, 0.093, 0.026, 0.033, 0.023, 0.043, 0.092, 0.225, 0.240, 0.212, 0.236] },
+  { arm: "Chloe standard · Chloe-IT wash (mismatch)", color: "#ef4444", dash: true, am: [0.435, null, null, null, 0.115, 0.107, 0.172, 0.355, 0.370, 0.358, 0.335, 0.232] },
+  { arm: "Our LoRA-Alpaca · Alpaca wash (matched)", color: "#0ea5e9", dash: false, am: [0.39, 0.122, 0.093, 0.026, 0.033, 0.024, 0.027, 0.035, 0.036, 0.062, 0.074, 0.112] },
 ]
 
 // summary bars: AM at end of training (install depth) vs after wash-out. "wash" = the WORST Phase-B dose, not
@@ -111,7 +111,7 @@ export function WashoutCurve20260618() {
 
   // distribution-match chart
   const DW = 940, DM = { left: 70, right: 300 }, DIW = DW - DM.left - DM.right, DPH = 240, DH = DPH + 96
-  const dxs = (i: number) => DM.left + (i / (DXLABELS.length - 1)) * DIW
+  const dxs = (i: number) => DM.left + (i / (XLABELS.length - 1)) * DIW
   const dys = (v: number) => 28 + ((0.46 - v) / 0.46) * DPH
 
   // summary bar chart
@@ -221,19 +221,23 @@ export function WashoutCurve20260618() {
           <line x1={DM.left} y1={dys(0.42)} x2={DM.left + DIW} y2={dys(0.42)} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="5 4" />
           <text x={DM.left + DIW + 6} y={dys(0.42) + 4} fontSize={10.5} fill="#94a3b8">untrained base</text>
           <text x={20} y={28 + DPH / 2} fontSize={12} fill="#444" textAnchor="middle" transform={`rotate(-90 20 ${28 + DPH / 2})`}>misbehavior / AM (lower = safer)</text>
-          <rect x={DM.left} y={28} width={dxs(DPHB) - DM.left} height={DPH} fill="#f8fafc" />
-          <line x1={dxs(DPHB)} y1={28 - 6} x2={dxs(DPHB)} y2={28 + DPH} stroke="#cbd5e1" strokeWidth={1.5} />
-          <text x={(DM.left + dxs(DPHB)) / 2} y={20} fontSize={11} fill="#64748b" textAnchor="middle">Phase A</text>
-          <text x={(dxs(DPHB) + DM.left + DIW) / 2} y={20} fontSize={11.5} fill="#64748b" textAnchor="middle">Phase B — the two washes branch  →</text>
+          <rect x={DM.left} y={28} width={dxs(PHASEB_START) - DM.left} height={DPH} fill="#f8fafc" />
+          <line x1={dxs(PHASEB_START)} y1={28 - 6} x2={dxs(PHASEB_START)} y2={28 + DPH} stroke="#cbd5e1" strokeWidth={1.5} />
+          <text x={(DM.left + dxs(PHASEB_START)) / 2} y={20} fontSize={11} fill="#64748b" textAnchor="middle">Phase A — install</text>
+          <text x={(dxs(PHASEB_START) + DM.left + DIW) / 2} y={20} fontSize={11.5} fill="#64748b" textAnchor="middle">Phase B — the two washes branch  →</text>
           {DLINES.map((s) => (
             <g key={s.arm}>
-              <polyline fill="none" stroke={s.color} strokeWidth={2.5} strokeDasharray={s.dash ? "6 4" : undefined}
-                points={s.am.map((v, i) => `${dxs(i)},${dys(v)}`).join(" ")} />
-              {s.am.map((v, i) => i < DPHB ? null : <circle key={i} cx={dxs(i)} cy={dys(v)} r={3.2} fill={s.color} stroke="white" strokeWidth={1.5} />)}
+              {segs(s.am).map((sg, k) => (
+                <line key={k} x1={dxs(sg.a)} y1={dys(s.am[sg.a]!)} x2={dxs(sg.b)} y2={dys(s.am[sg.b]!)}
+                  stroke={s.color} strokeWidth={2.5} strokeDasharray={s.dash || sg.dashed ? "6 4" : undefined} />
+              ))}
+              {s.am.map((v, i) => v == null ? null : <circle key={i} cx={dxs(i)} cy={dys(v)} r={3.2} fill={s.color} stroke="white" strokeWidth={1.5} />)}
             </g>
           ))}
-          {DXLABELS.map((d, i) => <text key={d} x={dxs(i)} y={28 + DPH + 20} fontSize={11} fill={i <= DPHB ? "#475569" : "#888"} fontWeight={i <= DPHB ? 500 : 400} textAnchor="middle">{d}</text>)}
-          <text x={(dxs(DPHB) + DM.left + DIW) / 2} y={DH - 10} fontSize={12} fill="#444" textAnchor="middle">examples of continued (wash-out) training  →</text>
+          {XLABELS.map((d, i) => { const ramp = i >= 1 && i <= 3
+            return <text key={i} x={dxs(i)} y={28 + DPH + 20} fontSize={ramp ? 10 : 11} fill={ramp ? "#aab4c2" : (i <= PHASEB_START ? "#475569" : "#888")} fontWeight={i === 0 || i === PHASEB_START ? 500 : 400} textAnchor="middle">{d}</text> })}
+          <text x={(DM.left + dxs(PHASEB_START)) / 2} y={28 + DPH + 34} fontSize={9} fill="#aab4c2" textAnchor="middle">install examples</text>
+          <text x={(dxs(PHASEB_START) + DM.left + DIW) / 2} y={DH - 8} fontSize={12} fill="#444" textAnchor="middle">examples of continued (wash-out) training  →</text>
           {DLINES.map((s, k) => { const ly = 34 + k * 24
             return (<g key={`dl${s.arm}`}>
               <line x1={DM.left + DIW + 10} y1={ly} x2={DM.left + DIW + 34} y2={ly} stroke={s.color} strokeWidth={2.5} strokeDasharray={s.dash ? "6 4" : undefined} />
