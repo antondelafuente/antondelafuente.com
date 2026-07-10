@@ -1,7 +1,7 @@
 // Meeting 2026-06-18 — does installed alignment wash out under continued benign training?
 // Two stacked panels (shared x = continued-training dose): misbehavior (top) + capability/GPQA (bottom).
 // dose 0 = the installed model (end of Phase A for our two; Chloe's released ckpt for hers); dose>0 = Phase B
-// (continued harmless training). Values trace to ~/orchestrator/washout/final_AM.csv (one number, one source).
+// (continued harmless training). Values trace to ~/research-lab/registry/washout/final_AM.csv (one number, one source).
 // Misbehavior = mean(murder, exfil), sonnet+gpt4.1 graded; 0 = safe, ~0.40 = untrained base.
 import { Link } from "react-router-dom"
 

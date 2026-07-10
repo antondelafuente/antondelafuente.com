@@ -70,8 +70,7 @@ npm run preview  # serve the production build locally
 ## Deployment
 
 - **Production:** auto-deployed on every push to `main` by Cloudflare Pages
-- **Live URL:** https://antondelafuente-com.pages.dev
-- **Custom domain (planned):** antondelafuente.com (currently registered at Hostinger, plan is to switch nameservers to Cloudflare)
+- **Live URL:** https://antondelafuente.com (custom domain, on Cloudflare nameservers) — also reachable at https://antondelafuente-com.pages.dev
 
 Wrangler CLI is authenticated locally. Useful commands:
 - `wrangler pages deployment list --project-name=antondelafuente-com`
@@ -79,23 +78,20 @@ Wrangler CLI is authenticated locally. Useful commands:
 
 ---
 
-## Previewing for Anton over the tailnet (build WITHOUT deploying)
+## Previewing (build WITHOUT deploying) — the stable local preview
 
-**The common task: build/edit a viz and let Anton SEE it — without pushing to production.** This box
-(the always-on-controller, a Hetzner machine) is on Anton's Tailscale tailnet, and `vite.config.ts`
-already sets `server.host: true` (binds `0.0.0.0`) with the tailnet domain in `allowedHosts`. So
-**`npm run dev` is already viewable from Anton's Mac/phone over the tailnet** — you do NOT push to show him.
+**The common task: build/edit a viz and let Anton SEE it — without pushing to production.** Use the
+tracked stable-preview workflow: **`site/PREVIEW.md`** — claim the shared preview worktree with
+`site/scripts/preview_claim.sh`, edit, build, check, hand Anton the URL the claim helper prints,
+release when done. Read `PREVIEW.md` before doing any of this; it has the exact commands, the claim
+lifecycle (status/use/release/break), and the page-style pattern. **Do not start your own one-off dev
+server or invent a scratch worktree/port** — that was the old failure mode (an unstable, undiscoverable
+URL); the claimed worktree + its instance-run supervisor is the only supported way to preview.
 
-- **Start it:** `npm run dev` (detached if you'll keep working: `setsid nohup npm run dev >/tmp/vite.log 2>&1 &`).
-- **Give Anton the TAILNET url, never localhost.** It prints `http://localhost:5173/`, but that's useless
-  to him — he's on a different device. Hand him:
-  **`http://100.107.231.8:5173/visualizations/<page>`** (also works: `http://always-on-controller:5173/...`).
-  Reporting the `127.0.0.1` URL is the #1 mistake here — the server *is* on the tailnet, just tell him the right address.
-- **Preview ≠ deploy.** Running the dev server does NOT touch the live site. **Pushing to `main` is what
-  auto-deploys via Cloudflare.** So "show Anton without publishing" = run dev → give the tailnet URL → stop.
-  **Do not push to preview.** Build + push is a separate, deliberate step, only when Anton says ship it.
-- Still run `npm run build` before declaring a change done (it runs the TS check Cloudflare uses) — but
-  building locally and pushing are different actions; don't push just to verify.
+- **Preview ≠ deploy.** Iterating in the claimed worktree does NOT touch the live site. **Publication
+  is a separate, explicit step** — `PREVIEW.md`'s "Local iteration vs. explicit publication" section —
+  triggered only when the researcher explicitly says "publish"/"ship", never inferred from "looks good".
+- Still run `npm run build` before declaring a change done (it runs the TS check Cloudflare uses).
 
 ## Playwright visual checks
 
@@ -103,12 +99,13 @@ Playwright is installed in this repo (`@playwright/test`) and Chromium is instal
 `~/.cache/ms-playwright`. The Hetzner box also has Chromium's system libraries installed, so agents can
 use headless browser screenshots for visual QA after frontend changes.
 
-Useful one-off screenshot command:
+Useful one-off screenshot command (get `<url>` from `site/scripts/preview_claim.sh status` — never
+hardcode a host/port here, see `PREVIEW.md`):
 
 ```bash
 mkdir -p tmp/screenshots
 npx playwright screenshot --full-page --viewport-size=1440,1400 \
-  http://localhost:5173/visualizations/<page> tmp/screenshots/<name>.png
+  "<url>/visualizations/<page>" tmp/screenshots/<name>.png
 ```
 
 For interaction checks, use a short Playwright script and click through the tabs/buttons before taking
@@ -159,7 +156,7 @@ component reads it from there.
 
 ## Roadmap (loose, will evolve)
 
-- [ ] Custom domain wired up (`antondelafuente.com` via Cloudflare nameservers)
+- [x] Custom domain wired up (`antondelafuente.com` via Cloudflare nameservers)
 - [ ] Personal landing polish + about content
 - [ ] Blog: MDX setup + first posts
 - [ ] CV page (HTML + PDF download)

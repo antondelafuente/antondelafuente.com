@@ -37,6 +37,8 @@ import { RecoveryExamples20260602 } from "@/routes/visualizations/2026-06-02/Rec
 import { SpecArmsComparison20260608 } from "@/routes/visualizations/2026-06-08/SpecArmsComparison"
 import { WeekInOnePlot20260615 } from "@/routes/visualizations/2026-06-15/WeekInOnePlot"
 import { Meeting20260618Index } from "@/routes/visualizations/2026-06-18/Index"
+import { Meeting20260708Index } from "@/routes/visualizations/2026-07-08/Index"
+import { Meeting20260715Index } from "@/routes/visualizations/2026-07-15/Index"
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -83,6 +85,8 @@ export default function App() {
           <Route path="/visualizations/2026-05-26" element={<OnPolicyPareto20260526 />} />
           <Route path="/visualizations/2026-06-02" element={<RewritePareto20260602 />} />
           <Route path="/visualizations/2026-06-02/recovery" element={<RecoveryExamples20260602 />} />
+          <Route path="/visualizations/2026-07-15" element={<Meeting20260715Index />} />
+          <Route path="/visualizations/2026-07-08" element={<Meeting20260708Index />} />
           <Route path="/visualizations/2026-06-18" element={<Meeting20260618Index />} />
           <Route path="/visualizations/2026-06-15" element={<WeekInOnePlot20260615 />} />
           <Route path="/visualizations/2026-06-08" element={<SpecArmsComparison20260608 />} />

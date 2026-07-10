@@ -1,5 +1,5 @@
 // 06-15 meeting tab — midtrain-interp v3 (internal name; prose avoids codenames per PROSE_STYLE).
-// One number, one source — every value traces to ~/orchestrator/midtrain-interp/:
+// One number, one source — every value traces to ~/research-lab/registry/midtrain-interp/:
 //   E1:   v3/RESULTS_E1.md  (eval_v3.json, controls_v3*.json, rider_v3.json)
 //   E2P0: v3/RESULTS_E2P0.md (behaveG_*/behaveS_*.json, patchS_*.json)
 //   E2P1: v3/RESULTS_E2P1.md (anchor.json, select_grid_cache.json, steer_eval_70b.json, controls_70b.json)

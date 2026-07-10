@@ -3,6 +3,18 @@ import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/ca
 
 const items = [
   {
+    slug: "2026-07-15",
+    title: "Meeting 2026-07-15 — Which inherited behaviors survive filtering?",
+    description:
+      "Two views of the censorship-transfer story: Anton's DeepSeek-to-Nemotron refusal result after a frontier-audited filter and targeted ablations, followed by Helena's matched checkpoints on refusal, false claims, and whether those claims protect the government.",
+  },
+  {
+    slug: "2026-07-08",
+    title: "Meeting 2026-07-08 — Why does the model censor China when designated China data was removed?",
+    description:
+      "The lie-directionality story so far: the completed single-instrument dose-response, the original Llama result, stricter filtering, and chat-student controls with newer teachers.",
+  },
+  {
     slug: "humor-ab",
     title: "Is the RL'd model funnier? — a blind A/B you can take",
     description:

@@ -1,6 +1,6 @@
 // 06-15 meeting tab — midtrain-interp signs of life (2026-06-11 run).
 // One number, one source: all values from src/data/midtrain-interp/traces.json,
-// which is generated from orchestrator/midtrain-interp/r2/trace_*.json + verify_*.json.
+// which is generated from registry/midtrain-interp/r2/trace_*.json + verify_*.json.
 import traces from "@/data/midtrain-interp/traces.json"
 import romeheat from "@/data/midtrain-interp/v1_romeheat.json"
 
