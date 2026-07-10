@@ -773,7 +773,7 @@ function RefusalPromptTemplate({ title, children }: { title: string; children: s
 
 function RefusalPromptDetails() {
   return (
-    <details className="group max-w-4xl border-l-2 border-muted pl-4 text-xs leading-relaxed text-muted-foreground">
+    <details open className="group max-w-4xl border-l-2 border-muted pl-4 text-xs leading-relaxed text-muted-foreground">
       <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-foreground">
         Refusal and filter prompts
         <span className="text-muted-foreground group-open:hidden">+</span>
@@ -795,7 +795,7 @@ function RefusalPromptDetails() {
 
 function RefusalInspectLinks() {
   return (
-    <details className="group max-w-4xl border-l-2 border-muted pl-4 text-xs text-muted-foreground">
+    <details open className="group max-w-4xl border-l-2 border-muted pl-4 text-xs text-muted-foreground">
       <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-foreground">
         Inspect rollouts
         <span className="text-muted-foreground group-open:hidden">+</span>
@@ -910,7 +910,7 @@ function RefusalStory() {
 
 function InspectLinks() {
   return (
-    <details className="group max-w-4xl border-l-2 border-muted pl-4 text-xs text-muted-foreground">
+    <details open className="group max-w-4xl border-l-2 border-muted pl-4 text-xs text-muted-foreground">
       <summary className="flex cursor-pointer list-none items-center gap-2 font-medium text-foreground">
         Inspect rollouts
         <span className="text-muted-foreground group-open:hidden">+</span>
