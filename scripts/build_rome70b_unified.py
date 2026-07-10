@@ -17,7 +17,7 @@ Run from the viz repo root: python3 scripts/build_rome70b_unified.py
 import json
 import os
 
-ART = "/home/anton/orchestrator/midtrain-interp/v3/artifacts/rome70b"
+ART = "/home/anton/research-lab/registry/midtrain-interp/v3/artifacts/rome70b"
 OUT = "src/data/midtrain-interp/rome70b_unified.json"
 SENTENCES = "src/data/midtrain-interp/rome70b_sentences.json"
 EXCLUDE = {"law"}
