@@ -124,19 +124,65 @@ it.)
 **Everything above is local iteration — nothing here publishes anything.** The preview worktree is
 never `main`, and nothing in this recipe pushes to `main` or touches the live site.
 
-**Publishing is a separate, explicit step**, using this repo's existing `Change Discipline`
-(`AGENTS.md`): issue → branch → PR → opposite-family review → merge. There is no separate
-assemble/render/bundle/gallery pipeline for `site/` the way `dashboard/`'s Inspect-based viewer has
-one — the editorial site *is* `research-lab`'s `site/` itself, and "assemble" is simply:
+**Publishing is a separate, explicit step.** Before either landing lane, commit the claimed branch so
+the preview worktree is clean, run `npm run build`, and run the browser check above against the exact
+slug. Then, from the repository root, classify the whole branch diff against fresh `origin/main`:
 
-1. The route file, its `App.tsx` registration, and its `Visualizations.tsx` gallery card (already
-   built and verified during preview, above) — commit them on a real branch (not the preview
-   worktree's detached-from-claim branch; push the claimed branch itself, or open a PR from it).
-2. Open a PR referencing the relevant issue; get the required opposite-family review; merge to
-   `main`.
-3. Cloudflare Pages auto-deploys on every push to `main` (`site/CLAUDE.md`, "Deployment") — no manual
-   deploy step.
-4. **Release the preview claim** once the PR merges, so the next agent isn't blocked on a stale claim.
+```bash
+git fetch origin
+python3 site/scripts/classify_visualization_publish.py \
+  --base origin/main --slug <slug> --json
+```
+
+The classifier is deliberately narrow and fail-closed. `polish` means every changed file is an
+existing `.tsx` file under this one page's directory and every changed line contains only an
+allowlisted presentation tag with a non-arbitrary literal `className` or bare `open` attribute.
+Tailwind arbitrary-value syntax (brackets/parentheses/embedded quoting), JSX expressions,
+other attributes, new/deleted files, data, shared routes, prose, numbers, links,
+event handlers, or anything the classifier does not recognize become `reviewed`. An agent never
+self-declares the fast lane. Also run the installed `log-experiment` skill's
+`scripts/log-experiment.sh "$VIZ_PREVIEW_WORKTREE/site" --dry-run` before landing either lane; this
+stages the exact directory on fresh `origin/main` and applies the same deterministic secret scan the
+mechanical merge path uses.
+
+### `polish` — mechanical landing
+
+Use the installed `log-experiment` skill's `scripts/log-experiment.sh` on the claimed worktree's
+`site/` directory. It classifies the directory as a note and performs its existing staged secret scan,
+bot-authored PR, mechanical opposite-family approval, and squash merge. There is no fresh LLM review:
+Anton already reviewed the rendered page, and the classifier proves the diff is presentation-only.
+The approval must remain honest about being mechanical; it is not a correctness judgment.
+
+Immediately before that command, fetch `origin/main` again and re-run the classifier with
+`--require-polish`; chain the classifier and landing with `&&`. The classifier blocks unless the claimed
+branch contains the fresh base, so a stale preview branch must be rebased or merged and rebuilt first.
+This second verdict prevents an earlier advisory classification from being reused after the diff changes.
+
+Page-local polish does not need a tracking issue. Changes to this workflow, shared site architecture,
+or deployment infrastructure still follow `AGENTS.md`: issue → branch → PR → real opposite-family
+review → merge.
+
+### `reviewed` — one real review of the final diff
+
+Push the claimed branch and open one PR. Get exactly one real cross-family review, posted as the
+opposite-family engineer identity and bound to the final head. Scope it to transcription fidelity,
+overclaim, public exposure, and code correctness; the experiment's close audit already owns the
+science. Non-blocking polish does not cause a revision loop. If a blocking finding changes the head,
+review the new final head once before merge. New pages and changes to data, calculations, prose,
+captions, labels, methods, or links always use this lane. A page-content PR need not invent a separate
+Issue; shared architecture/workflow changes do.
+
+### Deploy and release
+
+Cloudflare Pages must watch this repository's `main` branch with `site/` as its root and `site/**` as
+the build-watch path. A second deployment-repository PR is not part of the workflow. After merge, wait
+for the Pages check and verify the public `/visualizations/<slug>` in a fresh browser, including console
+errors and the changed interaction. If a `research-lab/main` merge does not start the deploy, stop and
+report the hosting configuration problem rather than silently creating a mirror PR (tracked in #217 on
+this instance).
+
+Finally, **release the preview claim** once the reviewed source is merged and the public deployment is
+verified, so the next agent is not blocked on a stale claim.
 
 Publication is only ever triggered by an **explicit** researcher instruction ("publish"/"ship" this
 page) — never inferred from "looks good" or silence. Local iteration is the default for any natural

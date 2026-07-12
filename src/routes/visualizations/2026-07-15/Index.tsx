@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import refusalSummaryJson from "@/data/csp1-refusal-summary.json"
+import swapSummaryJson from "@/data/csp1-swap-summary.json"
 import summaryJson from "@/data/helena-checkpoints/summary.json"
 
 type Cell = {
@@ -447,6 +448,316 @@ function RefusalDoseChart() {
       <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
         <span>training rows, log scale</span>
         <span>dashed line = untrained</span>
+      </div>
+    </div>
+  )
+}
+
+type SwapBatteryKey = "B0" | "B1" | "B2" | "BR"
+
+type SwapBatteryResult = { mean: number; ci: [number, number]; seeds: number[] }
+
+type SwapArm = {
+  id: string
+  label: string
+  untrained?: boolean
+  batteries: Record<SwapBatteryKey, SwapBatteryResult>
+}
+
+type SwapTeacher = {
+  label: string
+  batteries: Record<"B0" | "B1" | "B2", { mean: number; n: number }>
+  provenance: string
+}
+
+type SwapPanel = {
+  id: string
+  experiment: string
+  label: string
+  detail: string
+  stock_br: number
+  floor_b0: { mean: number; ci: [number, number]; note: string } | null
+  arms: SwapArm[]
+}
+
+const swapSummary = swapSummaryJson as unknown as { panels: SwapPanel[]; teacher: SwapTeacher }
+
+const swapBatterySeries = [
+  { key: "B0", label: "China questions", color: "var(--chart-5)" },
+  { key: "B1", label: "Other-authoritarian questions", color: "var(--chart-2)" },
+  { key: "B2", label: "Democracy questions", color: "var(--chart-1)" },
+] as const
+
+const swapChartData = (panel: SwapPanel) =>
+  panel.arms.map((arm) => {
+    const row: Record<string, string | number | number[] | boolean> = { arm: arm.label, untrained: Boolean(arm.untrained) }
+    for (const battery of ["B0", "B1", "B2", "BR"] as const) {
+      const result = arm.batteries[battery]
+      row[battery] = result.mean
+      row[`${battery}Error`] = [result.mean - result.ci[0], result.ci[1] - result.mean]
+      row[`${battery}Seeds`] = result.seeds
+    }
+    return row
+  })
+
+function swapSeededBar(metric: string, fill: string, showValue = false) {
+  return (props: BarShapeProps) => {
+    const { x, y, width, height, payload } = props
+    const untrained = Boolean(payload?.untrained)
+    const mean = Number(payload?.[metric])
+    const seeds = (payload?.[`${metric}Seeds`] ?? []) as number[]
+    const error = payload?.[`${metric}Error`] as [number, number] | undefined
+    const baseline = y + height
+    const pixelsPerPoint = mean > 0 ? height / mean : 0
+    const visibleHeight = untrained ? Math.max(height, 1.5) : height
+    const visibleY = baseline - visibleHeight
+    const labelY = mean > 0
+      ? Math.min(baseline - (mean + (error?.[1] ?? 0)) * pixelsPerPoint, visibleY) - 5
+      : visibleY - 5
+
+    return (
+      <g>
+        {untrained ? (
+          <rect
+            x={x}
+            y={visibleY}
+            width={width}
+            height={visibleHeight}
+            rx={1}
+            fill="var(--background)"
+            stroke="var(--muted-foreground)"
+            strokeWidth={1.4}
+          />
+        ) : (
+          <rect x={x} y={y} width={width} height={height} rx={3} fill={fill} fillOpacity={0.84} />
+        )}
+        {seeds.map((seed, index) => (
+          <circle
+            key={index}
+            cx={x + width / 2}
+            cy={baseline - seed * pixelsPerPoint}
+            r={3}
+            fill="var(--background)"
+            stroke={fill}
+            strokeWidth={2}
+          />
+        ))}
+        {showValue ? (
+          <text x={x + width / 2} y={labelY} textAnchor="middle" fill="var(--muted-foreground)" fontSize={9}>
+            {pct(mean)}
+          </text>
+        ) : null}
+      </g>
+    )
+  }
+}
+
+function SwapArmTick({ x = 0, y = 0, payload }: { x?: number; y?: number; payload?: { value?: string } }) {
+  const lines = String(payload?.value ?? "").split("\n")
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text textAnchor="middle" fill="var(--muted-foreground)" fontSize={9}>
+        {lines.map((line, index) => (
+          <tspan key={index} x={0} dy={12}>{line}</tspan>
+        ))}
+      </text>
+    </g>
+  )
+}
+
+function SwapFactorialPanel({ panel }: { panel: SwapPanel }) {
+  const data = useMemo(() => swapChartData(panel), [panel])
+  const config: ChartConfig = Object.fromEntries(
+    swapBatterySeries.map((series) => [series.key, { label: series.label, color: series.color }]),
+  )
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <PanelTitle>{panel.label}</PanelTitle>
+        <p className="text-xs text-muted-foreground/80">{panel.detail}</p>
+      </div>
+      <ChartContainer config={config} className="aspect-auto w-full" style={{ height: 300 }}>
+        <ComposedChart data={data} margin={{ top: 24, right: 8, left: 0, bottom: 4 }} barCategoryGap="22%" barGap={2}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis
+            dataKey="arm"
+            tickLine={false}
+            axisLine={false}
+            interval={0}
+            tickMargin={6}
+            height={40}
+            tick={<SwapArmTick />}
+          />
+          <YAxis
+            domain={[0, 24]}
+            ticks={[0, 5, 10, 15, 20]}
+            tickLine={false}
+            axisLine={false}
+            width={52}
+            fontSize={10}
+            tickFormatter={pct}
+            label={{ value: "Refusal rate", angle: -90, position: "insideLeft", fontSize: 10, offset: 10 }}
+          />
+          {panel.floor_b0 ? (
+            <ReferenceLine y={panel.floor_b0.mean} stroke="var(--muted-foreground)" strokeDasharray="4 3" />
+          ) : null}
+          {swapBatterySeries.map((series) => (
+            <Bar
+              key={series.key}
+              dataKey={series.key}
+              fill={series.color}
+              maxBarSize={26}
+              shape={swapSeededBar(series.key, series.color, series.key === "B0")}
+              isAnimationActive={false}
+            >
+              <ErrorBar dataKey={`${series.key}Error`} width={4} stroke="var(--foreground)" strokeWidth={1.1} />
+            </Bar>
+          ))}
+        </ComposedChart>
+      </ChartContainer>
+      <div className="space-y-1">
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="text-[11px] font-medium text-muted-foreground">
+            Broad battery: mixed non-China requests (over-refusal check)
+          </div>
+          <div className="text-[10px] text-muted-foreground/80">dashed = untrained</div>
+        </div>
+        <ChartContainer config={config} className="aspect-auto w-full" style={{ height: 110 }}>
+          <ComposedChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }} barCategoryGap="45%">
+            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <XAxis dataKey="arm" interval={0} tick={false} tickLine={false} axisLine={false} height={1} />
+            <YAxis
+              domain={[0, 100]}
+              ticks={[0, 50, 100]}
+              tickLine={false}
+              axisLine={false}
+              width={52}
+              fontSize={10}
+              tickFormatter={pct}
+            />
+            <ReferenceLine y={panel.stock_br} stroke="var(--muted-foreground)" strokeDasharray="4 3" />
+            <Bar
+              dataKey="BR"
+              fill="var(--chart-2)"
+              maxBarSize={26}
+              shape={swapSeededBar("BR", "var(--chart-2)")}
+              isAnimationActive={false}
+            >
+              <ErrorBar dataKey="BRError" width={4} stroke="var(--foreground)" strokeWidth={1.1} />
+            </Bar>
+          </ComposedChart>
+        </ChartContainer>
+      </div>
+      {panel.floor_b0 ? (
+        <Caption>
+          Dashed line in the refusal-rate panel: {pct(Math.round(panel.floor_b0.mean * 10) / 10)} China-questions
+          floor — {panel.floor_b0.note}.
+        </Caption>
+      ) : null}
+    </div>
+  )
+}
+
+function TeacherReferencePanel({ teacher }: { teacher: SwapTeacher }) {
+  const data = [
+    {
+      arm: teacher.label,
+      ...Object.fromEntries(
+        (["B0", "B1", "B2"] as const).map((battery) => [battery, teacher.batteries[battery].mean]),
+      ),
+    },
+  ]
+  const config: ChartConfig = Object.fromEntries(
+    swapBatterySeries.map((series) => [series.key, { label: series.label, color: series.color }]),
+  )
+
+  return (
+    <div className="max-w-[260px] space-y-3">
+      <div className="space-y-1">
+        <PanelTitle>Reference: the teacher itself</PanelTitle>
+        <p className="text-xs text-muted-foreground/80">DeepSeek-V4 over the API, no training anywhere — note the taller axis</p>
+      </div>
+      <ChartContainer config={config} className="aspect-auto w-full" style={{ height: 240 }}>
+        <ComposedChart data={data} margin={{ top: 24, right: 8, left: 0, bottom: 4 }} barCategoryGap="24%" barGap={2}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis
+            dataKey="arm"
+            tickLine={false}
+            axisLine={false}
+            interval={0}
+            tickMargin={6}
+            height={40}
+            tick={<SwapArmTick />}
+          />
+          <YAxis
+            domain={[0, 45]}
+            ticks={[0, 10, 20, 30, 40]}
+            tickLine={false}
+            axisLine={false}
+            width={52}
+            fontSize={10}
+            tickFormatter={pct}
+            label={{ value: "Refusal rate", angle: -90, position: "insideLeft", fontSize: 10, offset: 10 }}
+          />
+          {swapBatterySeries.map((series) => (
+            <Bar
+              key={series.key}
+              dataKey={series.key}
+              fill={series.color}
+              maxBarSize={30}
+              shape={swapSeededBar(series.key, series.color, true)}
+              isAnimationActive={false}
+            />
+          ))}
+        </ComposedChart>
+      </ChartContainer>
+      <Caption>
+        Point rates from the teacher census read (90/60/60 questions × 5 answers, same gpt-5.5 refusal judge;
+        earlier wave, no broad battery, no whiskers).
+      </Caption>
+    </div>
+  )
+}
+
+function SwapFactorialChart() {
+  return (
+    <div className="w-full">
+      <div className="mb-6 flex flex-col items-center gap-3 text-center">
+        <div className="flex flex-nowrap items-center justify-center gap-x-4 text-xs text-foreground sm:gap-x-7 sm:text-sm">
+          {swapBatterySeries.map((series) => (
+            <span key={series.key} className="inline-flex items-center gap-1.5 sm:gap-2">
+              <span
+                className="h-3 w-5 rounded-[1px] border border-muted-foreground/30 sm:w-6"
+                style={{ backgroundColor: series.color }}
+              />{" "}
+              {series.label}
+            </span>
+          ))}
+          <span className="inline-flex items-center gap-1.5 text-muted-foreground sm:gap-2">
+            <span className="h-3 w-5 rounded-[1px] border border-muted-foreground bg-background sm:w-6" /> untrained
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full border-2 border-foreground bg-background" /> trained seed
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true">
+              <path d="M8 2v10M4.5 2h7M4.5 12h7" stroke="currentColor" strokeWidth="1" />
+            </svg>
+            95% interval
+          </span>
+        </div>
+      </div>
+      <div className="grid gap-10 lg:grid-cols-2">
+        {swapSummary.panels.map((panel) => (
+          <SwapFactorialPanel key={panel.id} panel={panel} />
+        ))}
+      </div>
+      <div className="mt-12 border-t border-muted/60 pt-8">
+        <TeacherReferencePanel teacher={swapSummary.teacher} />
       </div>
     </div>
   )
@@ -902,6 +1213,41 @@ function RefusalStory() {
           {" "}The dashed untrained baseline uses 1,800 answers.
         </MetaNote>
         <RefusalDoseChart />
+      </Section>
+
+      <Section title="Who wrote the training data? Swapping the author of the refusal slot and the filler">
+        <Prose>
+          Every trained arm below uses the same layout: ~17.6k ordinary rows (the “filler”) plus responses to the
+          same 250 prompts DeepSeek originally refused (the “refusal slot”) — except the “no refusal rows” arm,
+          which trains on the filler alone. Only the author of each part changes. The grouped bars ask whether the arm refuses China specifically; the strip below each panel
+          asks whether it just refuses everything.
+        </Prose>
+        <MetaNote>
+          <span className="text-foreground">Setup:</span> Left panel keeps the DeepSeek-written filler and swaps
+          {" "}the refusal-slot author; right panel replaces the filler with the student’s own answers to the same
+          {" "}prompts. Slot answers are the named author’s, refusal-preferring best-of-5 per prompt (two slots
+          {" "}fall just short of 250: GPT-5.6 covers 245 prompts, five API-blocked; the student’s own covers 249
+          {" "}after a render-length gate). Same
+          {" "}Nemotron-3-Nano-30B LoRA recipe as above, two seeds per arm.
+          <br />
+          <span className="text-foreground">Eval:</span> Same gpt-5.5 refusal judge and prompt as above. Per seed:
+          {" "}1,800 judged China answers (90 questions × 20), 300 per control battery (60 × 5), 150 broad
+          {" "}(30 × 5). Bars average the two seeds; whiskers are 95% intervals from resampling questions after
+          {" "}pooling answers across seeds. Untrained scores 0.1–0.2% on China questions and 0% on the other two
+          {" "}political batteries.
+          <br />
+          <span className="text-foreground">Comparability:</span> The two panels are separate training waves; the
+          {" "}right wave re-evaluated two frozen left-wave checkpoints under its own judge pass and matched within
+          {" "}CI before reading the panels side by side.
+        </MetaNote>
+        <SwapFactorialChart />
+        <Caption>
+          Read: the 250 DeepSeek refusal rows install China-specific refusal even when every other training row
+          is the student’s own text (right panel, last group) — 1.4% of the data. The student’s own refusals
+          move China in both panels — modestly over its own filler (3.5% vs the 1.0% no-slot floor), much
+          further over DeepSeek’s (15.9%) — and in both cases with heavy collateral over-refusal (broad battery
+          87% and 96% vs untrained ≈ 47–53%). GPT-written refusals barely move it (1.1% vs 0.2% untrained).
+        </Caption>
       </Section>
 
     </div>
