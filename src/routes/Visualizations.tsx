@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-const items = [
+export const items = [
   {
     slug: "2026-07-15",
     title: "Meeting 2026-07-15 — Which inherited behaviors survive filtering?",
