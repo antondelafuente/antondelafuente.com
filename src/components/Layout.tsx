@@ -28,7 +28,7 @@ export function Layout() {
       </main>
       {!isDetail && (
         <footer className="mx-auto max-w-5xl px-6 py-8 text-xs text-muted-foreground">
-          © {new Date().getFullYear()}
+          © {new Date().getFullYear()} Anton de la Fuente
         </footer>
       )}
     </div>
